@@ -1,0 +1,19 @@
+{
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "lib": ["es6", "dom"],
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "declaration": false,
+        "noImplicitAny": true,
+        "experimentalDecorators": true,
+        "rootDir": ".",
+        "sourceMap": true,
+        "noEmitOnError": true,
+        "strict": true,
+        "jsx": "react-jsx"
+    }
+}

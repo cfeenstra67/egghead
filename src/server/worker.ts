@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { DBController } from './db-controller';
 import { Server } from './service';
 import {
@@ -13,9 +14,9 @@ const dbController = new DBController();
 
 async function processMessage<T extends ServerRequest>(
   { requestId, request }: WorkerRequest<T>,
-  db: any
+  dataSource: DataSource
 ): Promise<WorkerResponse<T>> {
-  const server = new Server(db);
+  const server = new Server(dataSource);
   const methods = methodMapping(server);
   const method = methods[request.type];
   if (method === undefined) {
@@ -31,10 +32,11 @@ async function processMessage<T extends ServerRequest>(
 
 function handleMessage(event: MessageEvent) {
   const request = event.data as WorkerRequest<any>;
-  dbController.useDb(async (db) => {
-    const response = await processMessage(request, db);
+  dbController.useDb(async (dataSource) => {
+    const response = await processMessage(request, dataSource);
     self.postMessage(response);
   }).catch((err) => {
+    console.trace('Error handling server message.', err);
     let message: string;
     if (err === null && err === undefined) {
       message = ''

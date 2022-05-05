@@ -1,3 +1,4 @@
+import { User } from '../models';
 import {
   ServerInterface,
   ServerMessage,
@@ -8,35 +9,45 @@ import {
   HelloResponse,
   QueryRequest,
   QueryResponse,
+  CreateUserRequest,
+  CreateUserResponse,
+  GetUsersRequest,
+  GetUsersResponse,
 } from './types';
+import { DataSource } from 'typeorm';
 
 export class Server implements ServerInterface {
 
-  constructor(readonly db: any) {}
+  constructor(readonly dataSource: DataSource) {}
 
-  async getHello(request: HelloRequest): Promise<HelloResponse> {
+  async getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse> {
     return { code: ServerResponseCode.Ok, message: 'Hello, world!' };
   }
 
-  async runQuery(request: QueryRequest): Promise<QueryResponse> {
-    const results = this.db.exec(request.query);
-    if (results.length < 1) {
-      return {
-        code: ServerResponseCode.Ok,
-        result: [],
-      }
-    }
-    const result = results[0];
-    const rows = result.values.map((row: any[]) => {
-      const out: Record<string, any> = {};
-      result.columns.forEach((column: string, idx: number) => {
-        out[column] = row[idx];
-      });
-      return out;
-    });
+  async runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse> {
+    const result = await this.dataSource.manager.query(request.query);
     return {
       code: ServerResponseCode.Ok,
-      result: rows,
+      result,
+    };
+  }
+
+  async createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse> {
+    const repo = this.dataSource.getRepository(User);
+    const user = repo.create({ name: request.name });
+    await repo.save(user)
+    return {
+      code: ServerResponseCode.Ok,
+      user
+    };
+  }
+
+  async getUsers(request: Omit<GetUsersResponse, 'type'>): Promise<GetUsersResponse> {
+    const repo = this.dataSource.getRepository(User);
+    const users = await repo.find();
+    return {
+      code: ServerResponseCode.Ok,
+      users,
     };
   }
 

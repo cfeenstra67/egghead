@@ -9,11 +9,13 @@
         "esModuleInterop": true,
         "declaration": false,
         "noImplicitAny": true,
+        "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "rootDir": ".",
         "sourceMap": true,
         "noEmitOnError": true,
         "strict": true,
+        "strictPropertyInitialization": false,
         "jsx": "react-jsx"
     }
 }

@@ -24,6 +24,7 @@ async function handleServerRequest<T extends ServerRequest>(message: T): Promise
   try {
     return await serverConnection(message) as ServerResponse<T>;
   } catch (err) {
+    console.trace('Error making request to server thread.');
     return { code: ServerResponseCode.Error, message: (err as any).toString() };
   }
 }

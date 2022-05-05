@@ -22,3 +22,11 @@ serverClient.runQuery({ query: 'SELECT 1;' }).then((response: any) => {
 }).catch((error: any) => {
   console.error("ERROR2", error);
 });
+
+serverClient
+  .createUser({ name: 'Cam' })
+  .then(async (response) => {
+    console.log("Created", response.user);
+    const users = await serverClient.getUsers({});
+    console.log("USERS", users);
+  });

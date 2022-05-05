@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "tsc --noEmit",
-    "build": "./build.sh"
+    "build": "./build.sh",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "devDependencies": {
     "@jlongster/sql.js": "^1.6.7",
@@ -19,8 +20,11 @@
     "event-target-shim": "^6.0.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
+    "reflect-metadata": "^0.1.13",
+    "sqlite3": "^5.0.6",
     "ts-loader": "^9.3.0",
     "ts-node": "^10.7.0",
+    "typeorm": "^0.3.6",
     "typescript": "^4.6.4",
     "uuid": "^8.3.2",
     "webpack": "^5.72.0",

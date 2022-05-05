@@ -8,6 +8,10 @@ import {
   ServerResponseCode,
   QueryRequest,
   QueryResponse,
+  CreateUserRequest,
+  CreateUserResponse,
+  GetUsersRequest,
+  GetUsersResponse,
 } from './types';
 
 export type RequestProcessor<T extends ServerRequest> = (request: T) => Promise<ServerResponse<T>>;
@@ -36,6 +40,20 @@ export class ServerClient implements ServerInterface {
       type: ServerMessage.Query,
       ...request
     }) as QueryResponse;
+  }
+
+  async createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.CreateUser,
+      ...request
+    }) as CreateUserResponse;
+  }
+
+  async getUsers(request: Omit<GetUsersRequest, 'type'>): Promise<GetUsersResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.GetUsers,
+      ...request
+    }) as GetUsersResponse;
   }
 
 }

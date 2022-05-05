@@ -2,16 +2,19 @@ import initSqlJs from '@jlongster/sql.js';
 import { SQLiteFS } from 'absurd-sql';
 import IndexedDBBackend from 'absurd-sql/dist/indexeddb-backend';
 import { EventTarget, Event } from 'event-target-shim';
+import { DataSource } from 'typeorm';
+import { migrations } from '../migrations';
+import { entities } from '../models';
 
 export class DBController {
 
   initCalled: boolean;
-  db: any;
+  dataSource: DataSource | undefined;
   private dbEvents: EventTarget;
 
   constructor() {
     this.initCalled = false;
-    this.db = undefined;
+    this.dataSource = undefined;
     this.dbEvents = new EventTarget();
   }
 
@@ -24,33 +27,57 @@ export class DBController {
     SQL.FS.mount(sqlFS, {}, '/sql');
 
     const path = '/sql/db.sqlite';
+
+    class PatchedDatabase extends SQL.Database {
+      constructor() {
+        super(path, { filename: true });
+        this.exec('PRAGMA journal_mode=MEMORY; PRAGMA page_size=8192;');
+      }
+    }
+
+    SQL.Database = PatchedDatabase;
+
+    // TODO: can this be removed?
     if (typeof SharedArrayBuffer === 'undefined') {
       let stream = SQL.FS.open(path, 'a+');
       await stream.node.contents.readIfFallback();
       SQL.FS.close(stream);
     }
 
-    this.db = new SQL.Database(path, { filename: true });
-    this.db.exec('PRAGMA journal_mode=MEMORY;');
+    this.dataSource = new DataSource({
+      type: 'sqljs',
+      driver: SQL,
+      autoSave: false,
+      migrations,
+      migrationsRun: true,
+      entities,
+      logging: ['query', 'schema'],
+    });
+
+    await this.dataSource.initialize();
 
     this.dbEvents.dispatchEvent(new Event('init'));
   }
 
-  useDb<T>(func: (db: any) => T): Promise<T> {
+  useDb<T>(func: (db: DataSource) => T): Promise<T> {
     return new Promise((resolve, reject) => {
-      if (this.db === undefined) {
-        this.dbEvents.addEventListener('init', () => {
+      if (this.dataSource !== undefined) {
+        resolve(func(this.dataSource));
+        return;
+      }
+      this.dbEvents.addEventListener(
+        'init',
+        () => {
           try {
-            resolve(func(this.db));
+            resolve(func(this.dataSource as DataSource));
           } catch (err) {
             reject(err);
           }
-        });
-        if (!this.initCalled) {
-          this.initializeDb();
-        }
-      } else {
-        resolve(func(this.db));
+        },
+        { once: true }
+      );
+      if (!this.initCalled) {
+        this.initializeDb();
       }
     });
   }

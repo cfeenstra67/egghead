@@ -1,7 +1,10 @@
+import type { User } from '../models';
 
 export enum ServerMessage {
   Hello = 'Hello',
   Query = 'Query',
+  CreateUser = 'CreateUser',
+  GetUsers = 'GetUsers',
 }
 
 export enum ServerResponseCode {
@@ -28,11 +31,34 @@ export interface QueryResponse {
   result: Record<string, any>[];
 }
 
+export interface CreateUserRequest {
+  type: ServerMessage.CreateUser;
+  name: string;
+}
+
+export interface CreateUserResponse {
+  code: ServerResponseCode.Ok;
+  user: User;
+}
+
+export interface GetUsersRequest {
+  type: ServerMessage.GetUsers;
+}
+
+export interface GetUsersResponse {
+  code: ServerResponseCode.Ok;
+  users: User[];
+}
+
 export interface ServerInterface {
 
   getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse>;
 
   runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse>;
+
+  createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse>;
+
+  getUsers(request: Omit<GetUsersRequest, 'type'>): Promise<GetUsersResponse>;
 
 }
 
@@ -43,11 +69,15 @@ export interface ErrorResponse {
 
 export type ServerRequest =
   | HelloRequest
-  | QueryRequest;
+  | QueryRequest
+  | CreateUserRequest
+  | GetUsersRequest;
 
 export type ServerResponse<T> = (
   T extends HelloRequest ? HelloResponse
   : T extends QueryRequest ? QueryResponse
+  : T extends CreateUserRequest ? CreateUserResponse
+  : T extends GetUsersRequest ? GetUsersResponse
   : never
 ) | ErrorResponse;
 

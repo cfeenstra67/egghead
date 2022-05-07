@@ -1,51 +1,50 @@
 import {
   ServerResponseCode,
   ServerMessage,
-  ServerRequest,
-  ServerResponse,
   ErrorResponse,
 } from './server';
 import { createBackgroundServerRequestProcessor } from './server/background-client';
+import { ServerClient } from './server/client';
 import {
   ExtensionMessage,
   ExtensionRequest,
   ExtensionResponse,
-  HelloExtensionRequest,
-  HelloExtensionResponse,
-} from './types';
-
-async function handleHelloRequest(message: HelloExtensionRequest): Promise<HelloExtensionResponse> {
-  return { code: ServerResponseCode.Ok, message: `Hello, ${message.message}` };
-}
+} from './extension';
+import { makeRequestProcessor } from './extension/client';
+import { ExtensionService } from './extension/service';
+import { setupSessionObservers } from './extension/utils';
 
 const serverConnection = createBackgroundServerRequestProcessor();
+const serverClient = new ServerClient(serverConnection);
 
-async function handleServerRequest<T extends ServerRequest>(message: T): Promise<ServerResponse<T>> {
-  try {
-    return await serverConnection(message) as ServerResponse<T>;
-  } catch (err) {
-    console.trace('Error making request to server thread.');
-    return { code: ServerResponseCode.Error, message: (err as any).toString() };
-  }
-}
+const extensionService = new ExtensionService();
+const handleExtensionRequest = makeRequestProcessor(extensionService);
+
+setupSessionObservers(serverClient);
 
 async function handleMessage<T extends ExtensionRequest>(message: T): Promise<ExtensionResponse<T>> {
-  switch (message.type) {
-    case ExtensionMessage.Hello2:
-      return await handleHelloRequest(message) as ExtensionResponse<T>;
-    default:
-      if (ServerMessage[message.type]) {
-        return await handleServerRequest(message) as ExtensionResponse<T>;
-      }
-      const resp: ErrorResponse = {
-        code: ServerResponseCode.Error,
-        message: `Invalid message type: ${(message as any).type}.`
-      };
-      return resp;
+  if (ServerMessage.hasOwnProperty(message.type)) {
+    return await serverConnection(message) as ExtensionResponse<T>;
   }
+  if (ExtensionMessage.hasOwnProperty(message.type)) {
+    return await handleExtensionRequest(message) as ExtensionResponse<T>;
+  }
+  const resp: ErrorResponse = {
+    code: ServerResponseCode.Error,
+    message: `Invalid message type: ${(message as any).type}.`
+  };
+  return resp;
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  handleMessage(request as ExtensionRequest).then(sendResponse);
+  handleMessage(request as ExtensionRequest)
+    .then(sendResponse)
+    .catch((error) => {
+      console.trace('Error handling extension request.', error);
+      return {
+        code: ServerResponseCode.Error,
+        message: error.toString(),
+      };
+    });
   return true;
 });

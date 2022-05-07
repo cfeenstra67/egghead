@@ -1,10 +1,13 @@
 import type { User } from '../models';
+import type { TabSession } from '../extension';
 
 export enum ServerMessage {
   Hello = 'Hello',
   Query = 'Query',
   CreateUser = 'CreateUser',
   GetUsers = 'GetUsers',
+  StartSession = 'StartSession',
+  EndSession = 'EndSession',
 }
 
 export enum ServerResponseCode {
@@ -50,6 +53,26 @@ export interface GetUsersResponse {
   users: User[];
 }
 
+export interface StartSessionRequest {
+  type: ServerMessage.StartSession;
+  session: TabSession;
+  parentSessionId?: string;
+  transitionType?: string;
+}
+
+export interface StartSessionResponse {
+  code: ServerResponseCode.Ok;
+}
+
+export interface EndSessionRequest {
+  type: ServerMessage.EndSession;
+  session: TabSession;
+}
+
+export interface EndSessionResponse {
+  code: ServerResponseCode.Ok;
+}
+
 export interface ServerInterface {
 
   getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse>;
@@ -59,6 +82,10 @@ export interface ServerInterface {
   createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse>;
 
   getUsers(request: Omit<GetUsersRequest, 'type'>): Promise<GetUsersResponse>;
+
+  startSession(request: Omit<StartSessionRequest, 'type'>): Promise<StartSessionResponse>;
+
+  endSession(request: Omit<EndSessionRequest, 'type'>): Promise<EndSessionResponse>;
 
 }
 
@@ -71,13 +98,17 @@ export type ServerRequest =
   | HelloRequest
   | QueryRequest
   | CreateUserRequest
-  | GetUsersRequest;
+  | GetUsersRequest
+  | StartSessionRequest
+  | EndSessionRequest;
 
 export type ServerResponse<T> = (
   T extends HelloRequest ? HelloResponse
   : T extends QueryRequest ? QueryResponse
   : T extends CreateUserRequest ? CreateUserResponse
   : T extends GetUsersRequest ? GetUsersResponse
+  : T extends StartSessionRequest ? StartSessionResponse
+  : T extends EndSessionRequest ? EndSessionResponse
   : never
 ) | ErrorResponse;
 

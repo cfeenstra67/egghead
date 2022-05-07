@@ -12,6 +12,11 @@
       "js": ["content-script.js"]
     }
   ],
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs"
+  ],
   "chrome_url_overrides": {
     "history": "history.html"
   },

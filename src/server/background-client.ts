@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { initBackend } from 'absurd-sql/dist/indexeddb-main-thread';
-import { EventTarget, Event } from 'event-target-shim';
+import EventTarget from '@ungap/event-target';
 import { RequestProcessor } from './client';
 import {
   ServerRequest,
@@ -14,15 +14,15 @@ export function backgroundServerRequestProcessor(
   requestTimeout: number = 10000
 ): RequestProcessor<any> {
   const target = new EventTarget();
-  const responses: Record<string, ServerResponse<any>> = {};
 
   worker.addEventListener('message', (event: MessageEvent) => {
     if (!event.data.requestId) {
       return;
     }
     const response = event.data as WorkerResponse<any>;
-    responses[response.requestId] = response.response;
-    target.dispatchEvent(new Event(response.requestId));
+    target.dispatchEvent(
+      new CustomEvent(response.requestId, { detail: response.response })
+    );
   });
 
   return (request: ServerRequest) => {
@@ -32,12 +32,8 @@ export function backgroundServerRequestProcessor(
       target.addEventListener(
         requestId,
         (event) => {
-          const response = responses[requestId];
-          if (response) {
-            clearTimeout(timeout);
-            delete responses[requestId];
-            resolve(response);
-          }
+          clearTimeout(timeout);
+          resolve((event as CustomEvent).detail);
         },
         { once: true }
       );

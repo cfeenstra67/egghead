@@ -1,7 +1,7 @@
 import initSqlJs from '@jlongster/sql.js';
 import { SQLiteFS } from 'absurd-sql';
 import IndexedDBBackend from 'absurd-sql/dist/indexeddb-backend';
-import { EventTarget, Event } from 'event-target-shim';
+import EventTarget from '@ungap/event-target';
 import { DataSource } from 'typeorm';
 import { migrations } from '../migrations';
 import { entities } from '../models';
@@ -51,12 +51,11 @@ export class DBController {
       migrations,
       migrationsRun: true,
       entities,
-      logging: ['query', 'schema'],
     });
 
     await this.dataSource.initialize();
 
-    this.dbEvents.dispatchEvent(new Event('init'));
+    this.dbEvents.dispatchEvent(new CustomEvent('init'));
   }
 
   useDb<T>(func: (db: DataSource) => T): Promise<T> {

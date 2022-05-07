@@ -12,6 +12,10 @@ import {
   CreateUserResponse,
   GetUsersRequest,
   GetUsersResponse,
+  StartSessionRequest,
+  StartSessionResponse,
+  EndSessionRequest,
+  EndSessionResponse,
 } from './types';
 
 export type RequestProcessor<T extends ServerRequest> = (request: T) => Promise<ServerResponse<T>>;
@@ -54,6 +58,20 @@ export class ServerClient implements ServerInterface {
       type: ServerMessage.GetUsers,
       ...request
     }) as GetUsersResponse;
+  }
+
+  async startSession(request: Omit<StartSessionRequest, 'type'>): Promise<StartSessionResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.StartSession,
+      ...request
+    }) as StartSessionResponse;
+  }
+
+  async endSession(request: Omit<EndSessionRequest, 'type'>): Promise<EndSessionResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.EndSession,
+      ...request
+    }) as EndSessionResponse;
   }
 
 }

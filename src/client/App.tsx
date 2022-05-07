@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
-import { processExtensionRequest } from '../page-client';
-import { ServerClient } from '../server/client';
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
+import {
+  Router,
+  Route,
+  Switch
+} from 'wouter';
+import { useHistoryLocation } from './lib/router';
 
 export default function App() {
-  const [value, setValue] = useState('<calculating>');
-
-  useEffect(() => {
-    const client = new ServerClient(processExtensionRequest);
-
-    client
-      .runQuery({ query: 'SELECT 1 + 1 as test' })
-      .then((response) => setValue(JSON.stringify(response)));
-  });
-
-  return <h1>Hello, world! {value}</h1>;
+  return (
+    <Router hook={useHistoryLocation}>
+      <Switch>
+        <Route path="/"><Home/></Route>
+        <Route><NotFound/></Route>
+      </Switch>
+    </Router>
+  );
 }

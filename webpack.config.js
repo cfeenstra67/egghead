@@ -7,7 +7,7 @@ module.exports = {
     background: './src/background.ts',
     'server-worker': './src/server/worker.ts',
     'content-script': './src/content-script.ts',
-    'client-bootstrap': './src/client-bootstrap.ts',
+    'client': './src/client/index.tsx',
   },
   devtool: 'inline-source-map',
   module: {
@@ -16,6 +16,18 @@ module.exports = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true
+            }
+          }
+        ],
       }
     ]
   },
@@ -26,7 +38,7 @@ module.exports = {
     })
   ],
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', '.css'],
     fallback: {
       fs: false,
       path: false,

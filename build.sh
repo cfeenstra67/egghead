@@ -5,4 +5,4 @@ rm -rf dist
 
 cp -r public dist
 
-npx webpack
+npx webpack --config-name extension

@@ -16,6 +16,10 @@ import {
   StartSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
+  QuerySessionsRequest,
+  QuerySessionsResponse,
+  ExportDatabaseRequest,
+  ExportDatabaseResponse,
 } from './types';
 
 export type RequestProcessor<T extends ServerRequest> = (request: T) => Promise<ServerResponse<T>>;
@@ -72,6 +76,20 @@ export class ServerClient implements ServerInterface {
       type: ServerMessage.EndSession,
       ...request
     }) as EndSessionResponse;
+  }
+
+  async querySessions(request: Omit<QuerySessionsRequest, 'type'>): Promise<QuerySessionsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.QuerySessions,
+      ...request
+    }) as QuerySessionsResponse;
+  }
+  
+  async exportDatabase(request: Omit<ExportDatabaseRequest, 'type'>): Promise<ExportDatabaseResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.ExportDatabase,
+      ...request
+    }) as ExportDatabaseResponse;
   }
 
 }

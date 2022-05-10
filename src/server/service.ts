@@ -1,4 +1,4 @@
-import { User, Session } from '../models';
+import { User, Session, SessionIndex } from '../models';
 import {
   ServerInterface,
   ServerMessage,
@@ -17,8 +17,14 @@ import {
   StartSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
+  SessionResponse,
+  QuerySessionsRequest,
+  QuerySessionsResponse,
+  ExportDatabaseRequest,
+  ExportDatabaseResponse,
 } from './types';
 import { DataSource } from 'typeorm';
+import { SqljsDriver } from 'typeorm/driver/sqljs/SqljsDriver';
 
 export class Server implements ServerInterface {
 
@@ -81,11 +87,56 @@ export class Server implements ServerInterface {
       throw new Error(`Session ${request.session.id} does not exist.`);
     }
     await repo.update(session.id, {
+      url: request.session.url,
       rawUrl: request.session.rawUrl,
       title: request.session.title,
       endedAt: request.session.endedAt,
     });
     return { code: ServerResponseCode.Ok };
+  }
+
+  async querySessions(request: Omit<QuerySessionsRequest, 'type'>): Promise<QuerySessionsResponse> {
+    const repo = this.dataSource.getRepository(SessionIndex);
+    let builder = await repo
+      .createQueryBuilder('s')
+      .loadRelationCountAndMap(
+        's.childCount',
+        's.childSessions',
+        'children'
+      )
+      .orderBy('s.startedAt', 'DESC');
+
+    if (request.query) {
+      builder = builder.where('session_index MATCH :query', { query: request.query });
+    }
+
+    const totalCount = await builder.getCount();
+
+    if (request.skip) {
+      builder = builder.skip(request.skip);
+    }
+    if (request.limit) {
+      builder = builder.limit(request.limit);
+    }
+
+    // Typescript won't let us case to SessionResponse[] because of the extra col.
+    const results = await builder.getMany() as any[];
+
+    return {
+      code: ServerResponseCode.Ok,
+      totalCount,
+      results,
+    };
+  }
+
+  async exportDatabase(request: Omit<ExportDatabaseRequest, 'type'>): Promise<ExportDatabaseResponse> {
+    const driver = this.dataSource.driver as SqljsDriver;
+    const database = new Blob([driver.export()]);
+    const databaseUrl = URL.createObjectURL(database);
+    return {
+      code: ServerResponseCode.Ok,
+      databaseUrl,
+    };
   }
 
 }

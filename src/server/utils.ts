@@ -7,6 +7,8 @@ type MethodMapping = {
   [ServerMessage.GetUsers]: ServerInterface["getUsers"];
   [ServerMessage.StartSession]: ServerInterface["startSession"];
   [ServerMessage.EndSession]: ServerInterface["endSession"];
+  [ServerMessage.QuerySessions]: ServerInterface["querySessions"];
+  [ServerMessage.ExportDatabase]: ServerInterface["exportDatabase"];
 };
 
 export function methodMapping(server: ServerInterface): MethodMapping {
@@ -17,5 +19,7 @@ export function methodMapping(server: ServerInterface): MethodMapping {
     [ServerMessage.GetUsers]: server.getUsers.bind(server),
     [ServerMessage.StartSession]: server.startSession.bind(server),
     [ServerMessage.EndSession]: server.endSession.bind(server),
+    [ServerMessage.QuerySessions]: server.querySessions.bind(server),
+    [ServerMessage.ExportDatabase]: server.exportDatabase.bind(server),
   };
 }

@@ -1,0 +1,111 @@
+
+.navBar {
+    --search-field-text-color: white;
+    --search-field-focus-outline: #CBCBCB;
+    --title-width: calc(var(--sidebar-width) - var(--padding));
+    position: fixed;
+    top: 0;
+    width: calc(100% - var(--padding) * 2);
+    height: calc(var(--navbar-height) - var(--padding) * 2);
+    background-color: var(--secondary-bg-color);
+    display: grid;
+    grid-template-columns: var(--title-width) 1fr 50% 1fr;
+    grid-column-gap: var(--padding);
+    padding: var(--padding);
+    box-shadow: 0 6px 4px 0 var(--bg-color);
+    z-index: 10000;
+}
+
+@media only screen and (min-width: 1040px) {
+    .navBar {
+        grid-template-columns: var(--title-width) 1fr 50% 2fr;
+    }
+}
+
+
+@media only screen and (min-width: 1232px) {
+    .navBar {
+        grid-template-columns: 1fr 0px 616px 1fr;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .navBar {
+        grid-template-columns: var(--title-width) 1fr 60% 1fr;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .navBar {
+        grid-template-columns: var(--title-width) 1fr 80% 1fr;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .navBar {
+        grid-template-columns: min-content auto;
+    }
+}
+
+.navBar > * {
+    position: relative;
+    align-self: center;
+}
+
+.navBar h1 {
+    margin-block-start: 0;
+    margin-block-end: 0;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.searchField {
+    display: inline-grid;
+    grid-template-columns: min-content auto min-content;
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding-left: var(--padding);
+    padding-right: var(--padding);
+    grid-column: 3;
+}
+
+.searchField:focus-within {
+    outline: var(--search-field-focus-outline) solid 1px;
+}
+
+.searchField > * {
+    align-self: center;
+}
+
+.searchField input {
+    width: calc(100% - var(--padding));
+    height: calc(100% - var(--padding) * 2);
+    background-color: transparent;
+    outline: none;
+    border: none;
+    padding-left: 0px;
+    padding: 8px;
+    color: var(--search-field-text-color);
+}
+
+.searchField input::placeholder {
+    color: var(--search-field-text-color);
+}
+
+.searchField input:focus {
+    outline-width: 0;
+}
+
+.searchFieldIcon {
+    --icon-size: calc(var(--navbar-height) - var(--padding) * 4.5);
+    height: var(--icon-size);
+    width: var(--icon-size);
+}
+
+.searchFieldClearIcon {
+    --icon-size: calc(var(--navbar-height) - var(--padding) * 4.25);
+    height: var(--icon-size);
+    width: var(--icon-size);
+    cursor: pointer;
+}

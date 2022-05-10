@@ -1,5 +1,5 @@
 {
-    "include": ["**/*.ts"],
+    "include": ["**/*.ts", "**/*.tsx"],
     "exclude": ["node_modules"],
     "compilerOptions": {
         "lib": ["es6", "dom"],
@@ -17,5 +17,6 @@
         "strict": true,
         "strictPropertyInitialization": false,
         "jsx": "react-jsx",
+        "allowJs": true
     }
 }

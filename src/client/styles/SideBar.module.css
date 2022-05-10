@@ -1,0 +1,64 @@
+
+.sideBar {
+    --item-height: 36px;
+    --content-height: calc(var(--item-height) - 2.5 * var(--padding));
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100% - var(--navbar-height));
+}
+
+.sideBar > ul {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding-inline-start: 0px;
+    margin-block-start: 0px;
+    margin-block-end: 0px;
+    margin-top: calc(3 * var(--padding));
+}
+
+.sideBarItem {
+    height: var(--item-height);
+    display: block;
+    margin: var(--padding);
+    margin-bottom: 0px;
+    position: relative;
+    vertical-align: middle;
+    border-radius: var(--border-radius);
+}
+
+.sideBarItem:hover {
+    background-color: var(--secondary-bg-color);
+}
+
+.activeSideBarItem {
+    background-color: var(--secondary-bg-color);
+}
+
+.sideBarItem > a {
+    height: calc(100% - var(--padding) * 2);
+    width: calc(100% - var(--padding) * 3);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: min-content auto;
+    align-items: center;
+    padding: var(--padding);
+    padding-left: calc(2 * var(--padding));
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--primary-text);
+    font-size: var(--content-height);
+    letter-spacing: .6px;
+}
+
+.sideBarItem > a > svg {
+    width: var(--content-height);
+    height: var(--content-height);
+    margin-right: var(--padding);
+    vertical-align: middle;
+}

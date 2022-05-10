@@ -1,19 +1,5 @@
-import {
-  ExtensionMessage,
-} from './types';
+import { processExtensionRequest } from './extension/client';
 import { ServerClient } from './server/client';
-
-import { processExtensionRequest, ExtensionClient } from './extension/client';
-
-const extensionClient = new ExtensionClient(processExtensionRequest);
-
-extensionClient
-  .getHello({ message: 'Blah2' })
-  .then((response: any) => {
-    console.log("RESPONSE", response);
-  }).catch((error: any) => {
-    console.error("ERROR", error);
-  });
 
 const serverClient = new ServerClient(processExtensionRequest);
 
@@ -24,16 +10,10 @@ SELECT
 FROM
   session
 ORDER BY startedAt DESC
-LIMIT 100
+LIMIT 10
 ` })
   .then((response: any) => {
-    console.log("RESPONSE2", response);
+    console.log("SESSIONS", response);
   }).catch((error: any) => {
-    console.error("ERROR2", error);
-  });
-
-serverClient
-  .getUsers({})
-  .then(async (users) => {
-    console.log("USERS", users);
+    console.error("ERROR", error);
   });

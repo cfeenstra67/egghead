@@ -1,7 +1,15 @@
-import { Session } from './session.entity';
+import { Session, SessionIndex } from './session.entity';
 import { User } from './user.entity';
 
+// All entities to be queried
 export const entities = [
+  User,
+  Session,
+  SessionIndex,
+];
+
+// Entities to be included in migrations
+export const migrationEntities = [
   User,
   Session,
 ];

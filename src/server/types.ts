@@ -1,4 +1,4 @@
-import type { User } from '../models';
+import type { User, Session } from '../models';
 import type { TabSession } from '../extension';
 
 export enum ServerMessage {
@@ -8,6 +8,8 @@ export enum ServerMessage {
   GetUsers = 'GetUsers',
   StartSession = 'StartSession',
   EndSession = 'EndSession',
+  QuerySessions = 'QuerySessions',
+  ExportDatabase = 'ExportDatabase',
 }
 
 export enum ServerResponseCode {
@@ -73,6 +75,32 @@ export interface EndSessionResponse {
   code: ServerResponseCode.Ok;
 }
 
+export interface QuerySessionsRequest {
+  type: ServerMessage.QuerySessions;
+  query: string;
+  skip?: number;
+  limit?: number;
+}
+
+export interface SessionResponse extends Session {
+  childCount: number;
+}
+
+export interface QuerySessionsResponse {
+  code: ServerResponseCode.Ok;
+  totalCount: number;
+  results: SessionResponse[];
+}
+
+export interface ExportDatabaseRequest {
+  type: ServerMessage.ExportDatabase;
+}
+
+export interface ExportDatabaseResponse {
+  code: ServerResponseCode.Ok;
+  databaseUrl: string;
+}
+
 export interface ServerInterface {
 
   getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse>;
@@ -87,6 +115,9 @@ export interface ServerInterface {
 
   endSession(request: Omit<EndSessionRequest, 'type'>): Promise<EndSessionResponse>;
 
+  querySessions(request: Omit<QuerySessionsRequest, 'type'>): Promise<QuerySessionsResponse>;
+
+  exportDatabase(request: Omit<ExportDatabaseRequest, 'type'>): Promise<ExportDatabaseResponse>;
 }
 
 export interface ErrorResponse {
@@ -100,7 +131,9 @@ export type ServerRequest =
   | CreateUserRequest
   | GetUsersRequest
   | StartSessionRequest
-  | EndSessionRequest;
+  | EndSessionRequest
+  | QuerySessionsRequest
+  | ExportDatabaseRequest;
 
 export type ServerResponse<T> = (
   T extends HelloRequest ? HelloResponse
@@ -109,6 +142,8 @@ export type ServerResponse<T> = (
   : T extends GetUsersRequest ? GetUsersResponse
   : T extends StartSessionRequest ? StartSessionResponse
   : T extends EndSessionRequest ? EndSessionResponse
+  : T extends QuerySessionsRequest ? QuerySessionsResponse
+  : T extends ExportDatabaseRequest ? ExportDatabaseResponse
   : never
 ) | ErrorResponse;
 

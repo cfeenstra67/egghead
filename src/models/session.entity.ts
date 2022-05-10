@@ -1,4 +1,4 @@
-import { PrimaryColumn, Entity, Column, ManyToOne } from 'typeorm';
+import { PrimaryColumn, Entity, Column, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Session {
@@ -24,6 +24,9 @@ export class Session {
   @ManyToOne(() => Session, session => session.id)
   parentSession?: Session;
 
+  @OneToMany(() => Session, session => session.parentSession)
+  childSessions: Session[];
+
   @Column({ nullable: true })
   transitionType!: string;
 
@@ -32,5 +35,13 @@ export class Session {
 
   @Column({ nullable: true })
   endedAt?: Date;
+
+}
+
+@Entity('session_index')
+export class SessionIndex extends Session {
+
+  @Column()
+  rowid!: number;
 
 }

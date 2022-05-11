@@ -41,10 +41,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     .then(sendResponse)
     .catch((error) => {
       console.trace('Error handling extension request.', error);
-      return {
+      sendResponse({
         code: ServerResponseCode.Error,
         message: error.toString(),
-      };
+      });
     });
   return true;
 });

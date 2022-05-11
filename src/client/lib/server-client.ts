@@ -1,22 +1,47 @@
-// import initSqlJs from '@jlongster/sql.js';
 import initSqlJs from '../../../lib/sql-wasm.js';
 import { DataSource } from 'typeorm';
 import EventTarget from '@ungap/event-target';
 import { processExtensionRequest } from '../../extension/client';
-import { ServerInterface } from '../../server';
+import {
+  ServerInterface,
+  ServerRequest,
+  ServerResponse,
+  ServerResponseCode,
+  ErrorResponse,
+} from '../../server';
+import { methodMapping } from '../../server/utils';
 import { ServerClient } from '../../server/client';
 import { Server } from '../../server/service';
 import { migrations } from '../../migrations';
 import { entities } from '../../models';
 import { AppRuntime } from './types';
 
-import existingDb from '../../../history.db';
-
 function convertDataURIToBinary(dataURI: string): Uint8Array {
   return Uint8Array.from(atob(dataURI), (char) => char.charCodeAt(0));
 }
 
-function serverFactory(): () => Promise<ServerInterface> {
+function serializationMiddleware(
+  server: ServerInterface
+): <T extends ServerRequest>(request: T) => Promise<ServerResponse<T>> {
+  const mapping = methodMapping(server);
+
+  async function handleRequest<T extends ServerRequest>(
+    request: T
+  ): Promise<ServerResponse<T>> {
+    const method = mapping[request.type];
+    if (method === undefined) {
+      return {
+        code: ServerResponseCode.Error,
+        message: `No method exists for ${request.type}.`
+      };
+    }
+    return await method(request as any) as ServerResponse<T>;
+  }
+
+  return handleRequest;
+}
+
+export function serverFactory(existingDb: string): () => Promise<ServerInterface> {
   let dataSource: DataSource | undefined = undefined;
   const target = new EventTarget();
   let initialized = false;
@@ -49,6 +74,12 @@ function serverFactory(): () => Promise<ServerInterface> {
     }
   }
 
+  function getServer() {
+    const server = new Server(dataSource as DataSource);
+    const middleware = serializationMiddleware(server);
+    return new ServerClient(middleware);
+  }
+
   return () => new Promise((resolve, reject) => {
     if (initialized) {
       resolve(new Server(dataSource as DataSource));
@@ -65,17 +96,4 @@ function serverFactory(): () => Promise<ServerInterface> {
       initialize();
     }
   });
-}
-
-async function serverClientFactory(): Promise<ServerInterface> {
-  return new ServerClient(processExtensionRequest);
-}
-
-export function getServerClientFactory(context: AppRuntime): () => Promise<ServerInterface> {
-  switch (context) {
-    case AppRuntime.Extension:
-      return serverClientFactory;
-    case AppRuntime.Web:
-      return serverFactory();
-  }
 }

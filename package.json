@@ -5,8 +5,14 @@
   "author": "cfeenstra67 <cameron.l.feenstra@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "prebuild": "tsc --noEmit",
-    "build": "./build.sh",
+    "clean": "rm -rf dist",
+    "check-types": "tsc --noEmit",
+    "prebuild": "npm run clean && npm run check-types",
+    "build": "webpack --config-name extension",
+    "prebuild-web": "npm run clean && npm run check-types",
+    "build-web": "webpack --config-name web",
+    "watch": "npm run clean && tsc --noEmit --watch | webpack --config-name extension --watch",
+    "watch-web": "npm run clean && tsc --noEmit --watch | webpack --config-name web --watch",
     "typeorm": "typeorm-ts-node-commonjs"
   },
   "devDependencies": {
@@ -20,7 +26,9 @@
     "@types/uuid": "^8.3.4",
     "@ungap/event-target": "^0.2.3",
     "absurd-sql": "^0.0.53",
+    "copy-webpack-plugin": "^10.2.4",
     "css-loader": "^6.7.1",
+    "http-server": "^14.1.0",
     "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^2.6.0",
     "react": "^18.1.0",

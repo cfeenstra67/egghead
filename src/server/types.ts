@@ -82,8 +82,10 @@ export interface QuerySessionsRequest {
   limit?: number;
 }
 
-export interface SessionResponse extends Session {
+export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> {
   childCount: number;
+  startedAt: string;
+  endedAt?: string;
 }
 
 export interface QuerySessionsResponse {

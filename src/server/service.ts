@@ -113,14 +113,20 @@ export class Server implements ServerInterface {
     const totalCount = await builder.getCount();
 
     if (request.skip) {
-      builder = builder.skip(request.skip);
+      builder = builder.offset(request.skip);
     }
     if (request.limit) {
       builder = builder.limit(request.limit);
     }
 
     // Typescript won't let us case to SessionResponse[] because of the extra col.
-    const results = await builder.getMany() as any[];
+    const results = (await builder.getMany()).map((session) => {
+      return {
+        ...session,
+        startedAt: session.startedAt.toString(),
+        endedAt: session.endedAt?.toString(),
+      };
+    }) as any[];
 
     return {
       code: ServerResponseCode.Ok,

@@ -1,3 +1,4 @@
+const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
@@ -56,6 +57,11 @@ function createModule(name, entry, allowDbImport) {
         PERF_BUILD: ''
       }),
       new MiniCssExtractPlugin(),
+      new CopyPlugin({
+        patterns: [
+          { from: 'public', to: '.' },
+        ]
+      })
     ],
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.css'],
@@ -84,6 +90,6 @@ module.exports = [
     client: './src/client/extension.tsx',
   }),
   createModule('web', {
-    client: './src/client/web.tsx',
+    'web-client': './src/client/web.tsx',
   }, true),
 ];

@@ -11,7 +11,7 @@ import {
 
 export function backgroundServerRequestProcessor(
   worker: Worker,
-  requestTimeout: number = 10000
+  requestTimeout: number = 60000
 ): RequestProcessor<any> {
   const target = new EventTarget();
 

@@ -1,4 +1,5 @@
-import initSqlJs from '@jlongster/sql.js';
+// import initSqlJs from '@jlongster/sql.js';
+import initSqlJs from '../../lib/sql-wasm.js';
 import { SQLiteFS } from 'absurd-sql';
 import IndexedDBBackend from 'absurd-sql/dist/indexeddb-backend';
 import EventTarget from '@ungap/event-target';
@@ -37,8 +38,8 @@ export class DBController {
 
     SQL.Database = PatchedDatabase;
 
-    // TODO: can this be removed?
     if (typeof SharedArrayBuffer === 'undefined') {
+      console.warn("Running without SharedArrayBuffer, this will hurt performance.");
       let stream = SQL.FS.open(path, 'a+');
       await stream.node.contents.readIfFallback();
       SQL.FS.close(stream);
@@ -76,6 +77,7 @@ export class DBController {
         { once: true }
       );
       if (!this.initCalled) {
+        this.initCalled = true;
         this.initializeDb();
       }
     });

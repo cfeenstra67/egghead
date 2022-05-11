@@ -1,6 +1,5 @@
 import { createContext } from 'react';
 import { ServerInterface } from '../../server';
-import { getServerClientFactory } from './server-client';
 import { AppRuntime } from './types';
 
 export interface AppContext {
@@ -12,7 +11,7 @@ export interface AppContext {
 
 export const AppContext = createContext<AppContext>({
   runtime: AppRuntime.Web,
-  serverClientFactory: getServerClientFactory(AppRuntime.Web),
+  serverClientFactory: async () => { throw new Error('Not Implemented.'); },
   query: '',
   setQuery: () => {}
 });

@@ -1,13 +1,14 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useContext } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'wouter';
 import InfoIcon from '../icons/info.svg';
-import { getFaviconUrl } from '../lib/favicon';
+import { getFaviconUrlPublicApi } from '../lib/favicon';
+import { AppContext } from '../lib/context';
 import { SessionResponse } from '../../server'; 
 import styles from '../styles/SearchResults.module.css';
 
-function getTimeString(date: Date): string {
-  const [time, amPm] = date.toLocaleTimeString().split(' ');
+function getTimeString(date: string): string {
+  const [time, amPm] = new Date(date).toLocaleTimeString().split(' ');
   const timeString = time.split(':').slice(0, 2).join(':');
   return `${timeString} ${amPm}`;
 }
@@ -29,6 +30,8 @@ function SearchResultItem(
     delay: 100,
   });
 
+  const { runtime } = useContext(AppContext);
+
   useEffect(() => {
     if (!isLast) {
       return;
@@ -43,21 +46,23 @@ function SearchResultItem(
 
   return (
     <div className={styles.searchResultsItem} ref={ref}>
-      <div
-        className={styles.searchResultsItemTime}
-        data-top-tooltip={session.startedAt.toLocaleString()}
-      >
-        {getTimeString(session.startedAt)}
+      <Link to={`/session/${session.id}`}>
+        <InfoIcon
+          fill="white"
+          className={styles.searchResultsItemDetail}
+        />
+      </Link>
+      <div className={styles.searchResultsItemTime}>
+        <span title={new Date(session.startedAt).toLocaleString()}>
+          {getTimeString(session.startedAt)}
+        </span>
       </div>
-      <img src={getFaviconUrl(url.hostname, 16)} />
-      <div
-        className={styles.searchResultsItemContent}
-        data-top-tooltip={session.title}
-      >
+      <img src={getFaviconUrlPublicApi(url.hostname, 16)} />
+      <div className={styles.searchResultsItemContent}>
         <div className={styles.searchResultsItemContentInner}>
           <div className={styles.searchResultsItemTitle}>
             <a href={session.rawUrl} target="_blank">
-              {session.title}
+              <span title={session.title}>{session.title}</span>
             </a>
           </div>
           <div className={styles.searchResultsItemHost}>
@@ -69,14 +74,6 @@ function SearchResultItem(
             Opened {session.childCount} link(s)
           </div>
         )}
-      </div>
-      <div data-left-tooltip="View session details.">
-        <Link to={`/session/${session.id}`}>
-          <InfoIcon
-            fill="white"
-            className={styles.searchResultsItemDetail}
-          />
-        </Link>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ function SearchField() {
 
 export default function NavBar() {
   return (
-    <div className={styles.navBar}>
+    <div className={styles.navBar} id="navBar">
       <LeftContent />
       <SearchField />
     </div>

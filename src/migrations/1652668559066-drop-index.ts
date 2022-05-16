@@ -6,6 +6,7 @@ const sessionIndex: Fts5TableArgs = {
     columns: [
         ['id', false],
         ['tabId', false],
+        'host',
         'url',
         'title',
         'rawUrl',
@@ -13,19 +14,21 @@ const sessionIndex: Fts5TableArgs = {
         'transitionType',
         ['startedAt', false],
         ['endedAt', false],
+        ['nextSessionId', false],
     ],
     contentTableName: 'session',
     contentRowId: 'rowid',
+    tokenize: 'trigram',
 };
 
-export class searchIndex1652082981231 implements MigrationInterface {
+export class dropIndex1652668559066 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await createFts5Index(sessionIndex, queryRunner);
+        await dropFts5Index(sessionIndex, queryRunner);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await dropFts5Index(sessionIndex, queryRunner);
+        await createFts5Index(sessionIndex, queryRunner);
     }
 
 }

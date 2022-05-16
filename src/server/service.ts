@@ -1,101 +1,175 @@
-import { User, Session, SessionIndex } from '../models';
+import { renderClause } from './clause';
+import { Session, SessionIndex } from '../models';
+import {
+  Fts5TableArgs,
+  createFts5Index,
+  dropFts5Index,
+} from '../models/fts5';
 import {
   ServerInterface,
   ServerMessage,
   ServerResponseCode,
   ServerRequest,
   ServerResponse,
-  HelloRequest,
-  HelloResponse,
   QueryRequest,
   QueryResponse,
-  CreateUserRequest,
-  CreateUserResponse,
-  GetUsersRequest,
-  GetUsersResponse,
-  StartSessionRequest,
-  StartSessionResponse,
-  EndSessionRequest,
-  EndSessionResponse,
   SessionResponse,
   QuerySessionsRequest,
   QuerySessionsResponse,
   ExportDatabaseRequest,
   ExportDatabaseResponse,
+  RegenerateIndexRequest,
+  RegenerateIndexResponse,
+  TabChangedRequest,
+  TabChangedResponse,
+  TabClosedRequest,
+  TabClosedResponse,
 } from './types';
-import { DataSource } from 'typeorm';
+import { cleanURL, getHost } from './utils';
+import { DataSource, Repository, IsNull } from 'typeorm';
 import { SqljsDriver } from 'typeorm/driver/sqljs/SqljsDriver';
+import { v4 as uuidv4 } from 'uuid';
+
+function sessionToSessionResponse(session: Session): SessionResponse {
+  return {
+    ...session,
+    startedAt: session.startedAt.toString(),
+    endedAt: session.endedAt?.toString(),
+  } as any;
+}
+
+function sessionIndexTableArgs(src: DataSource): Fts5TableArgs {
+  const tableMeta = src.getMetadata(Session);
+  const indexMeta = src.getMetadata(SessionIndex);
+
+  const indexedColumns = [
+    'host',
+    'url',
+    'title',
+    'rawUrl',
+  ];
+
+  return {
+    tableName: indexMeta.tableName,
+    contentTableName: tableMeta.tableName,
+    columns: indexMeta.columns.flatMap((col) => {
+      const name = col.databaseNameWithoutPrefixes;
+      return name === 'rowid' ? [] : [[name, indexedColumns.includes(name)]];
+    }),
+    tokenize: 'trigram',
+  };
+}
 
 export class Server implements ServerInterface {
 
   constructor(readonly dataSource: DataSource) {}
 
-  async getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse> {
-    return { code: ServerResponseCode.Ok, message: 'Hello, world!' };
-  }
-
   async runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse> {
     const result = await this.dataSource.manager.query(request.query);
-    return {
-      code: ServerResponseCode.Ok,
-      result,
-    };
+    return { result };
   }
 
-  async createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse> {
-    const repo = this.dataSource.getRepository(User);
-    const user = repo.create({ name: request.name });
-    await repo.save(user)
-    return {
-      code: ServerResponseCode.Ok,
-      user
-    };
-  }
-
-  async getUsers(request: Omit<GetUsersRequest, 'type'>): Promise<GetUsersResponse> {
-    const repo = this.dataSource.getRepository(User);
-    const users = await repo.find();
-    return {
-      code: ServerResponseCode.Ok,
-      users,
-    };
-  }
-
-  async startSession(request: Omit<StartSessionRequest, 'type'>): Promise<StartSessionResponse> {
-    const repo = this.dataSource.getRepository(Session);
-    let parentSessionId: string | undefined = request.parentSessionId;
-    if (request.parentSessionId) {
-      const parent = await repo.findOne({ where: { id: request.parentSessionId } });
-      if (parent === null) {
-        console.error(`Parent session ${request.parentSessionId} does not exist.`)
-        parentSessionId = undefined;
+  private async getActiveSession(
+    tabId: number,
+    repo: Repository<Session>,
+    now?: Date
+  ): Promise<Session | undefined> {
+    if (now === undefined) {
+      now = new Date();
+    }
+    const existingSessions = await repo.find({
+      where: {
+        tabId,
+        endedAt: IsNull(),
+      },
+      order: {
+        startedAt: 'DESC'
+      }
+    });
+    // End any other active session(s) for the tab; data cleanup
+    if (existingSessions.length > 1) {
+      const urls = existingSessions.map((session) => session.url).join(', ');
+      console.warn(
+        `More than one session found for tab ${tabId}; urls: ${urls}.`
+      )
+      for (const session of existingSessions.slice(1)) {
+        session.endedAt = now;
+        await repo.save(session);
       }
     }
-    const session = repo.create({
-      ...request.session,
-      transitionType: request.transitionType,
-      parentSessionId
-    });
-    await repo.save(session);
-    return { code: ServerResponseCode.Ok };
+    return existingSessions[0];
   }
 
-  async endSession(request: Omit<EndSessionRequest, 'type'>): Promise<EndSessionResponse> {
-    const repo = this.dataSource.getRepository(Session);
-    const session = await repo.findOne({ where: { id: request.session.id } });
-    if (session === null) {
-      throw new Error(`Session ${request.session.id} does not exist.`);
-    }
-    await repo.update(session.id, {
-      url: request.session.url,
-      rawUrl: request.session.rawUrl,
-      title: request.session.title,
-      endedAt: request.session.endedAt,
+  async tabChanged(request: TabChangedRequest): Promise<TabChangedResponse> {
+    return await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(Session);
+      const now = new Date();
+      const existingSession = await this.getActiveSession(request.tabId, repo, now);
+      let sourceSessionId: string | undefined = undefined;
+      const transitionType: string | undefined = request.transitionType || 'link';
+
+      if (
+        request.sourceTabId !== undefined &&
+        request.sourceTabId !== request.tabId
+      ) {
+        const sourceSession = await this.getActiveSession(request.sourceTabId, repo, now);
+        sourceSessionId = sourceSession?.id;
+      }
+
+      if (existingSession) {
+        // Check if session hasn't changed.
+        const cleanUrl = cleanURL(request.url);
+        if (cleanURL(existingSession.url) === cleanUrl) {
+          return { code: ServerResponseCode.Ok };
+        }
+        // Otherwise: use as source unless it's already defined
+        if (sourceSessionId === undefined) {
+          sourceSessionId = existingSession.id;
+        }
+        // either way, mark as done; we'll save it later
+        existingSession.endedAt = now;
+      }
+
+      const newSession = repo.create({
+        id: uuidv4(),
+        tabId: request.tabId,
+        url: cleanURL(request.url),
+        rawUrl: request.url,
+        host: getHost(request.url),
+        title: request.title,
+        startedAt: now,
+        parentSessionId: sourceSessionId,
+        transitionType,
+      });
+
+      await repo.save(newSession);
+
+      if (existingSession && sourceSessionId === existingSession.id) {
+        existingSession.nextSessionId = newSession.id;
+      }
+      if (existingSession) {
+        await repo.save(existingSession);
+      }
+      return {};
     });
-    return { code: ServerResponseCode.Ok };
   }
 
-  async querySessions(request: Omit<QuerySessionsRequest, 'type'>): Promise<QuerySessionsResponse> {
+  async tabClosed(request: TabClosedRequest): Promise<TabClosedResponse> {
+    const now = new Date();
+    return await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(Session);
+      const existingSession = await this.getActiveSession(request.tabId, repo, now);
+      if (existingSession === undefined) {
+        console.warn(`No active session exists for tab ${request.tabId}`);
+        return { code: ServerResponseCode.Ok };
+      }
+      existingSession.endedAt = now;
+      await repo.save(existingSession);
+      return {};
+    });
+  }
+
+  async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
     const repo = this.dataSource.getRepository(SessionIndex);
     let builder = await repo
       .createQueryBuilder('s')
@@ -110,6 +184,14 @@ export class Server implements ServerInterface {
       builder = builder.where('session_index MATCH :query', { query: request.query });
     }
 
+    if (request.filter !== undefined) {
+      const [sql, params] = renderClause(
+        request.filter,
+        (fieldName) => `s.${fieldName}`
+      );
+      builder = builder.where(sql, params);
+    }
+
     const totalCount = await builder.getCount();
 
     if (request.skip) {
@@ -119,30 +201,31 @@ export class Server implements ServerInterface {
       builder = builder.limit(request.limit);
     }
 
-    // Typescript won't let us case to SessionResponse[] because of the extra col.
-    const results = (await builder.getMany()).map((session) => {
-      return {
-        ...session,
-        startedAt: session.startedAt.toString(),
-        endedAt: session.endedAt?.toString(),
-      };
-    }) as any[];
+    const results = (await builder.getMany()).map(sessionToSessionResponse);
 
     return {
-      code: ServerResponseCode.Ok,
       totalCount,
       results,
     };
   }
 
-  async exportDatabase(request: Omit<ExportDatabaseRequest, 'type'>): Promise<ExportDatabaseResponse> {
+  async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {
     const driver = this.dataSource.driver as SqljsDriver;
     const database = new Blob([driver.export()]);
     const databaseUrl = URL.createObjectURL(database);
     return {
-      code: ServerResponseCode.Ok,
       databaseUrl,
     };
+  }
+
+  async regenerateIndex(request: RegenerateIndexRequest): Promise<RegenerateIndexResponse> {
+    const args = sessionIndexTableArgs(this.dataSource);
+    const runner = this.dataSource.createQueryRunner();
+    runner.startTransaction()
+    await dropFts5Index(args, runner);
+    await createFts5Index(args, runner);
+    runner.commitTransaction()
+    return {};
   }
 
 }

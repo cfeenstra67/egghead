@@ -1,4 +1,12 @@
-import { PrimaryColumn, Entity, Column, ManyToOne, OneToMany } from 'typeorm';
+import {
+  PrimaryColumn,
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  Index,
+} from 'typeorm';
 
 @Entity()
 export class Session {
@@ -9,6 +17,9 @@ export class Session {
   @Column()
   tabId!: number;
 
+  @Column({ nullable: true })
+  host?: string;
+
   @Column()
   url!: string;
 
@@ -18,6 +29,7 @@ export class Session {
   @Column()
   rawUrl!: string;
 
+  @Index()
   @Column({ nullable: true })
   parentSessionId?: string;
 
@@ -27,8 +39,15 @@ export class Session {
   @OneToMany(() => Session, session => session.parentSession)
   childSessions: Session[];
 
+  @Index()
   @Column({ nullable: true })
-  transitionType!: string;
+  nextSessionId?: string;
+
+  @OneToOne(() => Session, session => session.id)
+  nextSession?: Session;
+
+  @Column({ nullable: true })
+  transitionType?: string;
 
   @Column()
   startedAt!: Date;

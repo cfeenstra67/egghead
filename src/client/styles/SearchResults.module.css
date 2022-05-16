@@ -1,10 +1,21 @@
 
 .searchResults {
-    margin-top: var(--padding);
     font-size: 14px;
+}
+
+.searchResultsDay {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--padding);
+    padding: var(--padding-2);
+    margin-top: var(--padding-2);
     display: flex;
     flex-direction: column;
     row-gap: var(--padding);
+}
+
+.searchResultsDaySticky {
+    top: calc(var(--navbar-height) + var(--padding));
+    position: sticky;
 }
 
 .searchResults a {
@@ -19,6 +30,11 @@
     column-gap: var(--padding-2);
     margin-top: var(--padding);
     margin-bottom: var(--padding);
+}
+
+.searchResultsItemChild {
+    composes:  searchResultsItem;
+    margin-top: 0;
 }
 
 .searchResultsItemContent {
@@ -43,6 +59,24 @@
 .searchResultsItemCaption {
     font-size: 12px;
     column-gap: var(--secondary-text-color);
+    display: grid;
+    grid-template-columns: min-content auto;
+    align-items: center;
+    margin-left: -6px;
+}
+
+.searchResultsItemCaption svg {
+    width: 16px;
+    height: 16px;
+    transform: rotate(-90deg);
+}
+
+.childrenExpanded svg {
+    transform: none !important;
+}
+
+.searchResultsItemCaption svg:hover {
+    cursor: pointer;
 }
 
 .searchResultsItemTitle {
@@ -57,6 +91,7 @@
     white-space: nowrap;
     overflow: visible;
     color: var(--secondary-text-color);
+    padding-right: 4px;
 }
 
 .searchResultsItemDetail {

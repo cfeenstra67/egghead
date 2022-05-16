@@ -1,15 +1,13 @@
-import type { User, Session } from '../models';
-import type { TabSession } from '../extension';
+import type { Clause } from './clause';
+import type { Session } from '../models';
 
 export enum ServerMessage {
-  Hello = 'Hello',
-  Query = 'Query',
-  CreateUser = 'CreateUser',
-  GetUsers = 'GetUsers',
-  StartSession = 'StartSession',
-  EndSession = 'EndSession',
-  QuerySessions = 'QuerySessions',
-  ExportDatabase = 'ExportDatabase',
+  Query = 'runQuery',
+  TabChanged = 'tabChanged',
+  TabClosed = 'tabClosed',
+  QuerySessions = 'querySessions',
+  ExportDatabase = 'exportDatabase',
+  RegenerateIndex = 'regenerateIndex',
 }
 
 export enum ServerResponseCode {
@@ -17,67 +15,33 @@ export enum ServerResponseCode {
   Error = 'Error',
 }
 
-export interface HelloRequest {
-  type: ServerMessage.Hello;
-}
-
-export interface HelloResponse {
-  code: ServerResponseCode.Ok;
-  message: string;
-}
-
 export interface QueryRequest {
-  type: ServerMessage.Query;
   query: string;
 }
 
 export interface QueryResponse {
-  code: ServerResponseCode.Ok;
   result: Record<string, any>[];
 }
 
-export interface CreateUserRequest {
-  type: ServerMessage.CreateUser;
-  name: string;
-}
-
-export interface CreateUserResponse {
-  code: ServerResponseCode.Ok;
-  user: User;
-}
-
-export interface GetUsersRequest {
-  type: ServerMessage.GetUsers;
-}
-
-export interface GetUsersResponse {
-  code: ServerResponseCode.Ok;
-  users: User[];
-}
-
-export interface StartSessionRequest {
-  type: ServerMessage.StartSession;
-  session: TabSession;
-  parentSessionId?: string;
+export interface TabChangedRequest {
+  tabId: number;
+  url: string;
+  title: string;
+  sourceTabId?: number;
   transitionType?: string;
 }
 
-export interface StartSessionResponse {
-  code: ServerResponseCode.Ok;
+export interface TabChangedResponse {}
+
+export interface TabClosedRequest {
+  tabId: number;
 }
 
-export interface EndSessionRequest {
-  type: ServerMessage.EndSession;
-  session: TabSession;
-}
-
-export interface EndSessionResponse {
-  code: ServerResponseCode.Ok;
-}
+export interface TabClosedResponse {}
 
 export interface QuerySessionsRequest {
-  type: ServerMessage.QuerySessions;
-  query: string;
+  query?: string;
+  filter?: Clause<Session>;
   skip?: number;
   limit?: number;
 }
@@ -89,72 +53,70 @@ export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> 
 }
 
 export interface QuerySessionsResponse {
-  code: ServerResponseCode.Ok;
   totalCount: number;
   results: SessionResponse[];
 }
 
-export interface ExportDatabaseRequest {
-  type: ServerMessage.ExportDatabase;
-}
+export interface ExportDatabaseRequest {}
 
 export interface ExportDatabaseResponse {
-  code: ServerResponseCode.Ok;
   databaseUrl: string;
 }
 
-export interface ServerInterface {
+export interface RegenerateIndexRequest {}
 
-  getHello(request: Omit<HelloRequest, 'type'>): Promise<HelloResponse>;
+export interface RegenerateIndexResponse {}
 
-  runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse>;
+export type ServerMessageMapping = {
+  [ServerMessage.Query]: [QueryRequest, QueryResponse];
+  [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
+  [ServerMessage.ExportDatabase]: [ExportDatabaseRequest, ExportDatabaseResponse];
+  [ServerMessage.RegenerateIndex]: [RegenerateIndexRequest, RegenerateIndexResponse];
+  [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];
+  [ServerMessage.TabClosed]: [TabClosedRequest, TabClosedResponse];
+};
 
-  createUser(request: Omit<CreateUserRequest, 'type'>): Promise<CreateUserResponse>;
+export type ServerRequestForMessage<T> =
+  T extends ServerMessage ? ServerMessageMapping[T][0] : never;
 
-  getUsers(request: Omit<GetUsersRequest, 'type'>): Promise<GetUsersResponse>;
+export type TypedServerRequestForMessage<T> =
+  T extends ServerMessage ? { type: T } & ServerMessageMapping[T][0] : never;
 
-  startSession(request: Omit<StartSessionRequest, 'type'>): Promise<StartSessionResponse>;
+export type ServerResponseForMessage<T> =
+  T extends ServerMessage ? ServerMessageMapping[T][1] : never;
 
-  endSession(request: Omit<EndSessionRequest, 'type'>): Promise<EndSessionResponse>;
+export type ServerResponseForMessageWithCode<T> = (
+  T extends ServerMessage ? (
+    ServerResponseForMessage<T> & { code: ServerResponseCode.Ok }
+  ) : never
+) | ErrorResponse;
 
-  querySessions(request: Omit<QuerySessionsRequest, 'type'>): Promise<QuerySessionsResponse>;
+export type ServerRequest = ServerRequestForMessage<ServerMessage>;
 
-  exportDatabase(request: Omit<ExportDatabaseRequest, 'type'>): Promise<ExportDatabaseResponse>;
-}
+export type ServerResponse = ServerResponseForMessage<ServerMessage>;
+
+export type ServerInterface = {
+  [key in keyof ServerMessageMapping as `${key}`]: (
+    input: ServerRequestForMessage<key>
+  ) => Promise<ServerResponseForMessage<key>>
+};
 
 export interface ErrorResponse {
   code: ServerResponseCode.Error;
   message: string;
 }
 
-export type ServerRequest =
-  | HelloRequest
-  | QueryRequest
-  | CreateUserRequest
-  | GetUsersRequest
-  | StartSessionRequest
-  | EndSessionRequest
-  | QuerySessionsRequest
-  | ExportDatabaseRequest;
+export type RequestHandler =
+  <T extends ServerMessage>(
+    input: TypedServerRequestForMessage<T>
+  ) => Promise<ServerResponseForMessageWithCode<T>>;
 
-export type ServerResponse<T> = (
-  T extends HelloRequest ? HelloResponse
-  : T extends QueryRequest ? QueryResponse
-  : T extends CreateUserRequest ? CreateUserResponse
-  : T extends GetUsersRequest ? GetUsersResponse
-  : T extends StartSessionRequest ? StartSessionResponse
-  : T extends EndSessionRequest ? EndSessionResponse
-  : T extends QuerySessionsRequest ? QuerySessionsResponse
-  : T extends ExportDatabaseRequest ? ExportDatabaseResponse
-  : never
-) | ErrorResponse;
-
-export interface WorkerRequest<T extends ServerRequest> {
+export interface WorkerRequest<T extends ServerMessage> {
   requestId: string;
-  request: T;
+  request: TypedServerRequestForMessage<T>;
 }
 
-export interface WorkerResponse<T> {
+export interface WorkerResponse<T extends ServerMessage> {
   requestId: string;
-  response: ServerResponse<T>;
+  response: ServerResponseForMessageWithCode<T>;
 }

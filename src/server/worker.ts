@@ -1,56 +1,68 @@
+import queue from 'queue';
 import { DataSource } from 'typeorm';
 import { DBController } from './db-controller';
 import { Server } from './service';
 import {
   ServerRequest,
+  ServerResponse,
   ServerResponseCode,
   ErrorResponse,
   WorkerRequest,
-  WorkerResponse,
+  RequestHandler,
 } from './types';
-import { methodMapping } from './utils';
+import { requestHandler } from './utils';
 
 const dbController = new DBController();
 
-async function processMessage<T extends ServerRequest>(
-  { requestId, request }: WorkerRequest<T>,
-  dataSource: DataSource
-): Promise<WorkerResponse<T>> {
+const requestTimeout = 10000;
+
+const requestQueue = queue({
+  concurrency: 1,
+  timeout: requestTimeout,
+});
+
+const handleRequest: RequestHandler = async (request) => {
+  const dataSource = await dbController.useDataSource();
   const server = new Server(dataSource);
-  const methods = methodMapping(server);
-  const method = methods[request.type];
-  if (method === undefined) {
-    const response: ErrorResponse = {
-      code: ServerResponseCode.Error,
-      message: `No method exists for ${request.type}.`
-    }
-    return { requestId, response };
-  }
-  const response = await method(request as any);
-  return { requestId, response } as any; // TODO: why doesn't ts like this?
+  const handler = requestHandler(server);
+  return await handler(request);
 }
 
 function handleMessage(event: MessageEvent) {
   const request = event.data as WorkerRequest<any>;
-  dbController.useDb(async (dataSource) => {
-    const response = await processMessage(request, dataSource);
-    self.postMessage(response);
-  }).catch((err) => {
-    console.trace('Error handling server message.', err);
-    let message: string;
-    if (err === null && err === undefined) {
-      message = ''
-    } else if (err.stack !== undefined) {
-      message = err.stack;
-    } else {
-      message = err.toString();
-    }
-    const response: ErrorResponse = {
-      code: ServerResponseCode.Error,
-      message,
-    }
-    self.postMessage({ requestId: request.requestId, response });
-  });
+  const job = () => handleRequest(request.request);
+  job.id = request.requestId;
+  requestQueue.push(job);
+  requestQueue.start();
 }
 
 self.onmessage = handleMessage;
+
+requestQueue.on('success', (result, job) => {
+  self.postMessage({ requestId: job.id, response: result });
+});
+
+requestQueue.on('error', (err, job) => {
+  console.trace('Error handling server message.', err);
+  let message: string;
+  if (err === null && err === undefined) {
+    message = ''
+  } else if (err.stack !== undefined) {
+    message = err.stack;
+  } else {
+    message = err.toString();
+  }
+  const response: ErrorResponse = {
+    code: ServerResponseCode.Error,
+    message,
+  }
+  self.postMessage({ requestId: job.id, response });
+});
+
+requestQueue.on('timeout', (_, job) => {
+  const response: ErrorResponse = {
+    code: ServerResponseCode.Error,
+    message: `Backend timed out after ${requestTimeout}ms.`,
+  }
+  self.postMessage({ requestId: job.id, response })
+});

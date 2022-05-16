@@ -1,25 +1,52 @@
-import { ServerMessage, ServerInterface } from './types';
+import {
+  ServerMessage,
+  ErrorResponse,
+  ServerResponseCode,
+  TypedServerRequestForMessage,
+  ServerInterface,
+  RequestHandler,
+} from './types';
 
-type MethodMapping = {
-  [ServerMessage.Hello]: ServerInterface["getHello"];
-  [ServerMessage.Query]: ServerInterface["runQuery"];
-  [ServerMessage.CreateUser]: ServerInterface["createUser"];
-  [ServerMessage.GetUsers]: ServerInterface["getUsers"];
-  [ServerMessage.StartSession]: ServerInterface["startSession"];
-  [ServerMessage.EndSession]: ServerInterface["endSession"];
-  [ServerMessage.QuerySessions]: ServerInterface["querySessions"];
-  [ServerMessage.ExportDatabase]: ServerInterface["exportDatabase"];
-};
+export function cleanURL(uri: string): string {
+  const urlObj = new URL(uri);
+  urlObj.search = '';
+  urlObj.hash = '';
+  return urlObj.href;
+}
 
-export function methodMapping(server: ServerInterface): MethodMapping {
-  return {
-    [ServerMessage.Hello]: server.getHello.bind(server),
-    [ServerMessage.Query]: server.runQuery.bind(server),
-    [ServerMessage.CreateUser]: server.createUser.bind(server),
-    [ServerMessage.GetUsers]: server.getUsers.bind(server),
-    [ServerMessage.StartSession]: server.startSession.bind(server),
-    [ServerMessage.EndSession]: server.endSession.bind(server),
-    [ServerMessage.QuerySessions]: server.querySessions.bind(server),
-    [ServerMessage.ExportDatabase]: server.exportDatabase.bind(server),
+export function getHost(uri: string): string {
+  const urlObj = new URL(uri);
+  return urlObj.hostname;
+}
+
+export function requestHandler(
+  server: ServerInterface
+): RequestHandler {
+  return async <T extends ServerMessage>(input: TypedServerRequestForMessage<T>) => {
+    const method = server[input.type]?.bind(server);
+    if (method === undefined) {
+      return {
+        code: ServerResponseCode.Error,
+        message: `Invalid method ${input.type}.`
+      };
+    }
+    try {
+      const response = await method(input as any);
+      return { code: ServerResponseCode.Ok, ...response };
+    } catch (err: any) {
+      let message: string;
+      if (err === null && err === undefined) {
+        message = ''
+      } else if (err.stack !== undefined) {
+        message = err.stack;
+      } else {
+        message = err.toString();
+      }
+      const response: ErrorResponse = {
+        code: ServerResponseCode.Error,
+        message,
+      }
+      return response as any;
+    };
   };
 }

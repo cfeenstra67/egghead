@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
-function createModule(name, entry, allowDbImport) {
+function createModule(name, entry, isDev) {
   return {
     mode: 'production',
     name,
@@ -19,7 +19,7 @@ function createModule(name, entry, allowDbImport) {
         {
           test: /\.css$/,
           use: [
-            MiniCssExtractPlugin.loader,
+            isDev ? 'style-loader' : MiniCssExtractPlugin.loader,
             {
               loader: 'css-loader',
               options: {
@@ -33,20 +33,27 @@ function createModule(name, entry, allowDbImport) {
         },
         {
           test: /\.css$/,
-          use: [MiniCssExtractPlugin.loader, 'css-loader'],
+          use: [
+            isDev ? 'style-loader' : MiniCssExtractPlugin.loader,
+            'css-loader'
+          ],
           exclude: /\.module\.css$/
         },
         {
           test: /\.svg$/,
+          issuer: /\.[jt]sx?$/,
           use: ['@svgr/webpack'],
+        },
+        {
+          test: /\.svg$/,
+          issuer: /\.css?$/,
+          type: 'asset',
         },
         {
           test: /\.db$/,
           type: 'asset/inline',
           generator: {
-            dataUrl: (content) => {
-              return allowDbImport ? content.toString('base64') : '';
-            }
+            dataUrl: (content) => content.toString('base64')
           }
         }
       ]
@@ -56,12 +63,12 @@ function createModule(name, entry, allowDbImport) {
         NODE_ENV: 'production',
         PERF_BUILD: ''
       }),
-      new MiniCssExtractPlugin(),
       new CopyPlugin({
         patterns: [
           { from: 'public', to: '.' },
         ]
-      })
+      }),
+      ...(isDev ? [] : [new MiniCssExtractPlugin()]),
     ],
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.css'],
@@ -77,19 +84,23 @@ function createModule(name, entry, allowDbImport) {
       path: path.resolve(__dirname, 'dist'),
     },
     optimization: {
-      minimize: false
-    }
+      minimize: false,
+      runtimeChunk: isDev ? 'single': undefined,
+    },
+    devServer: isDev ? {
+      static: './dist',
+    } : undefined,
   };
 }
 
 module.exports = [
-  createModule('extension', {
+  createModule('prod', {
     background: './src/background.ts',
     'server-worker': './src/server/worker.ts',
     'content-script': './src/content-script.ts',
     client: './src/client/extension.tsx',
   }),
-  createModule('web', {
+  createModule('dev', {
     'web-client': './src/client/web.tsx',
-  }, true),
+  })
 ];

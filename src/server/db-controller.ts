@@ -59,28 +59,63 @@ export class DBController {
     this.dbEvents.dispatchEvent(new CustomEvent('init'));
   }
 
-  useDb<T>(func: (db: DataSource) => T): Promise<T> {
+  useDataSource(): Promise<DataSource> {
     return new Promise((resolve, reject) => {
       if (this.dataSource !== undefined) {
-        resolve(func(this.dataSource));
+        resolve(this.dataSource);
         return;
       }
-      this.dbEvents.addEventListener(
-        'init',
-        () => {
-          try {
-            resolve(func(this.dataSource as DataSource));
-          } catch (err) {
-            reject(err);
-          }
-        },
-        { once: true }
-      );
+
+      const cleanUp = () => {
+        this.dbEvents.removeEventListener('error', handleError);
+        this.dbEvents.removeEventListener('init', handleInit);
+      }
+
+      const handleInit = (event: Event) => {
+        resolve(this.dataSource as DataSource);
+        cleanUp();
+      }
+
+      const handleError = (event: Event) => {
+        reject((event as CustomEvent).detail);
+        cleanUp();
+      }
+
+      this.dbEvents.addEventListener('init', handleInit);
+      this.dbEvents.addEventListener('error', handleError);
+
       if (!this.initCalled) {
         this.initCalled = true;
-        this.initializeDb();
+        this.initializeDb().catch((err) => {
+          this.dbEvents.dispatchEvent(new CustomEvent('error', { detail: err }));
+          this.initCalled = false;
+        });
       }
     });
   }
+
+  // useDb<T>(func: (db: DataSource) => T): Promise<T> {
+  //   return new Promise((resolve, reject) => {
+  //     if (this.dataSource !== undefined) {
+  //       resolve(func(this.dataSource));
+  //       return;
+  //     }
+  //     this.dbEvents.addEventListener(
+  //       'init',
+  //       async () => {
+  //         try {
+  //           resolve(await func(this.dataSource as DataSource));
+  //         } catch (err) {
+  //           reject(err);
+  //         }
+  //       },
+  //       { once: true }
+  //     );
+  //     if (!this.initCalled) {
+  //       this.initCalled = true;
+  //       this.initializeDb();
+  //     }
+  //   });
+  // }
 
 }

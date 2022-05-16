@@ -1,5 +1,4 @@
-import { processExtensionRequest } from './extension/client';
-import { ServerClient } from './server/client';
+import { ServerClient, processExtensionRequest } from './server/client';
 
 const serverClient = new ServerClient(processExtensionRequest);
 

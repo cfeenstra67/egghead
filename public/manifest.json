@@ -15,7 +15,8 @@
   "permissions": [
     "storage",
     "webNavigation",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "chrome_url_overrides": {
     "history": "history.html"

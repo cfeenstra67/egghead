@@ -64,3 +64,23 @@ export class SessionIndex extends Session {
   rowid!: number;
 
 }
+
+@Entity('session_term_index')
+export class SessionTermIndex extends Session {
+
+  @Column()
+  rowid!: number;
+
+}
+
+@Entity('session_term_index_vocab')
+export class SessionTermIndexVocab {
+  @PrimaryColumn()
+  term!: string;
+  @PrimaryColumn()
+  doc!: number;
+  @PrimaryColumn()
+  col!: string;
+  @PrimaryColumn()
+  offset!: number;
+}

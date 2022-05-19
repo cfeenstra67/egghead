@@ -1,10 +1,14 @@
-import { renderClause } from './clause';
-import { Session, SessionIndex } from '../models';
 import {
-  Fts5TableArgs,
+  Session,
+  SessionIndex,
+  SessionTermIndex,
+} from '../models';
+import {
   createFts5Index,
   dropFts5Index,
+  getColumn,
 } from '../models/fts5';
+import { SearchService, sessionIndexTableArgs } from './search';
 import {
   ServerInterface,
   ServerMessage,
@@ -30,39 +34,13 @@ import { DataSource, Repository, IsNull } from 'typeorm';
 import { SqljsDriver } from 'typeorm/driver/sqljs/SqljsDriver';
 import { v4 as uuidv4 } from 'uuid';
 
-function sessionToSessionResponse(session: Session): SessionResponse {
-  return {
-    ...session,
-    startedAt: session.startedAt.toString(),
-    endedAt: session.endedAt?.toString(),
-  } as any;
-}
-
-function sessionIndexTableArgs(src: DataSource): Fts5TableArgs {
-  const tableMeta = src.getMetadata(Session);
-  const indexMeta = src.getMetadata(SessionIndex);
-
-  const indexedColumns = [
-    'host',
-    'url',
-    'title',
-    'rawUrl',
-  ];
-
-  return {
-    tableName: indexMeta.tableName,
-    contentTableName: tableMeta.tableName,
-    columns: indexMeta.columns.flatMap((col) => {
-      const name = col.databaseNameWithoutPrefixes;
-      return name === 'rowid' ? [] : [[name, indexedColumns.includes(name)]];
-    }),
-    tokenize: 'trigram',
-  };
-}
-
 export class Server implements ServerInterface {
 
-  constructor(readonly dataSource: DataSource) {}
+  private searchService: SearchService;
+
+  constructor(readonly dataSource: DataSource) {
+    this.searchService = new SearchService(dataSource);
+  }
 
   async runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse> {
     const result = await this.dataSource.manager.query(request.query);
@@ -170,43 +148,7 @@ export class Server implements ServerInterface {
   }
 
   async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
-    const repo = this.dataSource.getRepository(SessionIndex);
-    let builder = await repo
-      .createQueryBuilder('s')
-      .loadRelationCountAndMap(
-        's.childCount',
-        's.childSessions',
-        'children'
-      )
-      .orderBy('s.startedAt', 'DESC');
-
-    if (request.query) {
-      builder = builder.where('session_index MATCH :query', { query: request.query });
-    }
-
-    if (request.filter !== undefined) {
-      const [sql, params] = renderClause(
-        request.filter,
-        (fieldName) => `s.${fieldName}`
-      );
-      builder = builder.where(sql, params);
-    }
-
-    const totalCount = await builder.getCount();
-
-    if (request.skip) {
-      builder = builder.offset(request.skip);
-    }
-    if (request.limit) {
-      builder = builder.limit(request.limit);
-    }
-
-    const results = (await builder.getMany()).map(sessionToSessionResponse);
-
-    return {
-      totalCount,
-      results,
-    };
+    return await this.searchService.querySessions(request);
   }
 
   async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {
@@ -219,12 +161,25 @@ export class Server implements ServerInterface {
   }
 
   async regenerateIndex(request: RegenerateIndexRequest): Promise<RegenerateIndexResponse> {
-    const args = sessionIndexTableArgs(this.dataSource);
+    const searchIndexArgs = sessionIndexTableArgs(
+      this.dataSource,
+      SessionIndex,
+      'trigram',
+    );
+    const termIndexArgs = sessionIndexTableArgs(
+      this.dataSource,
+      SessionTermIndex,
+    );
+
     const runner = this.dataSource.createQueryRunner();
-    runner.startTransaction()
-    await dropFts5Index(args, runner);
-    await createFts5Index(args, runner);
-    runner.commitTransaction()
+    await runner.startTransaction();
+
+    for (const args of [searchIndexArgs, termIndexArgs]) {
+      await dropFts5Index(args, runner);
+      await createFts5Index(args, runner);
+    }
+
+    await runner.commitTransaction()
     return {};
   }
 

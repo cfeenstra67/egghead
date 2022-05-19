@@ -9,6 +9,7 @@ function createModule(name, entry, isDev) {
     name,
     entry,
     devtool: 'inline-source-map',
+    target: 'web',
     module: {
       rules: [
         {
@@ -89,6 +90,10 @@ function createModule(name, entry, isDev) {
     },
     devServer: isDev ? {
       static: './dist',
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      }
     } : undefined,
   };
 }

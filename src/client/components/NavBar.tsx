@@ -4,12 +4,26 @@ import { AppContext } from '../lib';
 import styles from '../styles/NavBar.module.css';
 import SearchIcon from '../icons/search-icon.svg';
 import CloseCircleIcon from '../icons/close-circle.svg';
+import SettingsIcon from '../icons/settings.svg';
 
 function LeftContent() {
   return (
     <div>
       <Link to="/">
         <h1>History</h1>
+      </Link>
+    </div>
+  );
+}
+
+function RightContent() {
+  return (
+    <div className={styles.rightContent}>
+      <Link to="/settings">
+        <SettingsIcon
+          fill="white"
+          className={styles.settingsIcon}
+        />
       </Link>
     </div>
   );
@@ -47,6 +61,7 @@ export default function NavBar() {
     <div className={styles.navBar} id="navBar">
       <LeftContent />
       <SearchField />
+      <RightContent />
     </div>
   );
 }

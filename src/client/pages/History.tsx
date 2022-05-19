@@ -19,7 +19,7 @@ export default function History() {
   const [count, setCount] = useState<number>(0);
 
   const debounceDelay = 150;
-  const pageSize = 25;
+  const pageSize = 200;
 
   const querySessions = useMemo(() => {
     return _.debounce((

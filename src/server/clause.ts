@@ -1,3 +1,13 @@
+import * as ohm from 'ohm-js';
+import queryStringGrammar, {
+  QueryStringSemantics
+} from './query-string.ohm-bundle';
+
+export const IndexToken = '__index__';
+
+export enum UnaryOperator {
+  Not = 'NOT',
+}
 
 export enum BinaryOperator {
   Equals = '=',
@@ -7,6 +17,7 @@ export enum BinaryOperator {
   LessThan = '<',
   LessthanOrEqualTo = '<=',
   In = 'IN',
+  Match = 'MATCH',
 }
 
 export enum AggregateOperator {
@@ -20,10 +31,17 @@ export type FilterValue<T, O extends BinaryOperator> =
   : O extends BinaryOperator.NotEquals ? T | null
   : T;
 
-export interface Filter<T, O extends BinaryOperator, K extends keyof T> {
+type Keys<T> = keyof T | typeof IndexToken;
+
+export interface Filter<T, O extends BinaryOperator, K extends Keys<T>> {
   fieldName: K;
   operator: O;
-  value: FilterValue<T[K], O>;
+  value: FilterValue<K extends keyof T ? T[K] : string, O>;
+}
+
+export interface Unary<T, O extends UnaryOperator> {
+  operator: O;
+  clause: Clause<T>;
 }
 
 export interface AggregateClause<T, O extends AggregateOperator> {
@@ -32,23 +50,30 @@ export interface AggregateClause<T, O extends AggregateOperator> {
 }
 
 export type Clause<T> =
-  Filter<T, any, any>
+  | Filter<T, any, any>
+  | Unary<T, any>
   | AggregateClause<T, any>;
 
 export type FiltersClauseDsl<T> =
-  { [key in keyof T]?: (
-      FilterValue<T[key], BinaryOperator.Equals>
-      | { [op in BinaryOperator]?: FilterValue<T[key], op> }
+  { [key in Keys<T>]?: (
+      FilterValue<key extends keyof T ? T[key] : string, BinaryOperator.Equals>
+      | { [op in BinaryOperator]?: FilterValue<key extends keyof T ? T[key] : string, op> }
   ) };
 
 export type ClauseDsl<T> = {
   'AND': ClauseDsl<T>[]
 } | {
   'OR': ClauseDsl<T>[]
-} | FiltersClauseDsl<T>
+} | {
+  'NOT': ClauseDsl<T>
+} | FiltersClauseDsl<T>;
 
 export function isFilter<T>(clause: Clause<T>): clause is Filter<T, any, any> {
   return Object.values(BinaryOperator).includes(clause.operator);
+}
+
+export function isUnary<T>(clause: Clause<T>): clause is Unary<T, any> {
+  return Object.values(UnaryOperator).includes(clause.operator);
 }
 
 export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
@@ -59,6 +84,10 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   if (dsl.hasOwnProperty('OR')) {
     const clauses = (dsl as any).AND.map(dslToClause);
     return { operator: AggregateOperator.Or, clauses };
+  }
+  if (dsl.hasOwnProperty('NOT')) {
+    const clause = dslToClause<T>((dsl as any).NOT);
+    return { operator: UnaryOperator.Not, clause };
   }
   const filters: Filter<T, any, any>[] = [];
   Object.entries(dsl).forEach(([key, value]) => {
@@ -93,10 +122,17 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   };
 }
 
-export function renderClause<T>(
-  clause: Clause<T>,
-  getFieldName: (fieldName: keyof T) => string = (fieldName) => `"${fieldName}"`
-): [string, Record<string, any>] {
+export interface RenderClauseArgs<T> {
+  clause: Clause<T>;
+  getFieldName?: (fieldName: Keys<T>) => string;
+  getFilter?: (filter: Filter<any, any, any>) => Filter<any, any, any>;
+}
+
+export function renderClause<T>({
+  clause,
+  getFieldName = (fieldName) => `"${fieldName}"`,
+  getFilter = (filter) => filter
+}: RenderClauseArgs<T>): [string, Record<string, any>] {
 
   let paramIndex = 0;
   function getParamName(fieldName: string): string {
@@ -106,6 +142,7 @@ export function renderClause<T>(
 
   function renderClauseInner<T2>(clause: Clause<T2>): [string, Record<string, any>] {
     if (isFilter(clause)) {
+      clause = getFilter(clause);
       if (clause.operator === BinaryOperator.Equals && clause.value === null) {
         return [
           `${getFieldName(clause.fieldName)} IS NULL`,
@@ -125,6 +162,15 @@ export function renderClause<T>(
         { [paramName]: clause.value },
       ];
     }
+    if (isUnary(clause)) {
+      let innerClause: Clause<T2> = clause.clause;
+      if (isFilter(innerClause)) {
+        innerClause = getFilter(innerClause);
+      }
+
+      const [sql, params] = renderClauseInner(clause.clause);
+      return [`NOT (${sql})`, params];
+    }
 
     const parts: string[] = [];
     const allParams: Record<string, any> = {};
@@ -138,4 +184,102 @@ export function renderClause<T>(
   }
 
   return renderClauseInner(clause);
+}
+
+function addClauseOperation<T>(semantics: QueryStringSemantics): void {
+  semantics.addOperation<Clause<T>>('clause', {
+    Query: (queries) => {
+      return {
+        operator: AggregateOperator.And,
+        clauses: queries.children.map((child) => child.clause())
+      };
+    },
+    NotQuery_not: (notQuery, _, queryComp) => {
+      return {
+        operator: BinaryOperator.Match,
+        fieldName: IndexToken,
+        value: [
+          JSON.stringify(notQuery.sourceString),
+          'NOT',
+          JSON.stringify(queryComp.sourceString),
+        ].join(' ') as any,
+      };
+    },
+    QueryComp_parentheses: (_1, query, _2) => {
+      return query.clause();
+    },
+    AndQuery_and: (andQuery, _, orQuery) => {
+      return {
+        operator: AggregateOperator.And,
+        clauses: [andQuery.clause(), orQuery.clause()],
+      };
+    },
+    OrQuery_or: (orQuery, _, comp) => {
+      return {
+        operator: AggregateOperator.Or,
+        clauses: [orQuery.clause(), comp.clause()],
+      };
+    },
+    rawTerm: (term1, term2) => {
+      let value: any = [term1.sourceString, term2.sourceString].join('');
+      if (value === 'null') {
+        value = null;
+      } else {
+        value = JSON.stringify(value.replace(/"/g, '""'));
+      }
+      return {
+        operator: BinaryOperator.Match,
+        fieldName: IndexToken,
+        value,
+      };
+    },
+    stringLiteral: (_1, value, _2) => {
+      return {
+        operator: BinaryOperator.Match,
+        fieldName: IndexToken,
+        value: JSON.stringify(value.sourceString.replace(/\\"/g, '""')) as any,
+      };
+    },
+    columnQuery: (col, _1, operator, _2, value) => {
+      let term = value.clause().value;
+      term = term.slice(1, term.length - 1);
+
+      let outOp: BinaryOperator | undefined = undefined;
+      const op = operator.sourceString.slice(
+        0,
+        operator.sourceString.length - 1
+      );
+      if (op) {
+        outOp = {
+          gt: BinaryOperator.GreaterThan,
+          lt: BinaryOperator.LessThan,
+          gte: BinaryOperator.GreaterThanOrEqualTo,
+          lte: BinaryOperator.LessthanOrEqualTo,
+          eq: BinaryOperator.Equals,
+          ne: BinaryOperator.NotEquals,
+        }[op];
+      }
+      if (outOp === undefined) {
+        outOp = BinaryOperator.Equals;
+      }
+
+      return {
+        operator: outOp,
+        fieldName: col.sourceString,
+        value: term,
+      };
+    },
+  });
+}
+
+const queryStringSemantics = queryStringGrammar.createSemantics();
+
+addClauseOperation(queryStringSemantics);
+
+export function parseQueryString<T>(queryString: string): Clause<T> {
+  const match = queryStringGrammar.match(queryString);
+  if (match.failed()) {
+    throw new Error(`Unable to construct query for input: ${queryString}.`);
+  }
+  return queryStringSemantics(match).clause();
 }

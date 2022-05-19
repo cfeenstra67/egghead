@@ -6,16 +6,21 @@
 .searchResultsDay {
     background-color: var(--secondary-bg-color);
     border-radius: var(--padding);
-    padding: var(--padding-2);
     margin-top: var(--padding-2);
     display: flex;
     flex-direction: column;
     row-gap: var(--padding);
+    padding-top: var(--padding);
+    padding-bottom: var(--padding);
 }
 
 .searchResultsDaySticky {
-    top: calc(var(--navbar-height) + var(--padding));
+    top: var(--navbar-height);
     position: sticky;
+    background-color: var(--secondary-bg-color);
+    padding: calc(var(--padding) / 2) var(--padding-2);
+    box-shadow: 0 3px 1px 0 var(--bg-color);
+    z-index: 2;
 }
 
 .searchResults a {
@@ -28,8 +33,7 @@
     grid-template-columns: min-content min-content min-content auto;
     align-items: center;
     column-gap: var(--padding-2);
-    margin-top: var(--padding);
-    margin-bottom: var(--padding);
+    padding: var(--padding) var(--padding-2);
 }
 
 .searchResultsItemChild {
@@ -68,6 +72,7 @@
 .searchResultsItemCaption svg {
     width: 16px;
     height: 16px;
+    z-index: inherit;
     transform: rotate(-90deg);
 }
 

@@ -52,8 +52,19 @@ export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> 
   endedAt?: string;
 }
 
+export interface QuerySessionsResponseFacetValue {
+  value: string;
+  count: number;
+}
+
+export interface QuerySessionResponseFacets {
+  host: QuerySessionsResponseFacetValue[];
+  term: QuerySessionsResponseFacetValue[];
+}
+
 export interface QuerySessionsResponse {
   totalCount: number;
+  facets: QuerySessionResponseFacets;
   results: SessionResponse[];
 }
 

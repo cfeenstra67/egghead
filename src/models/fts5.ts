@@ -12,7 +12,7 @@ export interface Fts5TableArgs {
   tokenize?: string;
 }
 
-function getColumn(input: ColumnInput): [string, boolean] {
+export function getColumn(input: ColumnInput): [string, boolean] {
   if (Array.isArray(input)) {
     return input;
   }
@@ -204,8 +204,31 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
   return components.join(' ');
 }
 
+export function fts5VocabTableName(args: Fts5TableArgs): string {
+  let out: string = quoteDdlName(`${args.tableName}_vocab`);
+  if (args.schemaName !== undefined) {
+    return `${quoteDdlName(args.schemaName)}.${out}`;
+  }
+  return out;
+}
+
+export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
+  const tableArgs = [args.tableName, 'instance'].join(', ');
+
+  const components = [
+    'CREATE VIRTUAL TABLE',
+    fts5VocabTableName(args),
+    'USING fts5vocab(',
+    tableArgs,
+    ');'
+  ];
+
+  return components.join(' ');
+}
+
 export async function createFts5Index(args: Fts5TableArgs, runner: QueryRunner): Promise<void> {
   await runner.query(fts5createTableSql(args));
+  await runner.query(fts5CreateVocabTableSql(args))
   await runner.query(fts5InsertIntoIndexSql(args));
   await runner.query(fts5InsertTriggerSql(args));
   await runner.query(fts5UpdateTriggerSql(args));
@@ -221,6 +244,9 @@ export async function dropFts5Index(args: Fts5TableArgs, runner: QueryRunner): P
   );
   await runner.query(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(deleteTriggerName(args))}`
+  );
+  await runner.query(
+    `DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`
   );
   await runner.query(
     `DROP TABLE IF EXISTS ${getFullTableName(args.tableName, args.schemaName)}`

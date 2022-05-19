@@ -1087,6 +1087,15 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@ohm-js/cli@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@ohm-js/cli/-/cli-1.1.0.tgz#9e29b537a6ab73d661f7da1a3b4e522d73757975"
+  integrity sha512-CQSwyT6JsO6qc6lFGy9/EF639ZwPVqx2u8ZW/lTCxBGcnBs4aPueJtEYg3XT8yi7oGslCpddvoVDbsnnIEy+mw==
+  dependencies:
+    commander "^8.1.0"
+    fast-glob "^3.2.7"
+    ohm-js "^16.0.0"
+
 "@sqltools/formatter@^1.2.2":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@sqltools/formatter/-/formatter-1.2.3.tgz#1185726610acc37317ddab11c3c7f9066966bd20"
@@ -2099,6 +2108,11 @@ commander@^7.0.0, commander@^7.2.0:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-7.2.0.tgz#a36cb57d0b501ce108e4d20559a150a391d97ab7"
   integrity sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==
+
+commander@^8.1.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-8.3.0.tgz#4837ea1b2da67b9c616a67afbb0fafee567bca66"
+  integrity sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==
 
 compressible@~2.0.16:
   version "2.0.18"
@@ -3810,6 +3824,11 @@ obuf@^1.0.0, obuf@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/obuf/-/obuf-1.1.2.tgz#09bea3343d41859ebd446292d11c9d4db619084e"
   integrity sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==
+
+ohm-js@^16.0.0, ohm-js@^16.3.4:
+  version "16.3.4"
+  resolved "https://registry.yarnpkg.com/ohm-js/-/ohm-js-16.3.4.tgz#c0aef541785b9a70d4d52fd42e74c0405e84cc6f"
+  integrity sha512-Twk5k+an4HLKH/3QMiItq87svx+2aG6HVYa3jTs5D54GuKIYs2UQUF5NH/+y/pvVmocwWulrBd4VdrNVPQ2zJQ==
 
 on-finished@2.4.1:
   version "2.4.1"

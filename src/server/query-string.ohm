@@ -1,0 +1,62 @@
+QueryString {
+    Query = OrQuery*
+
+    and = caseInsensitive<"and">
+    or = caseInsensitive<"or">
+    not = caseInsensitive<"not">
+
+    OrQuery =
+      | OrQuery or AndQuery -- or
+      | AndQuery
+
+    AndQuery =
+      | AndQuery and NotQuery -- and
+      | NotQuery
+
+    NotQuery =
+      | NotQuery not QueryComp -- not
+      | QueryComp
+
+    QueryComp = 
+      | "(" OrQuery ")" -- parentheses
+      | queryTerm
+
+    queryTerm =
+      | columnQuery
+      | term
+
+    columnIdent = (letter | "_") (letter | digit | "_")*
+
+    operator = "gt" | "lt" | "gte" | "lte" | "eq" | "ne"
+
+    columnQuery = columnIdent ":" (operator ":")? term
+
+    term =
+      | stringLiteral
+      | rawTerm
+
+    rawTerm = 
+      | ("!".."'" | "*".."~") ("!".."'" | "*".."~")*
+      | "(" ("!".."'" | "*".."~")*
+      | ("!".."'" | "*".."~")* ")"
+
+    stringLiteral =
+      "\"" doubleStringCharacter* "\""
+
+    doubleStringCharacter (character) =
+      ~("\"" | "\\") any -- nonEscaped
+      | "\\" escapeSequence -- escaped
+
+    escapeSequence =
+      "\"" -- doubleQuote
+      | "\\" -- reverseSolidus
+      | "/" -- solidus
+      | "b" -- backspace
+      | "f" -- formfeed
+      | "n" -- newline
+      | "r" -- carriageReturn
+      | "t" -- horizontalTab
+      | "u" fourHexDigits -- codePoint
+
+    fourHexDigits = hexDigit hexDigit hexDigit hexDigit
+}

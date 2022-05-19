@@ -134,6 +134,32 @@ interface SearchResultsDayProps {
   isLast: boolean;
 }
 
+function dateString(date: Date): string {
+  const formatted = Intl.DateTimeFormat(
+    'en-US',
+    { month: 'short', day: 'numeric', year: 'numeric' }
+  ).format(date);
+
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 24 * 3600 * 1000);
+
+  function isSameDate(date1: Date, date2: Date): boolean {
+    return (
+      date1.getDate() === date2.getDate() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getFullYear() === date2.getFullYear()
+    );
+  }
+
+  if (isSameDate(date, today)) {
+    return `Today - ${formatted}`;
+  }
+  if (isSameDate(date, yesterday)) {
+    return `Yesterday - ${formatted}`;
+  }
+  return formatted;
+}
+
 function SearchResultsDay({
   date,
   sessions,
@@ -146,21 +172,10 @@ function SearchResultsDay({
     delay: 100,
   });
 
-  // const { ref: titleRef, inView: titleInView, entry: titleEntry } = useInView({
-  //   threshold: [0],
-  //   root: document.querySelector('#navBar'),
-  // });
-
-  // const [isSticky, setIsSticky] = useState(false);
-
-  // const sticky = inView && !titleInView;
-
   return (
     <div className={styles.searchResultsDay} ref={ref}>
-      <div>
-        <div className={styles.searchResultsDaySticky}>
-          {date.toString()}
-        </div>
+      <div className={styles.searchResultsDaySticky}>
+        <h3>{dateString(date)}</h3>
       </div>
       {sessions.map((session, idx) => (
         <SearchResultItem

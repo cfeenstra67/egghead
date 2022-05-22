@@ -28,6 +28,8 @@ import {
   TabChangedResponse,
   TabClosedRequest,
   TabClosedResponse,
+  QuerySessionFacetsRequest,
+  QuerySessionFacetsResponse,
 } from './types';
 import { cleanURL, getHost } from './utils';
 import { DataSource, Repository, IsNull } from 'typeorm';
@@ -149,6 +151,10 @@ export class Server implements ServerInterface {
 
   async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
     return await this.searchService.querySessions(request);
+  }
+
+  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+    return await this.searchService.querySessionFacets(request);
   }
 
   async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {

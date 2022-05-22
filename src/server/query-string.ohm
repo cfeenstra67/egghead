@@ -14,7 +14,7 @@ QueryString {
       | NotQuery
 
     NotQuery =
-      | NotQuery not QueryComp -- not
+      | not NotQuery -- not
       | QueryComp
 
     QueryComp = 

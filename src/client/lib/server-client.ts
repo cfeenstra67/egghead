@@ -1,6 +1,5 @@
 import initSqlJs from '../../../lib/sql-wasm.js';
 import { DataSource } from 'typeorm';
-import { SqljsDriver } from 'typeorm/driver/sqljs/SqljsDriver';
 import EventTarget from '@ungap/event-target';
 import {
   ServerInterface,
@@ -38,9 +37,7 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
       const SQL = await initSqlJs({ locateFile: (file: any) => file });
 
       let database: Uint8Array | undefined = undefined;
-      if (existingDb !== '') {
-        database = convertDataURIToBinary(existingDb);
-      }
+      database = convertDataURIToBinary(existingDb);
 
       dataSource = new DataSource({
         type: 'sqljs',
@@ -49,12 +46,9 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
         entities,
         migrations,
         migrationsRun: true,
+        // logging: ['query'],
       });
       await dataSource.initialize();
-      // TODO: remove
-      const driver = dataSource.driver as SqljsDriver;
-
-      driver.databaseConnection.create_function('log_js', Math.log);
 
       initialized = true;
       target.dispatchEvent(new CustomEvent('init'));

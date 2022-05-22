@@ -6,6 +6,7 @@ export enum ServerMessage {
   TabChanged = 'tabChanged',
   TabClosed = 'tabClosed',
   QuerySessions = 'querySessions',
+  QuerySessionFacets = 'querySessionFacets',
   ExportDatabase = 'exportDatabase',
   RegenerateIndex = 'regenerateIndex',
 }
@@ -52,20 +53,25 @@ export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> 
   endedAt?: string;
 }
 
-export interface QuerySessionsResponseFacetValue {
+export interface QuerySessionsResponse {
+  totalCount: number;
+  results: SessionResponse[];
+}
+
+export interface QuerySessionFacetsRequest {
+  query?: string;
+  filter?: Clause<Session>;
+  facetsSize?: number;
+}
+
+export interface QuerySessionFacetsFacetValue {
   value: string;
   count: number;
 }
 
-export interface QuerySessionResponseFacets {
-  host: QuerySessionsResponseFacetValue[];
-  term: QuerySessionsResponseFacetValue[];
-}
-
-export interface QuerySessionsResponse {
-  totalCount: number;
-  facets: QuerySessionResponseFacets;
-  results: SessionResponse[];
+export interface QuerySessionFacetsResponse {
+  host: QuerySessionFacetsFacetValue[];
+  term: QuerySessionFacetsFacetValue[];
 }
 
 export interface ExportDatabaseRequest {}
@@ -81,6 +87,7 @@ export interface RegenerateIndexResponse {}
 export type ServerMessageMapping = {
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
   [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
+  [ServerMessage.QuerySessionFacets]: [QuerySessionFacetsRequest, QuerySessionFacetsResponse];
   [ServerMessage.ExportDatabase]: [ExportDatabaseRequest, ExportDatabaseResponse];
   [ServerMessage.RegenerateIndex]: [RegenerateIndexRequest, RegenerateIndexResponse];
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];

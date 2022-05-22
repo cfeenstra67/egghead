@@ -1,3 +1,4 @@
+import { clausesEqual } from './clause';
 import {
   ServerMessage,
   ErrorResponse,
@@ -5,6 +6,8 @@ import {
   TypedServerRequestForMessage,
   ServerInterface,
   RequestHandler,
+  QuerySessionsRequest,
+  QuerySessionsResponse,
 } from './types';
 
 export function cleanURL(uri: string): string {
@@ -49,4 +52,20 @@ export function requestHandler(
       return response as any;
     };
   };
+}
+
+export function requestsEqual(req1: QuerySessionsRequest, req2: QuerySessionsRequest): boolean {
+  let filterEqual = true;
+  if (req1.filter && req2.filter) {
+    filterEqual = clausesEqual(req1.filter, req2.filter);
+  } else if (req1.filter || req2.filter) {
+    filterEqual = false;
+  }
+
+  return (
+    req1.query === req2.query &&
+    req1.skip === req2.skip &&
+    req1.limit === req2.limit &&
+    filterEqual
+  );
 }

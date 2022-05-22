@@ -17,6 +17,7 @@ export enum BinaryOperator {
   LessThan = '<',
   LessthanOrEqualTo = '<=',
   In = 'IN',
+  NotIn = 'NOT IN',
   Match = 'MATCH',
 }
 
@@ -76,6 +77,10 @@ export function isUnary<T>(clause: Clause<T>): clause is Unary<T, any> {
   return Object.values(UnaryOperator).includes(clause.operator);
 }
 
+export function isAggregate<T>(clause: Clause<T>): clause is AggregateClause<T, any> {
+  return Object.values(AggregateOperator).includes(clause.operator);
+}
+
 export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   if (dsl.hasOwnProperty('AND')) {
     const clauses = (dsl as any).AND.map(dslToClause);
@@ -122,68 +127,188 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   };
 }
 
+// export function invertClause<T>(clause: Clause<T>): Clause<T> {
+//   switch (clause.operator) {
+//     case UnaryOperator.Not:
+//       return clause.clause;
+//     case BinaryOperator.Equals:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.NotEquals,
+//         value: clause.value,
+//       };
+//     case BinaryOperator.NotEquals:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.Equals,
+//         value: clause.value
+//       };
+//     case BinaryOperator.GreaterThan:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.LessthanOrEqualTo,
+//         value: clause.value
+//       };
+//     case BinaryOperator.GreaterThanOrEqualTo:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.LessThan,
+//         value: clause.value
+//       };
+//     case BinaryOperator.LessThan:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.GreaterThanOrEqualTo,
+//         value: clause.value
+//       };
+//     case BinaryOperator.LessthanOrEqualTo:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.GreaterThan,
+//         value: clause.value
+//       };
+//     case BinaryOperator.In:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.NotIn,
+//         value: clause.value
+//       };
+//     case BinaryOperator.NotIn:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.In,
+//         value: clause.value
+//       };
+//     case BinaryOperator.Match:
+//       return {
+//         fieldName: clause.fieldName,
+//         operator: BinaryOperator.Match,
+//         value: `dum:dum NOT ${clause.value}`,
+//       };
+//     case AggregateOperator.And:
+//       return {
+//         operator: AggregateOperator.Or,
+//         clauses: clause.clauses.map(invertClause),
+//       };
+//     case AggregateOperator.Or:
+//       return {
+//         operator: AggregateOperator.And,
+//         clauses: clause.clauses.map(invertClause),
+//       };
+//   }
+// }
+
 export interface RenderClauseArgs<T> {
   clause: Clause<T>;
   getFieldName?: (fieldName: Keys<T>) => string;
   getFilter?: (filter: Filter<any, any, any>) => Filter<any, any, any>;
+  paramStartIndex?: number;
 }
 
 export function renderClause<T>({
   clause,
   getFieldName = (fieldName) => `"${fieldName}"`,
-  getFilter = (filter) => filter
-}: RenderClauseArgs<T>): [string, Record<string, any>] {
+  getFilter = (filter) => filter,
+  paramStartIndex = 0,
+}: RenderClauseArgs<T>): [string, Record<string, any>, number] {
 
-  let paramIndex = 0;
+  let paramIndex = paramStartIndex;
   function getParamName(fieldName: string): string {
     paramIndex += 1;
     return `param_${fieldName}_${paramIndex}`;
   }
 
-  function renderClauseInner<T2>(clause: Clause<T2>): [string, Record<string, any>] {
-    if (isFilter(clause)) {
-      clause = getFilter(clause);
-      if (clause.operator === BinaryOperator.Equals && clause.value === null) {
-        return [
-          `${getFieldName(clause.fieldName)} IS NULL`,
-          {},
-        ];
-      }
-      if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
-        return [
-          `${getFieldName(clause.fieldName)} IS NOT NULL`,
-          {},
-        ];
-      }
-
-      const paramName = getParamName(clause.fieldName);
+  if (isFilter(clause)) {
+    clause = getFilter(clause);
+    if (clause.operator === BinaryOperator.Equals && clause.value === null) {
       return [
-        `${getFieldName(clause.fieldName)} ${clause.operator} :${paramName}`,
-        { [paramName]: clause.value },
+        `${getFieldName(clause.fieldName)} IS NULL`,
+        {},
+        paramIndex,
       ];
     }
-    if (isUnary(clause)) {
-      let innerClause: Clause<T2> = clause.clause;
-      if (isFilter(innerClause)) {
-        innerClause = getFilter(innerClause);
-      }
-
-      const [sql, params] = renderClauseInner(clause.clause);
-      return [`NOT (${sql})`, params];
+    if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
+      return [
+        `${getFieldName(clause.fieldName)} IS NOT NULL`,
+        {},
+        paramIndex,
+      ];
     }
 
-    const parts: string[] = [];
-    const allParams: Record<string, any> = {};
-    clause.clauses.forEach((subClause) => {
-      const [sql, params] = renderClauseInner(subClause);
-      parts.push(isFilter(subClause) ? sql : `(${sql})`);
-      Object.assign(allParams, params);
-    })
-    const outSql = parts.join(` ${clause.operator} `);
-    return [outSql, allParams];
+    const paramName = getParamName(clause.fieldName);
+    return [
+      `${getFieldName(clause.fieldName)} ${clause.operator} :${paramName}`,
+      { [paramName]: clause.value },
+      paramIndex,
+    ];
+  }
+  if (isUnary(clause)) {
+    let innerClause = clause.clause;
+    if (isFilter(innerClause)) {
+      innerClause = getFilter(innerClause);
+    }
+
+    const [sql, params, newParamIndex] = renderClause({
+      clause: clause.clause,
+      paramStartIndex: paramIndex,
+      getFieldName,
+      getFilter,
+    });
+    return [`NOT (${sql})`, params, newParamIndex];
   }
 
-  return renderClauseInner(clause);
+  const parts: string[] = [];
+  const allParams: Record<string, any> = {};
+  clause.clauses.forEach((subClause) => {
+    const [sql, params, newParamIndex] = renderClause({
+      clause: subClause,
+      paramStartIndex: paramIndex,
+      getFieldName,
+      getFilter,
+    });
+    paramIndex = newParamIndex;
+    parts.push(isFilter(subClause) ? sql : `(${sql})`);
+    Object.assign(allParams, params);
+  })
+  const outSql = parts.join(` ${clause.operator} `);
+  return [outSql, allParams, paramIndex];
+}
+
+export function clausesEqual<T>(clause1: Clause<T>, clause2: Clause<T>): boolean {
+  if (clause1.operator !== clause2.operator) {
+    return false;
+  }
+
+  function compareValues(a: any, b: any): boolean {
+    if (Array.isArray(a) || Array.isArray(b)) {
+      if (!Array.isArray(a) || !Array.isArray(b)) {
+        return false;
+      }
+      if (a.length !== b.length) {
+        return false;
+      }
+      return a.every((item, idx) => compareValues(b[idx], item));
+    }
+    return a === b;
+  }
+
+  if (isFilter(clause1) && isFilter(clause2)) {
+    return (
+      clause1.fieldName === clause2.fieldName &&
+      compareValues(clause1.value, clause2.value)
+    );
+  }
+  if (isUnary(clause1) && isUnary(clause2)) {
+    return clausesEqual(clause1.clause, clause2.clause);
+  }
+  const aggClause1 = clause1 as AggregateClause<any, any>;
+  const aggClause2 = clause2 as AggregateClause<any, any>;
+  if (aggClause1.clauses.length !== aggClause2.clauses.length) {
+    return false;
+  }
+  return aggClause1.clauses.every((c1, idx) => {
+    return clausesEqual(c1, aggClause2.clauses[idx]);
+  });
 }
 
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
@@ -194,14 +319,16 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
         clauses: queries.children.map((child) => child.clause())
       };
     },
-    NotQuery_not: (notQuery, _, queryComp) => {
+    // TODO: this is not really complete, everything in NOT gets passed
+    // directly into the full text search engine
+    NotQuery_not: (_, notQuery) => {
       return {
         operator: BinaryOperator.Match,
         fieldName: IndexToken,
         value: [
-          JSON.stringify(notQuery.sourceString),
+          'dum:dum',
           'NOT',
-          JSON.stringify(queryComp.sourceString),
+          JSON.stringify(notQuery.sourceString),
         ].join(' ') as any,
       };
     },

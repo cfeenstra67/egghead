@@ -6,6 +6,7 @@ import { addHost1652328083169 } from './1652328083169-add-host';
 import { dropIndex1652668559066 } from './1652668559066-drop-index';
 import { createIndex1652668711232 } from './1652668711232-create-index';
 import { index1652947986280 } from './1652947986280-index';
+import { dummyColumn1653238599617 } from './1653238599617-dummy-column';
 
 export const migrations = [
   createUser1651729792149,
@@ -16,4 +17,5 @@ export const migrations = [
   dropIndex1652668559066,
   createIndex1652668711232,
   index1652947986280,
+  dummyColumn1653238599617,
 ];

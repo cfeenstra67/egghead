@@ -9,41 +9,40 @@
     height: calc(var(--navbar-height) - var(--padding) * 2);
     background-color: var(--secondary-bg-color);
     display: grid;
-    grid-template-columns: var(--title-width) 1fr 50% 1fr var(--title-width);
+    grid-template-columns: var(--title-width) 0px auto 0px var(--title-width);
     grid-column-gap: var(--padding);
     padding: var(--padding) var(--padding-2);
     /*box-shadow: 0 6px 4px 0 var(--bg-color);*/
     z-index: 3;
 }
 
-@media only screen and (min-width: 1040px) {
+@media only screen and (min-width: 1000px) {
     .navBar {
-        grid-template-columns: var(--title-width) 1fr 50% 2fr;
+        grid-template-columns: var(--title-width) 1fr 50% 1fr var(--title-width);
     }
 }
 
-
-@media only screen and (min-width: 1232px) {
+/*@media only screen and (min-width: 1232px) {
     .navBar {
-        grid-template-columns: 1fr 0px 616px 1fr;
+        grid-template-columns: 1fr 0px 616px 0px 1fr;
     }
 }
-
+*/
 @media only screen and (max-width: 800px) {
     .navBar {
-        grid-template-columns: var(--title-width) 1fr 60% 1fr;
+        grid-template-columns: 1fr 0px 60% 0px 1fr;
     }
 }
 
 @media only screen and (max-width: 600px) {
     .navBar {
-        grid-template-columns: var(--title-width) 1fr 80% 1fr;
+        grid-template-columns: 1fr 0px 70% 0px min-content;
     }
 }
 
 @media only screen and (max-width: 400px) {
     .navBar {
-        grid-template-columns: min-content auto;
+        grid-template-columns: min-content 0px auto 0px min-content;
     }
 }
 

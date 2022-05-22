@@ -55,6 +55,10 @@ export class Session {
   @Column({ nullable: true })
   endedAt?: Date;
 
+  // Always null column used in search index as dummy
+  @Column({ nullable: true })
+  dum?: string;
+
 }
 
 @Entity('session_index')

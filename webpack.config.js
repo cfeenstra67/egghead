@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
-function createModule(name, entry, isDev) {
+function createModule(name, entry) {
   return {
     mode: 'production',
     name,
@@ -20,7 +20,7 @@ function createModule(name, entry, isDev) {
         {
           test: /\.css$/,
           use: [
-            isDev ? 'style-loader' : MiniCssExtractPlugin.loader,
+            MiniCssExtractPlugin.loader,
             {
               loader: 'css-loader',
               options: {
@@ -35,7 +35,7 @@ function createModule(name, entry, isDev) {
         {
           test: /\.css$/,
           use: [
-            isDev ? 'style-loader' : MiniCssExtractPlugin.loader,
+            MiniCssExtractPlugin.loader,
             'css-loader'
           ],
           exclude: /\.module\.css$/
@@ -56,7 +56,14 @@ function createModule(name, entry, isDev) {
           generator: {
             dataUrl: (content) => content.toString('base64')
           }
-        }
+        },
+        {
+          test: /\.txt$/i,
+          type: 'asset/inline',
+          generator: {
+            dataUrl: (content) => content.toString()
+          }
+        },
       ]
     },
     plugins: [
@@ -69,7 +76,7 @@ function createModule(name, entry, isDev) {
           { from: 'public', to: '.' },
         ]
       }),
-      ...(isDev ? [] : [new MiniCssExtractPlugin()]),
+      new MiniCssExtractPlugin(),
     ],
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.css'],
@@ -86,15 +93,7 @@ function createModule(name, entry, isDev) {
     },
     optimization: {
       minimize: false,
-      runtimeChunk: isDev ? 'single': undefined,
     },
-    devServer: isDev ? {
-      static: './dist',
-      headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-      }
-    } : undefined,
   };
 }
 

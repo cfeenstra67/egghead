@@ -8,8 +8,17 @@ import {
 } from 'react';
 import Layout from '../components/Layout';
 import SearchResults from '../components/SearchResults';
+import SearchResultsSideBar from '../components/SearchResultsSideBar';
 import { AppContext } from '../lib';
+import { Session } from '../../models';
 import { SessionResponse, QuerySessionsRequest } from '../../server';
+import {
+  Clause,
+  AggregateOperator,
+  BinaryOperator,
+  IndexToken,
+} from '../../server/clause';
+import { requestsEqual } from '../../server/utils';
 
 export default function History() {
   const { serverClientFactory, query } = useContext(AppContext);
@@ -17,19 +26,23 @@ export default function History() {
   const [error, setError] = useState<boolean>(false);
   const [results, setResults] = useState<SessionResponse[]>([]);
   const [count, setCount] = useState<number>(0);
+  const [request, setRequest] = useState<QuerySessionsRequest>({});
+  const [selectedTerms, setSelectedTerms] = useState<string[]>([]);
+  const [selectedHosts, setSelectedHosts] = useState<string[]>([]);
 
   const debounceDelay = 150;
   const pageSize = 200;
 
   const querySessions = useMemo(() => {
     return _.debounce((
-      request: Omit<QuerySessionsRequest, 'type'>,
+      request: QuerySessionsRequest,
       existingResults?: SessionResponse[],
       isActive?: () => boolean,
     ) => {
       setLoading(true);
       serverClientFactory().then(async (client) => {
         const response = await client.querySessions(request);
+
         if (isActive && !isActive()) {
           return;
         }
@@ -46,32 +59,79 @@ export default function History() {
   }, [setError, setResults, setLoading, setCount]);
 
   useEffect(() => {
+    const newRequest: QuerySessionsRequest = {
+      query,
+      limit: pageSize
+    };
+    const clauses: Clause<Session>[] = [];
+
+    if (selectedTerms.length > 0) {
+      const subClauses = selectedTerms.map((term) => ({
+        fieldName: IndexToken,
+        operator: BinaryOperator.Match,
+        value: term,
+      }));
+      clauses.push({
+        operator: AggregateOperator.And,
+        clauses: subClauses,
+      });
+    }
+    if (selectedHosts.length > 0) {
+      const subClauses = selectedHosts.map((host) => ({
+        operator: BinaryOperator.Equals,
+        fieldName: 'host',
+        value: host,
+      }));
+      clauses.push({
+        operator: AggregateOperator.Or,
+        clauses: subClauses,
+      });
+    }
+    if (clauses.length === 1) {
+      newRequest.filter = clauses[0];
+    }
+    if (clauses.length > 1) {
+      newRequest.filter = {
+        operator: AggregateOperator.And,
+        clauses,
+      };
+    }
+
+    if (!requestsEqual(newRequest, request)) {
+      setRequest(newRequest);
+    }
+  }, [query, selectedTerms, selectedHosts, request, setRequest]);
+
+  useEffect(() => {
     let active = true;
     const isActive = () => active;
 
-    document.querySelector('#body > div')?.scroll(0, 0);
-    querySessions(
-      { query, limit: pageSize },
-      undefined,
-      isActive,
-    );
+    window.scroll(0, 0);
+    querySessions(request, undefined, isActive);
 
-    return () => { active = false; };
-  }, [query, querySessions]);
+    return () => { active = false };
+  }, [querySessions, request]);
 
-  function onEndReached() {
+  const onEndReached = useCallback(() => {
     if (results.length >= count) {
       return;
     }
     querySessions(
-      { query, skip: results.length, limit: pageSize },
+      { ...request, limit: pageSize },
       results,
     );
-  }
+  }, [results, count, request, querySessions]);
 
   return (
     <Layout>
       <h1>History</h1>
+      <SearchResultsSideBar
+        request={request}
+        selectedHosts={selectedHosts}
+        setSelectedHosts={setSelectedHosts}
+        selectedTerms={selectedTerms}
+        setSelectedTerms={setSelectedTerms}
+      />
       {error ? (
         <p>An error occurred while loading search results.</p>
       ) : (

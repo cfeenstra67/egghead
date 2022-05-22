@@ -1,5 +1,7 @@
 import type { QueryRunner } from 'typeorm';
 
+const dummyColumnName = 'dum';
+
 export type ColumnInput = string | [string, boolean];
 
 export interface Fts5TableArgs {
@@ -37,7 +39,7 @@ export function fts5createTableSql(args: Fts5TableArgs): string {
   const columnStrings = args.columns.map((colInput) => {
     const [colName, indexed] = getColumn(colInput);
     return `${quoteDdlName(colName)}${indexed ? '' : ' UNINDEXED'}`;
-  });
+  }).concat([quoteDdlName(dummyColumnName)]);
 
   const components = [
     'CREATE VIRTUAL TABLE',
@@ -62,10 +64,12 @@ export function fts5InsertIntoIndexSql(args: Fts5TableArgs): string {
   const tableName = getFullTableName(args.tableName, args.schemaName);
 
   const insertCols = ['rowid', ...args.columns]
-    .map((input) => quoteDdlName(getColumn(input)[0]));
+    .map((input) => quoteDdlName(getColumn(input)[0]))
+    .concat([quoteDdlName(dummyColumnName)]);
 
   const selectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => quoteDdlName(getColumn(input)[0]));
+    .map((input) => quoteDdlName(getColumn(input)[0]))
+    .concat([`'${dummyColumnName}'`]);
 
   const components = [
     'INSERT INTO',
@@ -96,10 +100,12 @@ export function fts5InsertTriggerSql(args: Fts5TableArgs): string {
   const triggerName = insertTriggerName(args);
 
   const insertCols = ['rowid', ...args.columns]
-    .map((input) => quoteDdlName(getColumn(input)[0]));
+    .map((input) => quoteDdlName(getColumn(input)[0]))
+    .concat([quoteDdlName(dummyColumnName)]);
 
   const selectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]));
+    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+    .concat([`'${dummyColumnName}'`]);
 
   const components = [
     'CREATE TRIGGER',
@@ -132,13 +138,16 @@ export function fts5UpdateTriggerSql(args: Fts5TableArgs): string {
   const triggerName = updateTriggerName(args);
 
   const insertCols = ['rowid', ...args.columns]
-    .map((input) => quoteDdlName(getColumn(input)[0]));
+    .map((input) => quoteDdlName(getColumn(input)[0]))
+    .concat([quoteDdlName(dummyColumnName)]);
 
   const oldSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'old.' + quoteDdlName(getColumn(input)[0]));
+    .map((input) => 'old.' + quoteDdlName(getColumn(input)[0]))
+    .concat([`'${dummyColumnName}'`]);
 
   const newSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]));
+    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+    .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
 
@@ -180,10 +189,12 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
   const triggerName = deleteTriggerName(args);
 
   const insertCols = ['rowid', ...args.columns]
-    .map((input) => quoteDdlName(getColumn(input)[0]));
+    .map((input) => quoteDdlName(getColumn(input)[0]))
+    .concat([quoteDdlName(dummyColumnName)]);
 
   const newSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]));
+    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+    .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
 

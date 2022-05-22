@@ -41,6 +41,7 @@
     "react-intersection-observer": "^9.1.0",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.6",
+    "style-loader": "^3.3.1",
     "ts-loader": "^9.3.0",
     "ts-node": "^10.7.0",
     "typeorm": "^0.3.6",

@@ -20,8 +20,12 @@ import {
 import {
   QuerySessionsRequest,
   QuerySessionsResponse,
+  QuerySessionFacetsRequest,
+  QuerySessionFacetsResponse,
   SessionResponse,
 } from './types';
+import stophostsTxt from './stophosts.txt';
+import stopwordsTxt from './stopwords.txt';
 
 function sessionToSessionResponse(session: Session): SessionResponse {
   return {
@@ -44,6 +48,7 @@ export function sessionIndexTableArgs(
     'url',
     'title',
     'rawUrl',
+    'dum',
   ];
 
   return {
@@ -81,18 +86,20 @@ export class SearchService {
       return `s.${fieldName}`;
     };
 
+    let paramIndex = 0;
+
     if (request.query) {
       const clause = parseQueryString<Session>(request.query);
       const indexArgs = sessionIndexTableArgs(this.dataSource, SessionIndex);
       const indexedMap = Object.fromEntries(indexArgs.columns.map(getColumn));
 
-      const [sql, params] = renderClause({
+      const [sql, params, newParamIndex] = renderClause({
         clause,
         getFieldName,
         getFilter: (filter) => {
           if (
             indexedMap[filter.fieldName] &&
-            filter.operator === BinaryOperator.Match
+            filter.operator === BinaryOperator.Equals
           ) {
             return {
               operator: BinaryOperator.Match,
@@ -105,19 +112,24 @@ export class SearchService {
             };
           }
           return filter;
-        }
+        },
+        paramStartIndex: paramIndex,
       });
+      paramIndex = newParamIndex;
 
-      builder = builder.where(sql, params);
+      builder = builder.andWhere(sql, params);
     }
 
     if (request.filter !== undefined) {
-      const [sql, params] = renderClause({
+      const [sql, params, newParamIndex] = renderClause({
         clause: request.filter,
         getFieldName,
+        paramStartIndex: paramIndex,
       });
-      builder = builder.where(sql, params);
+      paramIndex = newParamIndex;
+      builder = builder.andWhere(sql, params);
     }
+
     return builder;
   }
 
@@ -132,6 +144,8 @@ export class SearchService {
       .where(`rowid IN (${rowIdBuilder.getQuery()})`)
       .setParameters(rowIdBuilder.getParameters());
 
+    const stophosts = stophostsTxt.split('\n').filter((x) => x);
+
     return await this.dataSource
       .createQueryBuilder()
       .select('t.host', 'value')
@@ -140,6 +154,7 @@ export class SearchService {
       .setParameters(sessionQueryBuilder.getParameters())
       .groupBy('t.host')
       .where('t.host IS NOT NULL')
+      .where('t.host NOT IN (:...stophosts)', { stophosts })
       .orderBy('2', 'DESC')
       .limit(count)
       .getRawMany();
@@ -160,6 +175,7 @@ export class SearchService {
           session_term_index_vocab
         WHERE
           col = 'title'
+          AND term NOT IN (:...stopwords)
         GROUP BY 
           term, doc, is_result
       ), doc_counts AS (
@@ -222,10 +238,13 @@ export class SearchService {
       ORDER BY t.tfidf DESC, t.count DESC
     `;
 
+    const stopwords = stopwordsTxt.split('\n').filter((x) => x);
+
     const builder = this.dataSource
       .createQueryBuilder()
       .from(`(${sql})`, 't')
       .setParameters(rowIdBuilder.getParameters())
+      .setParameter('stopwords', stopwords)
       .select('*')
       .limit(count);
 
@@ -236,16 +255,6 @@ export class SearchService {
     const repo = this.dataSource.getRepository(SessionIndex);
 
     let builder = await this.searchQueryBuilder(request);
-
-    const rowIdBuilder = builder
-      .clone()
-      .select('s.rowid');
-
-    const facetsSize = 25;
-
-    const hostStats = await this.getHostStats(rowIdBuilder, facetsSize);
-
-    const termStats = await this.getTermStats(rowIdBuilder, facetsSize);
 
     const totalCount = await builder.getCount();
 
@@ -260,11 +269,28 @@ export class SearchService {
 
     return {
       totalCount,
-      facets: {
-        host: hostStats,
-        term: termStats,
-      },
       results,
+    };
+  }
+
+  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+    const repo = this.dataSource.getRepository(SessionIndex);
+
+    let builder = await this.searchQueryBuilder(request);
+
+    const rowIdBuilder = builder
+      .clone()
+      .select('s.rowid');
+
+    const facetsSize = request.facetsSize ?? 25;
+
+    const hostStats = await this.getHostStats(rowIdBuilder, facetsSize);
+
+    const termStats = await this.getTermStats(rowIdBuilder, facetsSize);
+
+    return {
+      host: hostStats,
+      term: termStats,
     };
   }
 

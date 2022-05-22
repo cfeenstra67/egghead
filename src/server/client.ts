@@ -17,6 +17,8 @@ import {
   TabClosedRequest,
   TabClosedResponse,
   RequestHandler,
+  QuerySessionFacetsRequest,
+  QuerySessionFacetsResponse,
 } from './types';
 
 // For use in a web page
@@ -84,6 +86,13 @@ export class ServerClient implements ServerInterface {
   async tabClosed(request: TabClosedRequest): Promise<TabClosedResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.TabClosed,
+      ...request
+    });
+  }
+
+  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.QuerySessionFacets,
       ...request
     });
   }

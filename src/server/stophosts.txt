@@ -1,2 +1,4 @@
 newtab
 localhost
+history
+settings

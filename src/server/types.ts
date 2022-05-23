@@ -7,6 +7,7 @@ export enum ServerMessage {
   TabClosed = 'tabClosed',
   QuerySessions = 'querySessions',
   QuerySessionFacets = 'querySessionFacets',
+  QuerySessionTimeline = 'querySessionTimeline',
   ExportDatabase = 'exportDatabase',
   RegenerateIndex = 'regenerateIndex',
 }
@@ -49,6 +50,8 @@ export interface QuerySessionsRequest {
 
 export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> {
   childCount: number;
+  highlightedTitle: string;
+  highlightedHost: string;
   startedAt: string;
   endedAt?: string;
 }
@@ -74,6 +77,22 @@ export interface QuerySessionFacetsResponse {
   term: QuerySessionFacetsFacetValue[];
 }
 
+export interface QuerySessionTimelineRequest {
+  query?: string;
+  filter?: Clause<Session>;
+  granularity: 'hour' | 'day' | 'week' | 'month' | number;
+}
+
+export interface QuerySessionTimelineResponseItem {
+  dateString: string;
+  count: number;
+}
+
+export interface QuerySessionTimelineResponse {
+  granularity: QuerySessionTimelineRequest['granularity'] & string;
+  timeline: QuerySessionTimelineResponseItem[];
+}
+
 export interface ExportDatabaseRequest {}
 
 export interface ExportDatabaseResponse {
@@ -88,6 +107,7 @@ export type ServerMessageMapping = {
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
   [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
   [ServerMessage.QuerySessionFacets]: [QuerySessionFacetsRequest, QuerySessionFacetsResponse];
+  [ServerMessage.QuerySessionTimeline]: [QuerySessionTimelineRequest, QuerySessionTimelineResponse];
   [ServerMessage.ExportDatabase]: [ExportDatabaseRequest, ExportDatabaseResponse];
   [ServerMessage.RegenerateIndex]: [RegenerateIndexRequest, RegenerateIndexResponse];
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];

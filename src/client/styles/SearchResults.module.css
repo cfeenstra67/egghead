@@ -6,7 +6,7 @@
 .searchResultsDay {
     background-color: var(--secondary-bg-color);
     border-radius: var(--padding);
-    margin-top: var(--padding-2);
+    margin-top: var(--padding);
     display: flex;
     flex-direction: column;
     row-gap: var(--padding);
@@ -89,6 +89,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+}
+
+.highlighted {
+    font-weight: bolder;
+    background-color: rgba(255, 201, 51, 0.2);
 }
 
 .searchResultsItemHost {

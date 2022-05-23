@@ -43,7 +43,6 @@
 
 .collapsibleSideBarContent {
     padding-left: var(--padding);
-    font-size: 14px;
 }
 
 .seeMore {
@@ -53,52 +52,4 @@
 
 .seeMore:hover {
     cursor: pointer;
-}
-
-.word {
-    display: inline-block;
-    border-radius: 14px;
-    border: 1px solid var(--secondary-text-color);
-    padding: 4px 6px;
-    margin: 4px;
-    margin-left: 0px;
-}
-
-.selectedWord {
-    background-color: var(--primary-text-color) !important;
-}
-
-.word:hover {
-    cursor: pointer;
-    background-color: var(--secondary-text-color) !important;
-}
-
-.word:hover, .selectedWord {
-    color: var(--bg-color) !important;
-}
-
-.word:hover span:nth-child(2), .selectedWord span:nth-child(2) {
-    background-color: var(--bg-color) !important;
-    color: var(--primary-text-color) !important;
-}
-
-.word > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.word span {   
-    font-size: 12px;
-}
-
-.word span:nth-child(2) {
-    margin-left: 6px;
-    background-color: var(--primary-text-color);
-    color: var(--bg-color);
-    border-radius: 8px;
-    font-size: 10px;
-    padding: 3px;
-    min-width: 10px;
-    text-align: center;
 }

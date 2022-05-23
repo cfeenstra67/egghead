@@ -23,6 +23,8 @@ import {
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
   SessionResponse,
+  QuerySessionTimelineRequest,
+  QuerySessionTimelineResponse,
 } from './types';
 import stophostsTxt from './stophosts.txt';
 import stopwordsTxt from './stopwords.txt';
@@ -56,7 +58,7 @@ export function sessionIndexTableArgs(
     contentTableName: tableMeta.tableName,
     columns: indexMeta.columns.flatMap((col) => {
       const name = col.databaseNameWithoutPrefixes;
-      return name === 'rowid' ? [] : [[name, indexedColumns.includes(name)]];
+      return ['rowid', 'dum'].includes(name) ? [] : [[name, indexedColumns.includes(name)]];
     }),
     tokenize: tokenize ?? 'unicode61',
   };
@@ -72,12 +74,21 @@ export class SearchService {
     const repo = this.dataSource.getRepository(SessionIndex);
     let builder = await repo
       .createQueryBuilder('s')
+      .select('*')
       .loadRelationCountAndMap(
         's.childCount',
         's.childSessions',
         'children'
       )
-      .orderBy('s.startedAt', 'DESC');
+      .orderBy('s.startedAt', 'DESC')
+      .addSelect(
+        `highlight("session_index", 4, '{~{~{', '}~}~}')`,
+        'highlightedTitle',
+      )
+      .addSelect(
+        `highlight("session_index", 2, '{~{~{', '}~}~}')`,
+        'highlightedHost',
+      );
 
     const getFieldName = (fieldName: string) => {
       if (fieldName === IndexToken) {
@@ -251,6 +262,100 @@ export class SearchService {
     return await builder.getRawMany();
   }
 
+  private async detectGranularity(
+    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    maxBuckets: number,
+  ): Promise<QuerySessionTimelineRequest['granularity'] & string> {
+    const minMaxQueryBuilder = this.dataSource
+      .createQueryBuilder()
+      .from(Session, 't')
+      .where(
+        `t.rowid IN (${rowIdBuilder.getQuery()})`,
+        rowIdBuilder.getParameters()
+      )
+      .select('MIN(t.startedAt)', 'minStartedAt')
+      .addSelect('MAX(t.startedAt)', 'maxStartedAt');
+
+    const { minStartedAt, maxStartedAt } = await minMaxQueryBuilder.getRawOne();
+
+    const totalDiff: number = (
+      new Date(maxStartedAt).getTime() - new Date(minStartedAt).getTime()
+    );
+
+    const intervalLengths = {
+      hour: 1000 * 3600,
+      day: 1000 * 3600 * 24,
+      week: 1000 * 3600 * 24 * 7,
+      month: 1000 * 3600 * 24 * 30,
+    };
+
+    return Object.entries(intervalLengths).flatMap(([key, value]) => {
+      const buckets = totalDiff / value;
+      return buckets < maxBuckets ? (
+        [key as QuerySessionTimelineRequest['granularity'] & string] 
+      ) : [];
+    })[0] ?? 'month';
+  }
+
+  private async getTimeline(
+    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    granularity: QuerySessionTimelineRequest['granularity'],
+  ): Promise<QuerySessionTimelineResponse> {
+    let stringGranularity: QuerySessionTimelineRequest['granularity'] & string;
+    if (typeof granularity === 'number') {
+      stringGranularity = await this.detectGranularity(rowIdBuilder, granularity);
+    } else {
+      stringGranularity = granularity;
+    }
+
+    let format: string;
+    switch (stringGranularity) {
+      case 'hour':
+        format = '%Y-%m-%dT%H';
+        break;
+      case 'day':
+        format = '%Y-%m-%d';
+        break;
+      case 'week':
+        format = '%Y-%W';
+        break;
+      case 'month':
+        format = '%Y-%m';
+        break;
+    }
+
+    const sql = `
+      SELECT
+        strftime(:datefmt, s.startedAt) as dateString
+      FROM
+        session s
+      WHERE s.rowid IN (${rowIdBuilder.getQuery()})
+    `;
+
+    const timeline = await this.dataSource
+      .createQueryBuilder()
+      .select('t.dateString')
+      .addSelect('COUNT(1)', 'count')
+      .from(`(${sql})`, 't')
+      .setParameters(rowIdBuilder.getParameters())
+      .setParameter('datefmt', format)
+      .groupBy('t.dateString')
+      .getRawMany();
+
+    const qb = this.dataSource
+      .createQueryBuilder()
+      .select('t.dateString')
+      .addSelect('COUNT(1)', 'count')
+      .from(`(${sql})`, 't')
+      .setParameters(rowIdBuilder.getParameters())
+      .setParameter('datefmt', format);
+
+    return {
+      granularity: stringGranularity,
+      timeline,
+    };
+  }
+
   async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
     const repo = this.dataSource.getRepository(SessionIndex);
 
@@ -265,7 +370,7 @@ export class SearchService {
       builder = builder.limit(request.limit);
     }
 
-    const results = (await builder.getMany()).map(sessionToSessionResponse);
+    const results = (await builder.getRawMany()).map(sessionToSessionResponse);
 
     return {
       totalCount,
@@ -276,7 +381,7 @@ export class SearchService {
   async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
     const repo = this.dataSource.getRepository(SessionIndex);
 
-    let builder = await this.searchQueryBuilder(request);
+    const builder = await this.searchQueryBuilder(request);
 
     const rowIdBuilder = builder
       .clone()
@@ -292,6 +397,18 @@ export class SearchService {
       host: hostStats,
       term: termStats,
     };
+  }
+
+  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+    const repo = this.dataSource.getRepository(SessionIndex);
+
+    const builder = await this.searchQueryBuilder(request);
+
+    const rowIdBuilder = builder
+      .clone()
+      .select('s.rowid');
+
+    return await this.getTimeline(rowIdBuilder, request.granularity);
   }
 
 }

@@ -30,6 +30,8 @@ import {
   TabClosedResponse,
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
+  QuerySessionTimelineRequest,
+  QuerySessionTimelineResponse,
 } from './types';
 import { cleanURL, getHost } from './utils';
 import { DataSource, Repository, IsNull } from 'typeorm';
@@ -155,6 +157,10 @@ export class Server implements ServerInterface {
 
   async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
     return await this.searchService.querySessionFacets(request);
+  }
+
+  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+    return await this.searchService.querySessionTimeline(request);
   }
 
   async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {

@@ -1,0 +1,7 @@
+
+.chartContainer {
+    position: relative;
+    width: 100%;
+    height: 128px;
+    margin-top: var(--padding);
+}

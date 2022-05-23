@@ -19,6 +19,8 @@ import {
   RequestHandler,
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
+  QuerySessionTimelineRequest,
+  QuerySessionTimelineResponse,
 } from './types';
 
 // For use in a web page
@@ -94,6 +96,13 @@ export class ServerClient implements ServerInterface {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessionFacets,
       ...request
+    });
+  }
+
+  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.QuerySessionTimeline,
+      ...request,
     });
   }
 

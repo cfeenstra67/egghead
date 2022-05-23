@@ -16,6 +16,29 @@ function getTimeString(date: string): string {
   return `${timeString} ${amPm}`;
 }
 
+function Highlighted({ title }: { title: string }) {
+  const findPattern =/(\{~\{~\{.+?\}~\}~\})/g
+  const components: React.ReactNode[] = [];
+  let match = findPattern.exec(title);
+  let lastIndex = 0;
+  while (match !== null) {
+    if (match.index > lastIndex) {
+      components.push(title.slice(lastIndex, match.index));
+    }
+    const inner = match[0].slice(
+      '{~{~{'.length,
+      match[0].length - '}~}~}'.length
+    );
+    components.push(<span className={styles.highlighted}>{inner}</span>);
+    lastIndex = match.index + match[0].length;
+    match = findPattern.exec(title);
+  }
+  if (lastIndex < title.length - 1) {
+    components.push(title.slice(lastIndex));
+  }
+  return <>{components}</>;
+}
+
 interface SearchResultItemProps {
   session: SessionResponse;
   isLast?: boolean;
@@ -101,12 +124,14 @@ function SearchResultItem(
           <div className={styles.searchResultsItemContentInner}>
             <div className={styles.searchResultsItemTitle}>
               <a href={session.rawUrl} target="_blank">
-                <span title={session.title}>{session.title}</span>
+                <span title={session.title}>
+                  <Highlighted title={session.highlightedTitle} />
+                </span>
               </a>
             </div>
             <div className={styles.searchResultsItemHost}>
               <span title={session.url}>
-                {url.hostname}
+                <Highlighted title={session.highlightedHost ?? url.hostname} />
               </span>
             </div>
           </div>

@@ -1,0 +1,56 @@
+
+.bubble {
+    display: inline-block;
+    border-radius: 14px;
+    border: 1px solid var(--secondary-text-color);
+    padding: 4px 6px;
+    margin: 4px;
+    margin-left: 0px;
+    max-width: calc(100% - var(--padding-2));
+    font-size: 12px;
+}
+
+.selectedBubble {
+    background-color: var(--primary-text-color) !important;
+}
+
+.bubble:hover {
+    cursor: pointer;
+    background-color: var(--secondary-text-color) !important;
+}
+
+.bubble:hover, .selectedBubble {
+    color: var(--bg-color) !important;
+}
+
+.bubble:hover span:nth-child(2), .selectedBubble span:nth-child(2) {
+    background-color: var(--bg-color) !important;
+    color: var(--primary-text-color) !important;
+}
+
+.bubble > div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.bubble span {   
+    font-size: 12px;
+}
+
+.bubble span:first-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.bubble span:nth-child(2) {
+    margin-left: 6px;
+    background-color: var(--primary-text-color);
+    color: var(--bg-color);
+    border-radius: 8px;
+    font-size: 10px;
+    padding: 3px;
+    min-width: 10px;
+    text-align: center;
+}

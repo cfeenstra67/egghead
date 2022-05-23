@@ -5,6 +5,7 @@ import { AppContext } from '../lib';
 import { QuerySessionsRequest, QuerySessionFacetsFacetValue } from '../../server';
 import styles from '../styles/SideBar.module.css';
 import SideBar, { SideBarComponent } from './SideBar';
+import Word from './Word';
 
 interface CollapsibleComponentProps {
   title: string;
@@ -36,27 +37,6 @@ function CollapsibleComponent({
         {!collapsed && children}
       </div>
     </SideBarComponent>
-  );
-}
-
-interface WordProps {
-  value: string;
-  count: number;
-  selected?: boolean;
-  onClick?: () => void;
-}
-
-function Word({ value, count, onClick, selected }: WordProps) {
-  return (
-    <div
-      className={`${styles.word} ${selected ? styles.selectedWord : ''}`}
-      onClick={onClick}
-    >
-      <div>
-        <span>{value}</span>
-        <span>{count}</span>
-      </div>
-    </div>
   );
 }
 

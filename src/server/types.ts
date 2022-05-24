@@ -50,6 +50,7 @@ export interface QuerySessionsRequest {
 
 export interface SessionResponse extends Omit<Session, 'startedAt' | 'endedAt'> {
   childCount: number;
+  childTransitions: Record<string, string>;
   highlightedTitle: string;
   highlightedHost: string;
   startedAt: string;

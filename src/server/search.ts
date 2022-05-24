@@ -29,11 +29,13 @@ import {
 import stophostsTxt from './stophosts.txt';
 import stopwordsTxt from './stopwords.txt';
 
-function sessionToSessionResponse(session: Session): SessionResponse {
+function sessionToSessionResponse(session: Record<string, any>): SessionResponse {
+  const childTransitions = session.childTransitions && JSON.parse(session.childTransitions)
   return {
     ...session,
     startedAt: session.startedAt.toString(),
     endedAt: session.endedAt?.toString(),
+    childTransitions,
   } as any;
 }
 
@@ -69,18 +71,14 @@ export class SearchService {
   constructor(readonly dataSource: DataSource) {}
 
   private async searchQueryBuilder(
-    request: QuerySessionsRequest
+    request: QuerySessionsRequest,
+    includeChildCounts?: boolean
   ): Promise<SelectQueryBuilder<SessionIndex>> {
     const repo = this.dataSource.getRepository(SessionIndex);
+
     let builder = await repo
       .createQueryBuilder('s')
       .select('*')
-      .loadRelationCountAndMap(
-        's.childCount',
-        's.childSessions',
-        'children'
-      )
-      .orderBy('s.startedAt', 'DESC')
       .addSelect(
         `highlight("session_index", 4, '{~{~{', '}~}~}')`,
         'highlightedTitle',
@@ -88,7 +86,8 @@ export class SearchService {
       .addSelect(
         `highlight("session_index", 2, '{~{~{', '}~}~}')`,
         'highlightedHost',
-      );
+      )
+      .orderBy('s.startedAt', 'DESC');
 
     const getFieldName = (fieldName: string) => {
       if (fieldName === IndexToken) {
@@ -139,6 +138,27 @@ export class SearchService {
       });
       paramIndex = newParamIndex;
       builder = builder.andWhere(sql, params);
+    }
+
+    if (includeChildCounts) {
+      const childCountsSql = `
+        SELECT
+          s.parentSessionId as joinId,
+          COUNT(1) as joinChildCount,
+          json_group_object(s.id, s.transitionType) as joinChildTransitions
+        FROM
+          session s
+        GROUP BY s.parentSessionId
+      `;
+
+      builder = builder
+        .leftJoin(
+          `(${childCountsSql})`,
+          's2',
+          's.id = s2.joinId'
+        )
+        .addSelect('COALESCE(s2.joinChildCount, 0)', 'childCount')
+        .addSelect(`COALESCE(s2.joinChildTransitions, '{}')`, 'childTransitions');
     }
 
     return builder;
@@ -359,7 +379,7 @@ export class SearchService {
   async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
     const repo = this.dataSource.getRepository(SessionIndex);
 
-    let builder = await this.searchQueryBuilder(request);
+    let builder = await this.searchQueryBuilder(request, true);
 
     const totalCount = await builder.getCount();
 

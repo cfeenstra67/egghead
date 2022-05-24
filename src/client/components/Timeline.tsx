@@ -96,6 +96,115 @@ function dateRangeToLabel(start: Date, end: Date): string {
   return `${fmt(start)} - ${fmt(endWithBump)}`;
 }
 
+function fillMissingLabels(
+  granularity: QuerySessionTimelineRequest['granularity'] & string,
+  timeline: QuerySessionTimelineResponse['timeline'],
+): QuerySessionTimelineResponse['timeline'] {
+  if (timeline.length === 0) {
+    return [];
+  }
+  const [start, startEnd] = dateStringToDateRange(
+    granularity,
+    timeline[0].dateString
+  );
+  const [endStart, end] = dateStringToDateRange(
+    granularity,
+    timeline[timeline.length - 1].dateString,
+  );
+
+  function twoDigit(num: number): string {
+    return ('00' + num).slice(-2);
+  }
+
+  let getNext: (d: Date) => Date;
+  let getLabel: (d: Date) => string;
+  switch (granularity) {
+    case 'hour':
+      getNext = (d) => new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours() + 1,
+        d.getMinutes(),
+      );
+      getLabel = (d) => (
+        `${d.getFullYear()}-` + 
+        `${twoDigit(d.getMonth() + 1)}-` + 
+        `${twoDigit(d.getDate())}T` + 
+        `${twoDigit(d.getHours())}`
+      );
+      break;
+    case 'day':
+      getNext = (d) => new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate() + 1,
+        d.getHours(),
+        d.getMinutes(),
+      );
+      getLabel = (d) => (
+        `${d.getFullYear()}-` +
+        `${twoDigit(d.getMonth() + 1)}-` +
+        `${twoDigit(d.getDate())}`
+      );
+      break;
+    case 'week':
+      getNext = (d) => new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate() + 7,
+        d.getHours(),
+        d.getMinutes(),
+      );
+      getLabel = (d) => {
+        const yearStart = new Date(d.getFullYear(), 0, 1);
+        const days = Math.floor(
+          (d.getTime() - yearStart.getTime()) / (24 * 3600 * 1000)
+        );
+        const weekNumber = Math.ceil(
+          (d.getDay() + 1 + days) / 7
+        );
+        return `${d.getFullYear()}-${weekNumber}`;
+      };
+      break;
+    case 'month':
+      getNext = (d) => new Date(
+        d.getFullYear(),
+        d.getMonth() + 1,
+        d.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+      );
+      getLabel = (d) => (
+        `${d.getFullYear()}-${twoDigit(d.getMonth() + 1)}`
+      );
+      break;
+  }
+
+  const stepsByKey = Object.fromEntries(
+    timeline.map((step) => {
+      return [step.dateString, step];
+    })
+  );  
+  let current = start;
+  const out: QuerySessionTimelineResponse['timeline'] = [];
+
+  while (current.getTime() < end.getTime()) {
+    const label = getLabel(current);
+    if (stepsByKey.hasOwnProperty(label)) {
+      out.push(stepsByKey[label]);
+    } else {
+      out.push({
+        dateString: label,
+        count: 0
+      });
+    }
+    current = getNext(current);
+  }
+
+  return out;
+}
+
 export default function Timeline({
   request,
   dateRange,
@@ -114,7 +223,7 @@ export default function Timeline({
   }, [dateRangeStack, setDateRangeStack]);
 
   const popDateStack = useCallback(() => {
-    const last = dateRangeStack.pop();
+    dateRangeStack.pop();
     setDateRangeStack(dateRangeStack);
     if (dateRangeStack.length > 0) {
       setDateRange(dateRangeStack[dateRangeStack.length - 1]);
@@ -132,11 +241,16 @@ export default function Timeline({
         ...request,
         granularity: 24
       });
-      console.log("BLAH", timelineResp);
       if (!active) {
         return;
       }
-      setTimeline(timelineResp);
+      setTimeline({
+        granularity: timelineResp.granularity,
+        timeline: fillMissingLabels(
+          timelineResp.granularity,
+          timelineResp.timeline
+        )
+      });
     }
 
     load();
@@ -187,7 +301,14 @@ export default function Timeline({
                   timeline.granularity,
                   selectedLabel,
                 );
-                pushDateStack(...range);
+                const currentRange = dateRangeStack[dateRangeStack.length - 1];
+                if (
+                  currentRange === undefined ||
+                  currentRange[0].getTime() !== range[0].getTime() ||
+                  currentRange[1].getTime() !== range[1].getTime()
+                ) {
+                  pushDateStack(...range);
+                }
               },
               scales: {
                 y: {

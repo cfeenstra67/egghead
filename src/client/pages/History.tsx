@@ -103,15 +103,11 @@ export default function History() {
         fieldName: 'startedAt',
         operator: BinaryOperator.LessThan,
         value: getDateString(end),
-        // value: end,
-        // value: end.toISOString(),
       });
       clauses.push({
         fieldName: 'startedAt',
         operator: BinaryOperator.GreaterThanOrEqualTo,
         value: getDateString(start),
-        // value: start,
-        // value: start.toISOString(),
       });
     }
 
@@ -126,7 +122,6 @@ export default function History() {
     }
 
     if (!requestsEqual(newRequest, request)) {
-      console.log("QUERY", newRequest);
       setRequest(newRequest);
     }
   }, [

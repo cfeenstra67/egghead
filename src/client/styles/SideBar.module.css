@@ -48,6 +48,7 @@
 .seeMore {
     margin-top: var(--padding);
     font-weight: bolder;
+    font-size: 12px;
 }
 
 .seeMore:hover {

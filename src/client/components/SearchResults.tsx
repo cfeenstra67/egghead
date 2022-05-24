@@ -1,7 +1,15 @@
-import { useMemo, useState, useEffect, useContext, useCallback } from 'react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  createRef
+} from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'wouter';
 import DropdownIcon from '../icons/dropdown.svg';
+import EllipsisIcon from '../icons/ellipsis.svg';
 import InfoIcon from '../icons/info.svg';
 import { getFaviconUrlPublicApi } from '../lib/favicon';
 import { AppContext } from '../lib/context';
@@ -37,6 +45,46 @@ function Highlighted({ title }: { title: string }) {
     components.push(title.slice(lastIndex));
   }
   return <>{components}</>;
+}
+
+function DetailsDropdown({ session }: { session: SessionResponse }) {
+  const [expanded, setExpanded] = useState(false);
+  const ref = createRef<HTMLDivElement>();
+
+  useEffect(() => {
+    if (!expanded) {
+      return;
+    }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as any)) {
+        setExpanded(false);
+        cancel();
+      }
+    }
+
+    const cancel = () => document.removeEventListener('click', handleClickOutside, true);
+
+    document.addEventListener('click', handleClickOutside, true);
+
+    return cancel;
+  }, [expanded, setExpanded]);
+
+  return (
+    <div>
+      <EllipsisIcon
+        className={styles.moreDetails}
+        fill="white"
+        onClick={() => setExpanded(!expanded)}
+      />
+      {expanded && (
+        <div className={styles.expandedDetails} ref={ref}>
+          <Link to={`/session/${session.id}`}>
+            Details
+          </Link>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface SearchResultItemProps {
@@ -108,12 +156,6 @@ function SearchResultItem(
         ref={ref}
         style={{ marginLeft: (24 * (indent || 0)) + 'px' }}
       >
-        <Link to={`/session/${session.id}`}>
-          <InfoIcon
-            fill="white"
-            className={styles.searchResultsItemDetail}
-          />
-        </Link>
         <div className={styles.searchResultsItemTime}>
           <span title={new Date(session.startedAt).toLocaleString()}>
             {getTimeString(session.startedAt)}
@@ -144,6 +186,7 @@ function SearchResultItem(
             </div>
           )}
         </div>
+        <DetailsDropdown session={session} />
       </div>
       {children.map((child) => (
         <SearchResultItem session={child} indent={(indent || 0) + 1} />

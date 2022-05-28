@@ -76,6 +76,8 @@ export class SearchService {
   ): Promise<SelectQueryBuilder<SessionIndex>> {
     const repo = this.dataSource.getRepository(SessionIndex);
 
+    const stophosts = stophostsTxt.split('\n').filter((x) => x);
+
     let builder = await repo
       .createQueryBuilder('s')
       .select('*')
@@ -87,6 +89,7 @@ export class SearchService {
         `highlight("session_index", 2, '{~{~{', '}~}~}')`,
         'highlightedHost',
       )
+      .where('s.host NOT IN (:...stophosts)', { stophosts })
       .orderBy('s.startedAt', 'DESC');
 
     const getFieldName = (fieldName: string) => {
@@ -148,6 +151,7 @@ export class SearchService {
           json_group_object(s.id, s.transitionType) as joinChildTransitions
         FROM
           session s
+        WHERE s.host NOT IN (:...stophosts)
         GROUP BY s.parentSessionId
       `;
 
@@ -175,8 +179,6 @@ export class SearchService {
       .where(`rowid IN (${rowIdBuilder.getQuery()})`)
       .setParameters(rowIdBuilder.getParameters());
 
-    const stophosts = stophostsTxt.split('\n').filter((x) => x);
-
     return await this.dataSource
       .createQueryBuilder()
       .select('t.host', 'value')
@@ -184,8 +186,7 @@ export class SearchService {
       .from(`(${sessionQueryBuilder.getQuery()})`, 't')
       .setParameters(sessionQueryBuilder.getParameters())
       .groupBy('t.host')
-      .where('t.host IS NOT NULL')
-      .where('t.host NOT IN (:...stophosts)', { stophosts })
+      .having('t.host IS NOT NULL')
       .orderBy('2', 'DESC')
       .limit(count)
       .getRawMany();
@@ -310,7 +311,7 @@ export class SearchService {
     };
 
     return Object.entries(intervalLengths).flatMap(([key, value]) => {
-      const buckets = totalDiff / value;
+      const buckets = Math.ceil(totalDiff / value);
       return buckets < maxBuckets ? (
         [key as QuerySessionTimelineRequest['granularity'] & string] 
       ) : [];
@@ -346,7 +347,7 @@ export class SearchService {
 
     const sql = `
       SELECT
-        strftime(:datefmt, s.startedAt) as dateString
+        strftime(:datefmt, s.startedAt, 'localtime') as dateString
       FROM
         session s
       WHERE s.rowid IN (${rowIdBuilder.getQuery()})

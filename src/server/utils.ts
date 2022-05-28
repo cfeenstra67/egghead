@@ -19,7 +19,12 @@ export function cleanURL(uri: string): string {
 
 export function getHost(uri: string): string {
   const urlObj = new URL(uri);
-  return urlObj.hostname;
+  const hostname = urlObj.hostname;
+  // For www domains, use the root host
+  if (hostname.startsWith('www.')) {
+    return hostname.slice(4);
+  }
+  return hostname;
 }
 
 export function requestHandler(
@@ -68,4 +73,12 @@ export function requestsEqual(req1: QuerySessionsRequest, req2: QuerySessionsReq
     req1.limit === req2.limit &&
     filterEqual
   );
+}
+
+export function dateFromSqliteString(dateString: string): Date {
+  return new Date(dateString.replace(' ', 'T') + 'Z');
+}
+
+export function dateToSqliteString(date: Date): string {
+  return date.toISOString().replace('T', ' ').replace('Z', '');
 }

@@ -19,7 +19,7 @@ import {
   BinaryOperator,
   IndexToken,
 } from '../../server/clause';
-import { requestsEqual } from '../../server/utils';
+import { requestsEqual, dateToSqliteString } from '../../server/utils';
 
 export default function History() {
   const { serverClientFactory, query } = useContext(AppContext);
@@ -91,23 +91,16 @@ export default function History() {
     }
     if (dateRange !== null) {
       const [start, end] = dateRange;
-      function getDateString(date: Date): string {
-        const asTwo = (num: number) => ('00' + num).slice(-2);
-        return [
-          `${date.getFullYear()}-${asTwo(date.getMonth() + 1)}-${asTwo(date.getDate())}`,
-          `${asTwo(date.getHours())}:${asTwo(date.getMinutes())}:${asTwo(date.getSeconds())}`
-        ].join(' ');
-      }
 
       clauses.push({
         fieldName: 'startedAt',
         operator: BinaryOperator.LessThan,
-        value: getDateString(end),
+        value: dateToSqliteString(end),
       });
       clauses.push({
         fieldName: 'startedAt',
         operator: BinaryOperator.GreaterThanOrEqualTo,
-        value: getDateString(start),
+        value: dateToSqliteString(start),
       });
     }
 

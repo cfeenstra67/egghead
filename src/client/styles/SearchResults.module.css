@@ -30,7 +30,7 @@
 
 .searchResultsItem {
     display: grid;
-    grid-template-columns: min-content min-content auto min-content;
+    grid-template-columns: 12px min-content 16px auto min-content;
     align-items: center;
     column-gap: var(--padding-2);
     padding: var(--padding) var(--padding-2);

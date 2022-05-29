@@ -216,7 +216,7 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
 }
 
 export function fts5VocabTableName(args: Fts5TableArgs): string {
-  let out: string = quoteDdlName(`${args.tableName}_vocab`);
+  const out: string = quoteDdlName(`${args.tableName}_vocab`);
   if (args.schemaName !== undefined) {
     return `${quoteDdlName(args.schemaName)}.${out}`;
   }

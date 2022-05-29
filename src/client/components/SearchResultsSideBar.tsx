@@ -175,7 +175,7 @@ export default function SearchSideBar({
   const { serverClientFactory } = useContext(AppContext);
 
   useEffect(() => {
-    let active: boolean = true;
+    let active = true;
 
     async function load() {
       const client = await serverClientFactory();

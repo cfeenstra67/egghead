@@ -10,7 +10,6 @@ import { ServerClient } from '../../server/client';
 import { Server } from '../../server/service';
 import { migrations } from '../../migrations';
 import { entities } from '../../models';
-import { AppRuntime } from './types';
 
 function convertDataURIToBinary(dataURI: string): Uint8Array {
   return Uint8Array.from(atob(dataURI), (char) => char.charCodeAt(0));
@@ -19,7 +18,7 @@ function convertDataURIToBinary(dataURI: string): Uint8Array {
 function serializationMiddleware(handler: RequestHandler): RequestHandler {
 
   const handleRequest: RequestHandler = async (request) => {
-    const result = await handler(request as any);
+    const result = await handler(JSON.parse(JSON.stringify(request)));
     return JSON.parse(JSON.stringify(result));
   };
 
@@ -46,7 +45,6 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
         entities,
         migrations,
         migrationsRun: true,
-        // logging: ['query'],
       });
       await dataSource.initialize();
 
@@ -66,11 +64,11 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
 
   return () => new Promise((resolve, reject) => {
     if (initialized) {
-      resolve(new Server(dataSource as DataSource));
+      resolve(getServer());
       return;
     }
     target.addEventListener('init', () => {
-      resolve(new Server(dataSource as DataSource));
+      resolve(getServer());
     }, { once: true });
     target.addEventListener('error', (event) => {
       reject((event as CustomEvent).detail);

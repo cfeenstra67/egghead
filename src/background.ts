@@ -1,7 +1,5 @@
 import {
   ServerResponseCode,
-  ServerMessage,
-  ErrorResponse,
 } from './server';
 import { createBackgroundServerRequestProcessor } from './server/background-client';
 import { ServerClient } from './server/client';

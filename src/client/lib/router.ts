@@ -112,7 +112,7 @@ export function useExtensionLocation(): [string, NavigationHook] {
 // (excluding the leading '#' symbol)
 function currentHashLocation() {
   return window.location.hash.replace(/^#/, "") || "/";
-};
+}
 
 function hashNavigate(to: string): void {
   window.location.hash = to;
@@ -131,7 +131,7 @@ function useHashLocation(): [string, NavigationHook] {
   }, []);
 
   return [loc, hashNavigate];
-};
+}
 
 export function getRouterHook(runtime: AppRuntime): RouterHook {
   switch (runtime) {

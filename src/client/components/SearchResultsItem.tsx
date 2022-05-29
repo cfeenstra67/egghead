@@ -1,10 +1,16 @@
-import { useState, createRef, useEffect, useCallback, useContext } from 'react';
+import * as _ from 'lodash';
+import {
+  useState,
+  createRef,
+  useEffect,
+  useContext,
+  RefObject,
+} from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'wouter';
 import Word from './Word';
 import Connection from './Connection';
 import Highlighted from './Highlighted';
-import DropdownIcon from '../icons/dropdown.svg';
 import EllipsisIcon from '../icons/ellipsis.svg';
 import { AppContext } from '../lib/context';
 import { getFaviconUrlPublicApi } from '../lib/favicon';
@@ -77,13 +83,8 @@ interface SingleAggregatedSession {
   type: 'single';
   session: SessionResponse;
   duplicateSessions: SessionResponse[];
-}
-
-interface SearchResultsItemProps {
-  aggSession: SingleAggregatedSession;
-  isLast?: boolean;
-  onEndReached?: () => void;
-  indent?: number;
+  allSessionIds: string[];
+  nextSessionIds: string[];
 }
 
 export function groupSessions(sessions: SessionResponse[]): SingleAggregatedSession[] {
@@ -105,11 +106,16 @@ export function groupSessions(sessions: SessionResponse[]): SingleAggregatedSess
     }
     grouped[outUrl].push(session);
   });
-  return Object.entries(grouped).map(([url, sessions]) => {
+  return Object.entries(grouped).map((tup) => {
+    const sessions = tup[1];
     return {
       type: 'single',
       session: sessions[0],
       duplicateSessions: sessions.slice(1),
+      allSessionIds: sessions.map((session) => session.id),
+      nextSessionIds: sessions.flatMap((session) => {
+        return session.nextSessionId ? [session.nextSessionId] : [];
+      })
     }
   });
 }
@@ -119,33 +125,41 @@ function getAggSession(session: SessionResponse): SingleAggregatedSession {
     type: 'single',
     session,
     duplicateSessions: [],
+    allSessionIds: [session.id],
+    nextSessionIds: session.nextSessionId ? [session.nextSessionId] : [],
   };
 }
 
 function processChildTransitions(
-  childTransitions: Record<string, string>
+  aggSession: SingleAggregatedSession
 ): Omit<Record<ChildType, number>, ChildType.Duplicate> {
   const out = {
     [ChildType.Link]: 0,
     [ChildType.FormSubmit]: 0,
     [ChildType.Typed]: 0,
   };
-  Object.entries(childTransitions).forEach(([id, transition]) => {
-    switch (transition) {
-      case 'link':
-        out[ChildType.Link] += 1;
-        break;
-      case 'form_submit':
-        out[ChildType.FormSubmit] += 1;
-        break;
-      case 'typed':
-      case 'generated':
-        out[ChildType.Typed] += 1;
-        break;
-      default:
-        console.debug(`Unhandled transition type: ${transition}`);
-        break;
-    }
+  [
+    aggSession.session,
+    ...aggSession.duplicateSessions
+  ].forEach((session) => {
+    Object.entries(session.childTransitions).forEach((tup) => {
+      const transition = tup[1];
+      switch (transition) {
+        case 'link':
+          out[ChildType.Link] += 1;
+          break;
+        case 'form_submit':
+          out[ChildType.FormSubmit] += 1;
+          break;
+        case 'typed':
+        case 'generated':
+          out[ChildType.Typed] += 1;
+          break;
+        default:
+          console.debug(`Unhandled transition type: ${transition}`);
+          break;
+      }
+    });
   });
 
   return out;
@@ -190,14 +204,31 @@ function ChildTypeBubble({
   );
 }
 
-export default function SearchResultsItem(
-  { aggSession, isLast, onEndReached, indent }: SearchResultsItemProps
-) {
-  const session = aggSession.session;
-  const url = new URL(session.url);
+
+interface SingleAggregatedSearchResultsItemProps {
+  aggSession: SingleAggregatedSession;
+  isLast?: boolean;
+  onEndReached?: () => void;
+  indent?: number;
+  hideChildTypes?: boolean;
+  childTypesExpanded: ChildType[];
+  setChildTypesExpanded: (types: ChildType[]) => void;
+  childrenSessions: Record<string, Record<ChildType, SingleAggregatedSession[]>>;
+}
+
+function SingleAggregatedSearchResultsItem({
+  aggSession,
+  childrenSessions,
+  childTypesExpanded,
+  setChildTypesExpanded,
+  hideChildTypes,
+  isLast,
+  onEndReached,
+  indent
+}: SingleAggregatedSearchResultsItemProps) {
   const [isInView, setIsInView] = useState<boolean>(false);
-  const [childTypesExpanded, setChildTypesExpanded] = useState<ChildType[]>([]);
-  const { ref, inView, entry } = useInView({
+  const session = aggSession.session;
+  const { ref, inView } = useInView({
     threshold: [0],
     trackVisibility: true,
     delay: 100,
@@ -205,79 +236,10 @@ export default function SearchResultsItem(
   });
 
   const childTypeCounts: Record<ChildType, number> = {
-    ...processChildTransitions(aggSession.session.childTransitions),
+    ...processChildTransitions(aggSession),
     [ChildType.Duplicate]: aggSession.duplicateSessions.length,
   };
 
-  const [childrenFetched, setChildrenFetched] = useState(false);
-  const [children, setChildren] = useState<Record<ChildType, SingleAggregatedSession[]>>({
-    [ChildType.Duplicate]: [],
-    [ChildType.Typed]: [],
-    [ChildType.FormSubmit]: [],
-    [ChildType.Link]: [],
-  });
-
-  const { runtime, serverClientFactory } = useContext(AppContext);
-
-  useEffect(() => {
-    if (childrenFetched) {
-      return;
-    }
-    const containsOther = childTypesExpanded.some((item) => {
-      return item !== ChildType.Duplicate;
-    });
-    if (!containsOther) {
-      setChildren({
-        ...children,
-        [ChildType.Duplicate]: aggSession.duplicateSessions.map(getAggSession)
-      });
-      return;
-    }
-    serverClientFactory().then(async (client) => {
-      const childrenResp = await client.querySessions({
-        filter: dslToClause<Session>({
-          parentSessionId: session.id
-        })
-      });
-      const outChildren: Record<ChildType, SessionResponse[]> = {
-        [ChildType.Duplicate]: [],
-        [ChildType.Typed]: [],
-        [ChildType.FormSubmit]: [],
-        [ChildType.Link]: [],
-      };
-
-      childrenResp.results.forEach((session) => {
-        switch (session.transitionType) {
-          case 'typed':
-          case 'generated':
-            outChildren[ChildType.Typed].push(session);
-            break;
-          case 'link':
-            outChildren[ChildType.Link].push(session);
-            break;
-          case 'form_submit':
-            outChildren[ChildType.FormSubmit].push(session);
-            break;
-          default:
-            console.debug(`Unhandled child type: ${session.transitionType}`);
-            break;
-        }
-      });
-      const final = Object.fromEntries(
-        Object.entries(outChildren).map(([key, value]) => {
-          return [key, groupSessions(value)];
-        })
-      ) as Record<ChildType, SingleAggregatedSession[]>;
-      final[ChildType.Duplicate] = aggSession.duplicateSessions.map(getAggSession);
-      setChildren(final);
-      setChildrenFetched(true);
-    });
-  }, [
-    childTypesExpanded,
-    aggSession,
-    setChildrenFetched,
-    childrenFetched
-  ]);
 
   useEffect(() => {
     if (!isLast) {
@@ -289,7 +251,7 @@ export default function SearchResultsItem(
         onEndReached();
       }
     }
-  }, [inView]);
+  }, [inView, isInView, setIsInView]);
 
   return (
     <>
@@ -302,7 +264,7 @@ export default function SearchResultsItem(
         ref={ref}
         style={{ marginLeft: (24 * (indent || 0)) + 'px' }}
       >
-        {/*<Connection />*/}
+        <Connection />
         <div className={styles.searchResultsItemTime}>
           <span title={dateFromSqliteString(session.startedAt).toLocaleString()}>
             {getTimeString(session.startedAt)}
@@ -312,7 +274,7 @@ export default function SearchResultsItem(
         <div className={styles.searchResultsItemContent}>
           <div className={styles.searchResultsItemContentInner}>
             <div className={styles.searchResultsItemTitle}>
-              <a href={session.rawUrl} target="_blank">
+              <a href={session.rawUrl} target="_blank" rel="noreferrer">
                 <span title={session.title}>
                   <Highlighted title={session.highlightedTitle} />
                 </span>
@@ -324,31 +286,176 @@ export default function SearchResultsItem(
               </span>
             </div>
           </div>
-          <div>
-            {Object.entries(childTypeCounts).map(([childType, count]) => count > 0 && (
-              <ChildTypeBubble
-                childType={childType as ChildType}
-                count={count}
-                selected={childTypesExpanded.includes(childType as ChildType)}
-                onClick={() => {
-                  const type = childType as ChildType;
-                  if (childTypesExpanded.includes(type)) {
-                    setChildTypesExpanded(childTypesExpanded.filter((x) => x !== type));
-                  } else {
-                    setChildTypesExpanded(childTypesExpanded.concat([type]));
-                  }
-                }}
-              />
-            ))}
-          </div>
+          {!hideChildTypes && (
+            <div>
+              {Object.entries(childTypeCounts).map(([childType, count]) => count > 0 && (
+                <ChildTypeBubble
+                  childType={childType as ChildType}
+                  count={count}
+                  selected={childTypesExpanded.includes(childType as ChildType)}
+                  onClick={() => {
+                    const type = childType as ChildType;
+                    if (childTypesExpanded.includes(type)) {
+                      setChildTypesExpanded(childTypesExpanded.filter((x) => x !== type));
+                    } else {
+                      setChildTypesExpanded(childTypesExpanded.concat([type]));
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <DetailsDropdown session={session} />
       </div>
-      {childTypesExpanded.map((childType) => (
-        children[childType].map((aggSession) => (
-          <SearchResultsItem aggSession={aggSession} indent={(indent || 0) + 1} />
-        ))
+      {Object.values(ChildType).map((childType) => (
+        childrenSessions[aggSession.session.id]?.[childType]?.map((aggSession2) => {
+          if (childType === ChildType.Duplicate) {
+            const sessionChildren = childTypesExpanded.flatMap((type) => {
+              return childrenSessions[aggSession2.session.id]?.[type] ?? [];
+            });
+            if (childTypesExpanded.includes(childType) || sessionChildren.length > 0) {
+              const newChildren = _.pick(childrenSessions, [aggSession2.session.id]);
+              return (
+                <SingleAggregatedSearchResultsItem
+                  aggSession={aggSession2}
+                  childTypesExpanded={childTypesExpanded}
+                  setChildTypesExpanded={setChildTypesExpanded}
+                  hideChildTypes
+                  childrenSessions={newChildren}
+                  isLast={false}
+                  onEndReached={() => {}}
+                  indent={(indent || 0) + 1}
+                />
+              );
+            }
+          } else if (childTypesExpanded.includes(childType)) {
+            return <SearchResultsItem aggSession={aggSession2} indent={(indent || 0) + 1} />;
+          }
+          return <></>;
+        })
       ))}
     </>
   );
-};
+}
+
+
+export interface SearchResultsItemProps {
+  connectToRefs?: RefObject<any>[];
+  aggSession: SingleAggregatedSession;
+  isLast?: boolean;
+  onEndReached?: () => void;
+  indent?: number;
+}
+
+export default function SearchResultsItem(
+  { aggSession, isLast, onEndReached, indent }: SearchResultsItemProps
+) {
+  const [childTypesExpanded, setChildTypesExpanded] = useState<ChildType[]>([]);
+
+  const [childrenFetched, setChildrenFetched] = useState(false);
+  type ChildrenType = Record<string, Record<ChildType, SingleAggregatedSession[]>>;
+  const [children, setChildren] = useState<ChildrenType>({});
+
+  const { serverClientFactory } = useContext(AppContext);
+
+  useEffect(() => {
+    if (childrenFetched) {
+      return;
+    }
+    const containsOther = childTypesExpanded.some((item) => {
+      return item !== ChildType.Duplicate;
+    });
+    if (!containsOther) {
+      setChildren({
+        ...children,
+        [aggSession.session.id]: {
+          [ChildType.Duplicate]: aggSession.duplicateSessions.map(getAggSession),
+          [ChildType.Link]: [],
+          [ChildType.FormSubmit]: [],
+          [ChildType.Typed]: [],
+        }
+      });
+      return;
+    }
+    serverClientFactory().then(async (client) => {
+      const sessionIds = [
+        aggSession.session.id,
+        ...aggSession.duplicateSessions.map((session) => session.id),
+      ];
+      const childrenResp = await client.querySessions({
+        filter: dslToClause<Session>({
+          parentSessionId: {IN: sessionIds}
+        })
+      });
+      const outChildren: Record<string, Record<ChildType, SessionResponse[]>> = Object.fromEntries(
+        sessionIds.map((sessionId) => {
+          let duplicates: SessionResponse[] = [];
+          if (sessionId === aggSession.session.id) {
+            duplicates = aggSession.duplicateSessions;
+          }
+
+          return [sessionId, {
+            [ChildType.Duplicate]: duplicates,
+            [ChildType.Typed]: [],
+            [ChildType.FormSubmit]: [],
+            [ChildType.Link]: [],
+          }];
+        })
+      );
+
+      childrenResp.results.forEach((session) => {
+        switch (session.transitionType) {
+          case 'typed':
+          case 'generated':
+            outChildren[
+              session.parentSessionId as string
+            ][ChildType.Typed].push(session);
+            break;
+          case 'link':
+            outChildren[
+              session.parentSessionId as string
+            ][ChildType.Link].push(session);
+            break;
+          case 'form_submit':
+            outChildren[
+              session.parentSessionId as string
+            ][ChildType.FormSubmit].push(session);
+            break;
+          default:
+            console.debug(`Unhandled child type: ${session.transitionType}`);
+            break;
+        }
+      });
+      const final = Object.fromEntries(
+        Object.entries(outChildren).map(([key, value]) => {
+          return [key, Object.fromEntries(Object.entries(value).map(([key2, value2]) => {
+            if (key2 === ChildType.Duplicate) {
+              return [key2, value2.map(getAggSession)];
+            }
+            return [key2, groupSessions(value2)];
+          }))];
+        })
+      ) as ChildrenType;
+      setChildren(final);
+      setChildrenFetched(true);
+    });
+  }, [
+    childTypesExpanded,
+    aggSession,
+    setChildrenFetched,
+    childrenFetched
+  ]);
+
+  return (
+    <SingleAggregatedSearchResultsItem
+      aggSession={aggSession}
+      isLast={isLast}
+      onEndReached={onEndReached}
+      indent={indent}
+      childrenSessions={children}
+      childTypesExpanded={childTypesExpanded}
+      setChildTypesExpanded={setChildTypesExpanded}
+    />
+  );
+}

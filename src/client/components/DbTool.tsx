@@ -1,5 +1,4 @@
 import { useContext, useState } from 'react';
-import LoadingIcon from '../icons/loading.svg';
 import { AppContext, downloadUrl, cleanupUrl } from '../lib';
 import { ServerInterface } from '../../server';
 import styles from '../styles/DbTool.module.css';
@@ -16,7 +15,6 @@ enum LoadingState {
 }
 
 function getOptionStatusClassName(state: LoadingState): string {
-  const names = [styles.optionStatus];
   switch (state) {
     case LoadingState.None:
       return '';
@@ -31,10 +29,9 @@ function getOptionStatusClassName(state: LoadingState): string {
 
 interface OptionStatusProps {
   state: LoadingState;
-  setState: (state: LoadingState) => void;
 }
 
-function OptionStatus({ state, setState }: OptionStatusProps) {
+function OptionStatus({ state }: OptionStatusProps) {
   const className = getOptionStatusClassName(state);
 
   return (
@@ -69,7 +66,7 @@ function ExportDbOption({ serverClientFactory }: OptionProps) {
     <div className={styles.option}>
       <span>Export DB:</span>
       <button onClick={downloadDb}>Export</button>
-      <OptionStatus state={state} setState={setState} />
+      <OptionStatus state={state} />
       {state === LoadingState.Failed && (
         <span className={styles.errorText}>{error}</span>
       )}

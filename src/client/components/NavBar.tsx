@@ -1,4 +1,4 @@
-import { useState, useMemo, useContext } from 'react';
+import { useContext } from 'react';
 import { Link } from 'wouter';
 import { AppContext } from '../lib';
 import styles from '../styles/NavBar.module.css';

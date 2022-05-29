@@ -20,17 +20,6 @@ function dateStringToDateRange(
   granularity: QuerySessionTimelineRequest['granularity'] & string,
   dateString: string,
 ): [Date, Date] {
-  let offset = new Date().getTimezoneOffset();
-  const negative = offset < 0;
-  offset = Math.abs(offset);
-
-  const hours = Math.floor(offset / 60);
-  const hoursString = ('00' + hours).slice(-2);
-  const minutes = offset % 60;
-  const minutesString = ('00' + minutes).slice(-2);
-
-  const offsetString = `${negative ? '+' : '-'}${hoursString}:${minutesString}`
-
   const parseIntOnly = (input: string) => parseInt(input);
 
   switch (granularity) {
@@ -63,7 +52,7 @@ function dateStringToLabel(
   granularity: QuerySessionTimelineRequest['granularity'] & string,
   dateString: string,
 ): string {
-  const [start, end] = dateStringToDateRange(granularity, dateString);
+  const [start] = dateStringToDateRange(granularity, dateString);
   const localeName = 'en-US';
   switch (granularity) {
     case 'hour':
@@ -103,14 +92,14 @@ function fillMissingLabels(
   if (timeline.length === 0) {
     return [];
   }
-  const [start, startEnd] = dateStringToDateRange(
+  const start = dateStringToDateRange(
     granularity,
     timeline[0].dateString
-  );
-  const [endStart, end] = dateStringToDateRange(
+  )[0];
+  const end = dateStringToDateRange(
     granularity,
     timeline[timeline.length - 1].dateString,
-  );
+  )[1];
 
   function twoDigit(num: number): string {
     return ('00' + num).slice(-2);

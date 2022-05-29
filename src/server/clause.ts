@@ -1,4 +1,3 @@
-import * as ohm from 'ohm-js';
 import queryStringGrammar, {
   QueryStringSemantics
 } from './query-string.ohm-bundle';
@@ -236,6 +235,14 @@ export function renderClause<T>({
     }
 
     const paramName = getParamName(clause.fieldName);
+    if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
+      return [
+        `${getFieldName(clause.fieldName)} ${clause.operator} (:...${paramName})`,
+        { [paramName]: clause.value },
+        paramIndex,
+      ];
+    }
+
     return [
       `${getFieldName(clause.fieldName)} ${clause.operator} :${paramName}`,
       { [paramName]: clause.value },

@@ -5,7 +5,7 @@ export default function Connection() {
     <div>
       <svg className={styles.connection} viewBox="0 0 20 60">
         <line
-          stroke-width="2px"
+          strokeWidth="2px"
           stroke="white"
           x1="0"
           y1="30"

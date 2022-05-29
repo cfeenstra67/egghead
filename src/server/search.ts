@@ -7,14 +7,10 @@ import {
 } from './clause';
 import {
   Session,
-  SessionIndex,
-  SessionTermIndex,
-  SessionTermIndexVocab
+  SessionIndex
 } from '../models';
 import {
   Fts5TableArgs,
-  createFts5Index,
-  dropFts5Index,
   getColumn,
 } from '../models/fts5';
 import {
@@ -363,14 +359,6 @@ export class SearchService {
       .groupBy('t.dateString')
       .getRawMany();
 
-    const qb = this.dataSource
-      .createQueryBuilder()
-      .select('t.dateString')
-      .addSelect('COUNT(1)', 'count')
-      .from(`(${sql})`, 't')
-      .setParameters(rowIdBuilder.getParameters())
-      .setParameter('datefmt', format);
-
     return {
       granularity: stringGranularity,
       timeline,
@@ -378,8 +366,6 @@ export class SearchService {
   }
 
   async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
-    const repo = this.dataSource.getRepository(SessionIndex);
-
     let builder = await this.searchQueryBuilder(request, true);
 
     const totalCount = await builder.getCount();
@@ -400,8 +386,6 @@ export class SearchService {
   }
 
   async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
-    const repo = this.dataSource.getRepository(SessionIndex);
-
     const builder = await this.searchQueryBuilder(request);
 
     const rowIdBuilder = builder
@@ -421,8 +405,6 @@ export class SearchService {
   }
 
   async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
-    const repo = this.dataSource.getRepository(SessionIndex);
-
     const builder = await this.searchQueryBuilder(request);
 
     const rowIdBuilder = builder

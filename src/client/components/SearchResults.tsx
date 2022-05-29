@@ -25,7 +25,7 @@ export interface SearchResultsProps {
   sessions: SessionResponse[];
   isLoading?: boolean;
   onEndReached?: () => void;
-};
+}
 
 export default function SearchResults({
   sessions,

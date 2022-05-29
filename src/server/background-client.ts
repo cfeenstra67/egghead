@@ -9,7 +9,7 @@ import {
 
 export function backgroundServerRequestProcessor(
   worker: Worker,
-  requestTimeout: number = 60000
+  requestTimeout = 60000
 ): RequestHandler {
   const target = new EventTarget();
 

@@ -7,7 +7,7 @@ export function getTabById(
 ): void {
     pollInterval = pollInterval || 100;
 
-    let getTab = () => {
+    const getTab = () => {
         chrome.tabs.get(tabId, (tab: chrome.tabs.Tab) => {
             if (chrome.runtime.lastError) {
                 if (errorCallback) { errorCallback(chrome.runtime.lastError.message || ''); }
@@ -29,7 +29,7 @@ export function getWindowById(
 ): void {
     pollInterval = pollInterval || 100;
 
-    let getWindow = () => {
+    const getWindow = () => {
         chrome.windows.get(windowId, (win: chrome.windows.Window) => {
             if (chrome.runtime.lastError) {
                 if (errorCallback) { errorCallback(chrome.runtime.lastError.message || ''); }

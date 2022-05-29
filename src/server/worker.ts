@@ -1,10 +1,7 @@
 import queue from 'queue';
-import { DataSource } from 'typeorm';
 import { DBController } from './db-controller';
 import { Server } from './service';
 import {
-  ServerRequest,
-  ServerResponse,
   ServerResponseCode,
   ErrorResponse,
   WorkerRequest,

@@ -27,9 +27,9 @@ export class NavigationObserver {
 
   loadState(callback: () => void) {
     chrome.storage.local.get([this.storageName], (result: any) => {
-      let stored = result[this.storageName];
+      const stored = result[this.storageName];
       if (this.saveTime && stored && stored.saveTime) {
-        let saveTime = new Date(stored.saveTime);
+        const saveTime = new Date(stored.saveTime);
         // The stored data is not up to date
         if (saveTime < this.saveTime) {
           console.warn("Ignoring old data from", saveTime);
@@ -57,7 +57,7 @@ export class NavigationObserver {
   }
 
   wrapEventHandler(handler: (data: any) => void) {
-    let wrapped = (data: any) => {
+    const wrapped = (data: any) => {
       this.loadState(() => {
         handler(data);
         this.saveState();
@@ -98,17 +98,16 @@ export class NavigationObserver {
   // This should probably be improved to be more precise--for some reason a lot of
   // keys get left in the object
   cleanUpStorage() {
-    let now = new Date();
+    const now = new Date();
     this.loadState(() => {
-      let toDelete: string[] = [];
+      const toDelete: string[] = [];
       Object.entries(this.pending).map(([key, value]) => {
         if (!value.start) {
           return;
         }
 
-        let start = new Date(value.start);
-        // @ts-ignore
-        let daysOld = (now - start) / 1000 / 3600 / 24; 
+        const start = new Date(value.start);
+        const daysOld = (now.getTime() - start.getTime()) / 1000 / 3600 / 24; 
         if (daysOld > 7) {
           toDelete.push(key);
         }
@@ -123,7 +122,7 @@ export class NavigationObserver {
   }
 
   parseId(id: string): [number | null, number | null] {
-    let parts = id.split("-", 2);
+    const parts = id.split("-", 2);
     if (parts.length != 2) {
       return [null, null];
     }
@@ -150,8 +149,8 @@ export class NavigationObserver {
   }
 
   onCreatedNavigationTargetListener(data: any): void {
-    var id = this.constructId(data);
-    let patch = (existing: NavigationObserver.PendingRequest) => {
+    const id = this.constructId(data);
+    const patch = (existing: NavigationObserver.PendingRequest) => {
       existing.openedInNewTab = !!data.tabId;
       existing.source = {
         tabId: data.sourceTabId,
@@ -164,8 +163,8 @@ export class NavigationObserver {
   }
 
   onBeforeNavigateListener(data: any): void {
-    let id = this.constructId(data);
-    let patch = (existing: NavigationObserver.PendingRequest) => {
+    const id = this.constructId(data);
+    const patch = (existing: NavigationObserver.PendingRequest) => {
       existing.start = existing.start || data.timeStamp;
     };
 
@@ -173,7 +172,7 @@ export class NavigationObserver {
   }
 
   onCommittedListener(data: any): void {
-    var id = this.constructId(data);
+    const id = this.constructId(data);
     if (!this.pending[id]) {
       console.debug(
           'errorCommittedWithoutPending',
@@ -187,9 +186,9 @@ export class NavigationObserver {
   }
 
   onReferenceFragmentUpdatedListener(data: any): void {
-    var id = this.constructId(data);
+    const id = this.constructId(data);
     if (!this.pending[id]) {
-      let detail: NavigationObserver.Request = {
+      const detail: NavigationObserver.Request = {
         duration: 0,
         openedInNewTab: false,
         source: {
@@ -203,7 +202,7 @@ export class NavigationObserver {
         frameId: data.frameId
       };
 
-      let event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
 
       this.target.dispatchEvent(event);
     } else {
@@ -214,9 +213,9 @@ export class NavigationObserver {
   }
 
   onHistoryStateUpdatedListener(data: any): void {
-    var id = this.constructId(data);
+    const id = this.constructId(data);
     if (!this.pending[id]) {
-      let detail: NavigationObserver.Request = {
+      const detail: NavigationObserver.Request = {
         duration: 0,
         openedInNewTab: false,
         source: {
@@ -230,7 +229,7 @@ export class NavigationObserver {
         frameId: data.frameId
       };
 
-      let event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
 
       this.target.dispatchEvent(event);
     } else {
@@ -241,14 +240,14 @@ export class NavigationObserver {
   }
 
   onCompletedListener(data: any): void {
-    var id = this.constructId(data);
+    const id = this.constructId(data);
     if (!this.pending[id]) {
       console.debug(
           'errorCompletedWithoutPending',
           data.url,
           data);
     } else {
-      let detail: NavigationObserver.Request = {
+      const detail: NavigationObserver.Request = {
         duration: (data.timeStamp - this.pending[id].start),
         openedInNewTab: this.pending[id].openedInNewTab,
         source: this.pending[id].source || {tabId: null, frameId: null},
@@ -259,7 +258,7 @@ export class NavigationObserver {
         frameId: data.frameId
       };
 
-      let event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
 
       delete this.pending[id];
       this.target.dispatchEvent(event);
@@ -267,7 +266,7 @@ export class NavigationObserver {
   }
 
   onErrorOccurredListener(data: any): void {
-    var id = this.constructId(data);
+    const id = this.constructId(data);
     if (!this.pending[id]) {
       console.error(
           'errorErrorOccurredWithoutPending',
@@ -276,7 +275,7 @@ export class NavigationObserver {
     } else {
       this.prepareDataStorage(id);
 
-      let detail: NavigationObserver.Request = {
+      const detail: NavigationObserver.Request = {
         duration: (data.timeStamp - this.pending[id].start),
         openedInNewTab: this.pending[id].openedInNewTab,
         source: this.pending[id].source || {tabId: null, frameId: null},
@@ -287,7 +286,7 @@ export class NavigationObserver {
         frameId: data.frameId
       };
 
-      let event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_ERROR, { detail });
+      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_ERROR, { detail });
 
       delete this.pending[id];
       this.target.dispatchEvent(event);

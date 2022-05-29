@@ -40,7 +40,7 @@ export class DBController {
 
     if (typeof SharedArrayBuffer === 'undefined') {
       console.warn("Running without SharedArrayBuffer, this will hurt performance.");
-      let stream = SQL.FS.open(path, 'a+');
+      const stream = SQL.FS.open(path, 'a+');
       await stream.node.contents.readIfFallback();
       SQL.FS.close(stream);
     }

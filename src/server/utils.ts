@@ -7,7 +7,6 @@ import {
   ServerInterface,
   RequestHandler,
   QuerySessionsRequest,
-  QuerySessionsResponse,
 } from './types';
 
 export function cleanURL(uri: string): string {
@@ -55,7 +54,7 @@ export function requestHandler(
         message,
       }
       return response as any;
-    };
+    }
   };
 }
 

@@ -6,18 +6,13 @@ import {
 import {
   createFts5Index,
   dropFts5Index,
-  getColumn,
 } from '../models/fts5';
 import { SearchService, sessionIndexTableArgs } from './search';
 import {
   ServerInterface,
-  ServerMessage,
   ServerResponseCode,
-  ServerRequest,
-  ServerResponse,
   QueryRequest,
   QueryResponse,
-  SessionResponse,
   QuerySessionsRequest,
   QuerySessionsResponse,
   ExportDatabaseRequest,

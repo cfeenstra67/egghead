@@ -1,6 +1,3 @@
-import { Link, useRoute } from 'wouter';
-import HistoryIcon from '../icons/history.svg';
-import SettingsIcon from '../icons/settings.svg';
 import styles from '../styles/SideBar.module.css';
 
 // interface SideBarItemProps {

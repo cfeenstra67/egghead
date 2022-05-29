@@ -14,7 +14,8 @@
     "watch": "npm run clean && tsc --noEmit --watch | webpack --config-name extension --watch",
     "watch-web": "npm run clean && tsc --noEmit --watch | webpack --config-name web --watch",
     "typeorm": "typeorm-ts-node-commonjs",
-    "ohm-generate": "npx ohm generateBundles --esm --withTypes src/**/*.ohm"
+    "ohm-generate": "npx ohm generateBundles --esm --withTypes src/**/*.ohm",
+    "fmt": "eslint --fix 'src/**/*.{ts,tsx}'"
   },
   "devDependencies": {
     "@jlongster/sql.js": "^1.6.7",
@@ -34,9 +35,11 @@
     "copy-webpack-plugin": "^10.2.4",
     "css-loader": "^6.7.1",
     "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-react": "^7.30.0",
     "eslint-plugin-unused-imports": "^2.0.0",
@@ -45,6 +48,7 @@
     "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^2.6.0",
     "ohm-js": "^16.3.4",
+    "prettier": "^2.6.2",
     "queue": "^6.0.2",
     "react": "^18.1.0",
     "react-chartjs-2": "^4.1.0",

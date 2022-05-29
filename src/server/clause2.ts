@@ -1,4 +1,3 @@
-
 // export namespace Clause {
 
 //   export const IndexToken = '__index__';

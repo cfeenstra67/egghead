@@ -1,11 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
-import { initBackend } from 'absurd-sql/dist/indexeddb-main-thread';
-import EventTarget from '@ungap/event-target';
-import {
-  WorkerRequest,
-  WorkerResponse,
-  RequestHandler,
-} from './types';
+import { v4 as uuidv4 } from "uuid";
+import { initBackend } from "absurd-sql/dist/indexeddb-main-thread";
+import EventTarget from "@ungap/event-target";
+import { WorkerRequest, WorkerResponse, RequestHandler } from "./types";
 
 export function backgroundServerRequestProcessor(
   worker: Worker,
@@ -13,7 +9,7 @@ export function backgroundServerRequestProcessor(
 ): RequestHandler {
   const target = new EventTarget();
 
-  worker.addEventListener('message', (event: MessageEvent) => {
+  worker.addEventListener("message", (event: MessageEvent) => {
     if (!event.data.requestId) {
       return;
     }
@@ -40,18 +36,22 @@ export function backgroundServerRequestProcessor(
       worker.postMessage(workerRequest);
 
       const timeout = setTimeout(() => {
-        reject(new Error(
-          `Request ${JSON.stringify(request)} timed out after ${requestTimeout}ms.`
-        ));
+        reject(
+          new Error(
+            `Request ${JSON.stringify(
+              request
+            )} timed out after ${requestTimeout}ms.`
+          )
+        );
       }, requestTimeout);
     });
-  }
+  };
 }
 
 export function createServerWorker(): Worker {
-  const sqlWorker = new Worker('./server-worker.js');
+  const sqlWorker = new Worker("./server-worker.js");
   initBackend(sqlWorker);
-  return sqlWorker
+  return sqlWorker;
 }
 
 export function createBackgroundServerRequestProcessor(): RequestHandler {

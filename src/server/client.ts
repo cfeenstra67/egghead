@@ -21,7 +21,7 @@ import {
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
-} from './types';
+} from "./types";
 
 // For use in a web page
 export const processExtensionRequest: RequestHandler = (request) => {
@@ -37,7 +37,6 @@ export const processExtensionRequest: RequestHandler = (request) => {
 };
 
 export class ServerClient implements ServerInterface {
-
   constructor(readonly processRequest: RequestHandler) {}
 
   private async sendRequestAndRaiseForError<T extends ServerMessage>(
@@ -53,57 +52,66 @@ export class ServerClient implements ServerInterface {
   async runQuery(request: QueryRequest): Promise<QueryResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.Query,
-      ...request
+      ...request,
     });
   }
 
-  async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
+  async querySessions(
+    request: QuerySessionsRequest
+  ): Promise<QuerySessionsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessions,
-      ...request
-    });
-  }
-  
-  async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {
-    return await this.sendRequestAndRaiseForError({
-      type: ServerMessage.ExportDatabase,
-      ...request
+      ...request,
     });
   }
 
-  async regenerateIndex(request: RegenerateIndexRequest): Promise<RegenerateIndexResponse> {
+  async exportDatabase(
+    request: ExportDatabaseRequest
+  ): Promise<ExportDatabaseResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.ExportDatabase,
+      ...request,
+    });
+  }
+
+  async regenerateIndex(
+    request: RegenerateIndexRequest
+  ): Promise<RegenerateIndexResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.RegenerateIndex,
-      ...request
+      ...request,
     });
   }
 
   async tabChanged(request: TabChangedRequest): Promise<TabChangedResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.TabChanged,
-      ...request
+      ...request,
     });
   }
 
   async tabClosed(request: TabClosedRequest): Promise<TabClosedResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.TabClosed,
-      ...request
+      ...request,
     });
   }
 
-  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+  async querySessionFacets(
+    request: QuerySessionFacetsRequest
+  ): Promise<QuerySessionFacetsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessionFacets,
-      ...request
+      ...request,
     });
   }
 
-  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+  async querySessionTimeline(
+    request: QuerySessionTimelineRequest
+  ): Promise<QuerySessionTimelineResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessionTimeline,
       ...request,
     });
   }
-
 }

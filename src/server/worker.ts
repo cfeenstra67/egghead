@@ -1,13 +1,13 @@
-import queue from 'queue';
-import { DBController } from './db-controller';
-import { Server } from './service';
+import queue from "queue";
+import { DBController } from "./db-controller";
+import { Server } from "./service";
 import {
   ServerResponseCode,
   ErrorResponse,
   WorkerRequest,
   RequestHandler,
-} from './types';
-import { requestHandler } from './utils';
+} from "./types";
+import { requestHandler } from "./utils";
 
 const dbController = new DBController();
 
@@ -23,7 +23,7 @@ const handleRequest: RequestHandler = async (request) => {
   const server = new Server(dataSource);
   const handler = requestHandler(server);
   return await handler(request);
-}
+};
 
 function handleMessage(event: MessageEvent) {
   const request = event.data as WorkerRequest<any>;
@@ -35,15 +35,15 @@ function handleMessage(event: MessageEvent) {
 
 self.onmessage = handleMessage;
 
-requestQueue.on('success', (result, job) => {
+requestQueue.on("success", (result, job) => {
   self.postMessage({ requestId: job.id, response: result });
 });
 
-requestQueue.on('error', (err, job) => {
-  console.trace('Error handling server message.', err);
+requestQueue.on("error", (err, job) => {
+  console.trace("Error handling server message.", err);
   let message: string;
   if (err === null && err === undefined) {
-    message = ''
+    message = "";
   } else if (err.stack !== undefined) {
     message = err.stack;
   } else {
@@ -52,14 +52,14 @@ requestQueue.on('error', (err, job) => {
   const response: ErrorResponse = {
     code: ServerResponseCode.Error,
     message,
-  }
+  };
   self.postMessage({ requestId: job.id, response });
 });
 
-requestQueue.on('timeout', (_, job) => {
+requestQueue.on("timeout", (_, job) => {
   const response: ErrorResponse = {
     code: ServerResponseCode.Error,
     message: `Backend timed out after ${requestTimeout}ms.`,
-  }
-  self.postMessage({ requestId: job.id, response })
+  };
+  self.postMessage({ requestId: job.id, response });
 });

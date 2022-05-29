@@ -1,10 +1,10 @@
-import { useContext } from 'react';
-import { Link } from 'wouter';
-import { AppContext } from '../lib';
-import styles from '../styles/NavBar.module.css';
-import SearchIcon from '../icons/search-icon.svg';
-import CloseCircleIcon from '../icons/close-circle.svg';
-import SettingsIcon from '../icons/settings.svg';
+import { useContext } from "react";
+import { Link } from "wouter";
+import { AppContext } from "../lib";
+import styles from "../styles/NavBar.module.css";
+import SearchIcon from "../icons/search-icon.svg";
+import CloseCircleIcon from "../icons/close-circle.svg";
+import SettingsIcon from "../icons/settings.svg";
 
 function LeftContent() {
   return (
@@ -20,10 +20,7 @@ function RightContent() {
   return (
     <div className={styles.rightContent}>
       <Link to="/settings">
-        <SettingsIcon
-          fill="white"
-          className={styles.settingsIcon}
-        />
+        <SettingsIcon fill="white" className={styles.settingsIcon} />
       </Link>
     </div>
   );
@@ -49,9 +46,11 @@ function SearchField() {
         <CloseCircleIcon
           fill="white"
           className={styles.searchFieldClearIcon}
-          onClick={() => setQuery('')}
+          onClick={() => setQuery("")}
         />
-      ) : <></>}
+      ) : (
+        <></>
+      )}
     </div>
   );
 }

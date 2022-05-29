@@ -1,4 +1,4 @@
-import { clausesEqual } from './clause';
+import { clausesEqual } from "./clause";
 import {
   ServerMessage,
   ErrorResponse,
@@ -7,12 +7,12 @@ import {
   ServerInterface,
   RequestHandler,
   QuerySessionsRequest,
-} from './types';
+} from "./types";
 
 export function cleanURL(uri: string): string {
   const urlObj = new URL(uri);
-  urlObj.search = '';
-  urlObj.hash = '';
+  urlObj.search = "";
+  urlObj.hash = "";
   return urlObj.href;
 }
 
@@ -20,21 +20,21 @@ export function getHost(uri: string): string {
   const urlObj = new URL(uri);
   const hostname = urlObj.hostname;
   // For www domains, use the root host
-  if (hostname.startsWith('www.')) {
+  if (hostname.startsWith("www.")) {
     return hostname.slice(4);
   }
   return hostname;
 }
 
-export function requestHandler(
-  server: ServerInterface
-): RequestHandler {
-  return async <T extends ServerMessage>(input: TypedServerRequestForMessage<T>) => {
+export function requestHandler(server: ServerInterface): RequestHandler {
+  return async <T extends ServerMessage>(
+    input: TypedServerRequestForMessage<T>
+  ) => {
     const method = server[input.type]?.bind(server);
     if (method === undefined) {
       return {
         code: ServerResponseCode.Error,
-        message: `Invalid method ${input.type}.`
+        message: `Invalid method ${input.type}.`,
       };
     }
     try {
@@ -43,7 +43,7 @@ export function requestHandler(
     } catch (err: any) {
       let message: string;
       if (err === null && err === undefined) {
-        message = ''
+        message = "";
       } else if (err.stack !== undefined) {
         message = err.stack;
       } else {
@@ -52,13 +52,16 @@ export function requestHandler(
       const response: ErrorResponse = {
         code: ServerResponseCode.Error,
         message,
-      }
+      };
       return response as any;
     }
   };
 }
 
-export function requestsEqual(req1: QuerySessionsRequest, req2: QuerySessionsRequest): boolean {
+export function requestsEqual(
+  req1: QuerySessionsRequest,
+  req2: QuerySessionsRequest
+): boolean {
   let filterEqual = true;
   if (req1.filter && req2.filter) {
     filterEqual = clausesEqual(req1.filter, req2.filter);
@@ -75,9 +78,9 @@ export function requestsEqual(req1: QuerySessionsRequest, req2: QuerySessionsReq
 }
 
 export function dateFromSqliteString(dateString: string): Date {
-  return new Date(dateString.replace(' ', 'T') + 'Z');
+  return new Date(dateString.replace(" ", "T") + "Z");
 }
 
 export function dateToSqliteString(date: Date): string {
-  return date.toISOString().replace('T', ' ').replace('Z', '');
+  return date.toISOString().replace("T", " ").replace("Z", "");
 }

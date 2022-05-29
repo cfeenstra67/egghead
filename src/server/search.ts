@@ -1,18 +1,12 @@
-import { DataSource, EntityTarget, SelectQueryBuilder } from 'typeorm';
+import { DataSource, EntityTarget, SelectQueryBuilder } from "typeorm";
 import {
   renderClause,
   IndexToken,
   parseQueryString,
   BinaryOperator,
-} from './clause';
-import {
-  Session,
-  SessionIndex
-} from '../models';
-import {
-  Fts5TableArgs,
-  getColumn,
-} from '../models/fts5';
+} from "./clause";
+import { Session, SessionIndex } from "../models";
+import { Fts5TableArgs, getColumn } from "../models/fts5";
 import {
   QuerySessionsRequest,
   QuerySessionsResponse,
@@ -21,12 +15,15 @@ import {
   SessionResponse,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
-} from './types';
-import stophostsTxt from './stophosts.txt';
-import stopwordsTxt from './stopwords.txt';
+} from "./types";
+import stophostsTxt from "./stophosts.txt";
+import stopwordsTxt from "./stopwords.txt";
 
-function sessionToSessionResponse(session: Record<string, any>): SessionResponse {
-  const childTransitions = session.childTransitions && JSON.parse(session.childTransitions)
+function sessionToSessionResponse(
+  session: Record<string, any>
+): SessionResponse {
+  const childTransitions =
+    session.childTransitions && JSON.parse(session.childTransitions);
   return {
     ...session,
     startedAt: session.startedAt.toString(),
@@ -43,27 +40,22 @@ export function sessionIndexTableArgs(
   const tableMeta = src.getMetadata(Session);
   const indexMeta = src.getMetadata(index);
 
-  const indexedColumns = [
-    'host',
-    'url',
-    'title',
-    'rawUrl',
-    'dum',
-  ];
+  const indexedColumns = ["host", "url", "title", "rawUrl", "dum"];
 
   return {
     tableName: indexMeta.tableName,
     contentTableName: tableMeta.tableName,
     columns: indexMeta.columns.flatMap((col) => {
       const name = col.databaseNameWithoutPrefixes;
-      return ['rowid', 'dum'].includes(name) ? [] : [[name, indexedColumns.includes(name)]];
+      return ["rowid", "dum"].includes(name)
+        ? []
+        : [[name, indexedColumns.includes(name)]];
     }),
-    tokenize: tokenize ?? 'unicode61',
+    tokenize: tokenize ?? "unicode61",
   };
 }
 
 export class SearchService {
-
   constructor(readonly dataSource: DataSource) {}
 
   private async searchQueryBuilder(
@@ -72,25 +64,25 @@ export class SearchService {
   ): Promise<SelectQueryBuilder<SessionIndex>> {
     const repo = this.dataSource.getRepository(SessionIndex);
 
-    const stophosts = stophostsTxt.split('\n').filter((x) => x);
+    const stophosts = stophostsTxt.split("\n").filter((x) => x);
 
     let builder = await repo
-      .createQueryBuilder('s')
-      .select('*')
+      .createQueryBuilder("s")
+      .select("*")
       .addSelect(
         `highlight("session_index", 4, '{~{~{', '}~}~}')`,
-        'highlightedTitle',
+        "highlightedTitle"
       )
       .addSelect(
         `highlight("session_index", 2, '{~{~{', '}~}~}')`,
-        'highlightedHost',
+        "highlightedHost"
       )
-      .where('s.host NOT IN (:...stophosts)', { stophosts })
-      .orderBy('s.startedAt', 'DESC');
+      .where("s.host NOT IN (:...stophosts)", { stophosts })
+      .orderBy("s.startedAt", "DESC");
 
     const getFieldName = (fieldName: string) => {
       if (fieldName === IndexToken) {
-        return 'session_index';
+        return "session_index";
       }
       return `s.${fieldName}`;
     };
@@ -113,11 +105,10 @@ export class SearchService {
             return {
               operator: BinaryOperator.Match,
               fieldName: IndexToken,
-              value: filter.fieldName === IndexToken ? (
-                JSON.stringify(filter.value)
-              ) : ( 
-                `${filter.fieldName}:${filter.value}`
-              ),
+              value:
+                filter.fieldName === IndexToken
+                  ? JSON.stringify(filter.value)
+                  : `${filter.fieldName}:${filter.value}`,
             };
           }
           return filter;
@@ -152,13 +143,12 @@ export class SearchService {
       `;
 
       builder = builder
-        .leftJoin(
-          `(${childCountsSql})`,
-          's2',
-          's.id = s2.joinId'
-        )
-        .addSelect('COALESCE(s2.joinChildCount, 0)', 'childCount')
-        .addSelect(`COALESCE(s2.joinChildTransitions, '{}')`, 'childTransitions');
+        .leftJoin(`(${childCountsSql})`, "s2", "s.id = s2.joinId")
+        .addSelect("COALESCE(s2.joinChildCount, 0)", "childCount")
+        .addSelect(
+          `COALESCE(s2.joinChildTransitions, '{}')`,
+          "childTransitions"
+        );
     }
 
     return builder;
@@ -166,31 +156,31 @@ export class SearchService {
 
   private async getHostStats(
     rowIdBuilder: SelectQueryBuilder<SessionIndex>,
-    count: number,
+    count: number
   ): Promise<any[]> {
     const sessionRepo = this.dataSource.getRepository(Session);
     const sessionQueryBuilder = sessionRepo
       .createQueryBuilder()
-      .select('*')
+      .select("*")
       .where(`rowid IN (${rowIdBuilder.getQuery()})`)
       .setParameters(rowIdBuilder.getParameters());
 
     return await this.dataSource
       .createQueryBuilder()
-      .select('t.host', 'value')
-      .addSelect('COUNT(1)', 'count')
-      .from(`(${sessionQueryBuilder.getQuery()})`, 't')
+      .select("t.host", "value")
+      .addSelect("COUNT(1)", "count")
+      .from(`(${sessionQueryBuilder.getQuery()})`, "t")
       .setParameters(sessionQueryBuilder.getParameters())
-      .groupBy('t.host')
-      .having('t.host IS NOT NULL')
-      .orderBy('2', 'DESC')
+      .groupBy("t.host")
+      .having("t.host IS NOT NULL")
+      .orderBy("2", "DESC")
       .limit(count)
       .getRawMany();
   }
 
   private async getTermStats(
     rowIdBuilder: SelectQueryBuilder<SessionIndex>,
-    count: number,
+    count: number
   ): Promise<any[]> {
     const sql = `
       WITH doc_term_counts AS (
@@ -266,14 +256,14 @@ export class SearchService {
       ORDER BY t.tfidf DESC, t.count DESC
     `;
 
-    const stopwords = stopwordsTxt.split('\n').filter((x) => x);
+    const stopwords = stopwordsTxt.split("\n").filter((x) => x);
 
     const builder = this.dataSource
       .createQueryBuilder()
-      .from(`(${sql})`, 't')
+      .from(`(${sql})`, "t")
       .setParameters(rowIdBuilder.getParameters())
-      .setParameter('stopwords', stopwords)
-      .select('*')
+      .setParameter("stopwords", stopwords)
+      .select("*")
       .limit(count);
 
     return await builder.getRawMany();
@@ -281,23 +271,22 @@ export class SearchService {
 
   private async detectGranularity(
     rowIdBuilder: SelectQueryBuilder<SessionIndex>,
-    maxBuckets: number,
-  ): Promise<QuerySessionTimelineRequest['granularity'] & string> {
+    maxBuckets: number
+  ): Promise<QuerySessionTimelineRequest["granularity"] & string> {
     const minMaxQueryBuilder = this.dataSource
       .createQueryBuilder()
-      .from(Session, 't')
+      .from(Session, "t")
       .where(
         `t.rowid IN (${rowIdBuilder.getQuery()})`,
         rowIdBuilder.getParameters()
       )
-      .select('MIN(t.startedAt)', 'minStartedAt')
-      .addSelect('MAX(t.startedAt)', 'maxStartedAt');
+      .select("MIN(t.startedAt)", "minStartedAt")
+      .addSelect("MAX(t.startedAt)", "maxStartedAt");
 
     const { minStartedAt, maxStartedAt } = await minMaxQueryBuilder.getRawOne();
 
-    const totalDiff: number = (
-      new Date(maxStartedAt).getTime() - new Date(minStartedAt).getTime()
-    );
+    const totalDiff: number =
+      new Date(maxStartedAt).getTime() - new Date(minStartedAt).getTime();
 
     const intervalLengths = {
       hour: 1000 * 3600,
@@ -306,38 +295,43 @@ export class SearchService {
       month: 1000 * 3600 * 24 * 30,
     };
 
-    return Object.entries(intervalLengths).flatMap(([key, value]) => {
-      const buckets = Math.ceil(totalDiff / value);
-      return buckets < maxBuckets ? (
-        [key as QuerySessionTimelineRequest['granularity'] & string] 
-      ) : [];
-    })[0] ?? 'month';
+    return (
+      Object.entries(intervalLengths).flatMap(([key, value]) => {
+        const buckets = Math.ceil(totalDiff / value);
+        return buckets < maxBuckets
+          ? [key as QuerySessionTimelineRequest["granularity"] & string]
+          : [];
+      })[0] ?? "month"
+    );
   }
 
   private async getTimeline(
     rowIdBuilder: SelectQueryBuilder<SessionIndex>,
-    granularity: QuerySessionTimelineRequest['granularity'],
+    granularity: QuerySessionTimelineRequest["granularity"]
   ): Promise<QuerySessionTimelineResponse> {
-    let stringGranularity: QuerySessionTimelineRequest['granularity'] & string;
-    if (typeof granularity === 'number') {
-      stringGranularity = await this.detectGranularity(rowIdBuilder, granularity);
+    let stringGranularity: QuerySessionTimelineRequest["granularity"] & string;
+    if (typeof granularity === "number") {
+      stringGranularity = await this.detectGranularity(
+        rowIdBuilder,
+        granularity
+      );
     } else {
       stringGranularity = granularity;
     }
 
     let format: string;
     switch (stringGranularity) {
-      case 'hour':
-        format = '%Y-%m-%dT%H';
+      case "hour":
+        format = "%Y-%m-%dT%H";
         break;
-      case 'day':
-        format = '%Y-%m-%d';
+      case "day":
+        format = "%Y-%m-%d";
         break;
-      case 'week':
-        format = '%Y-%W';
+      case "week":
+        format = "%Y-%W";
         break;
-      case 'month':
-        format = '%Y-%m';
+      case "month":
+        format = "%Y-%m";
         break;
     }
 
@@ -351,12 +345,12 @@ export class SearchService {
 
     const timeline = await this.dataSource
       .createQueryBuilder()
-      .select('t.dateString')
-      .addSelect('COUNT(1)', 'count')
-      .from(`(${sql})`, 't')
+      .select("t.dateString")
+      .addSelect("COUNT(1)", "count")
+      .from(`(${sql})`, "t")
       .setParameters(rowIdBuilder.getParameters())
-      .setParameter('datefmt', format)
-      .groupBy('t.dateString')
+      .setParameter("datefmt", format)
+      .groupBy("t.dateString")
       .getRawMany();
 
     return {
@@ -365,7 +359,9 @@ export class SearchService {
     };
   }
 
-  async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
+  async querySessions(
+    request: QuerySessionsRequest
+  ): Promise<QuerySessionsResponse> {
     let builder = await this.searchQueryBuilder(request, true);
 
     const totalCount = await builder.getCount();
@@ -385,12 +381,12 @@ export class SearchService {
     };
   }
 
-  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+  async querySessionFacets(
+    request: QuerySessionFacetsRequest
+  ): Promise<QuerySessionFacetsResponse> {
     const builder = await this.searchQueryBuilder(request);
 
-    const rowIdBuilder = builder
-      .clone()
-      .select('s.rowid');
+    const rowIdBuilder = builder.clone().select("s.rowid");
 
     const facetsSize = request.facetsSize ?? 25;
 
@@ -404,14 +400,13 @@ export class SearchService {
     };
   }
 
-  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+  async querySessionTimeline(
+    request: QuerySessionTimelineRequest
+  ): Promise<QuerySessionTimelineResponse> {
     const builder = await this.searchQueryBuilder(request);
 
-    const rowIdBuilder = builder
-      .clone()
-      .select('s.rowid');
+    const rowIdBuilder = builder.clone().select("s.rowid");
 
     return await this.getTimeline(rowIdBuilder, request.granularity);
   }
-
 }

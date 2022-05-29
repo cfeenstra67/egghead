@@ -1,5 +1,5 @@
-import { Link } from 'wouter';
-import Layout from '../components/Layout';
+import { Link } from "wouter";
+import Layout from "../components/Layout";
 
 export interface SessionDetailProps {
   sessionId: string;

@@ -1,22 +1,18 @@
-import initSqlJs from '../../../lib/sql-wasm.js';
-import { DataSource } from 'typeorm';
-import EventTarget from '@ungap/event-target';
-import {
-  ServerInterface,
-  RequestHandler,
-} from '../../server';
-import { requestHandler } from '../../server/utils';
-import { ServerClient } from '../../server/client';
-import { Server } from '../../server/service';
-import { migrations } from '../../migrations';
-import { entities } from '../../models';
+import initSqlJs from "../../../lib/sql-wasm.js";
+import { DataSource } from "typeorm";
+import EventTarget from "@ungap/event-target";
+import { ServerInterface, RequestHandler } from "../../server";
+import { requestHandler } from "../../server/utils";
+import { ServerClient } from "../../server/client";
+import { Server } from "../../server/service";
+import { migrations } from "../../migrations";
+import { entities } from "../../models";
 
 function convertDataURIToBinary(dataURI: string): Uint8Array {
   return Uint8Array.from(atob(dataURI), (char) => char.charCodeAt(0));
 }
 
 function serializationMiddleware(handler: RequestHandler): RequestHandler {
-
   const handleRequest: RequestHandler = async (request) => {
     const result = await handler(JSON.parse(JSON.stringify(request)));
     return JSON.parse(JSON.stringify(result));
@@ -25,7 +21,9 @@ function serializationMiddleware(handler: RequestHandler): RequestHandler {
   return handleRequest;
 }
 
-export function serverFactory(existingDb: string): () => Promise<ServerInterface> {
+export function serverFactory(
+  existingDb: string
+): () => Promise<ServerInterface> {
   let dataSource: DataSource | undefined = undefined;
   const target = new EventTarget();
   let initialized = false;
@@ -39,7 +37,7 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
       database = convertDataURIToBinary(existingDb);
 
       dataSource = new DataSource({
-        type: 'sqljs',
+        type: "sqljs",
         driver: SQL,
         database,
         entities,
@@ -49,10 +47,10 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
       await dataSource.initialize();
 
       initialized = true;
-      target.dispatchEvent(new CustomEvent('init'));
+      target.dispatchEvent(new CustomEvent("init"));
     } catch (error) {
       initCalled = false;
-      target.dispatchEvent(new CustomEvent('error', { detail: error }));
+      target.dispatchEvent(new CustomEvent("error", { detail: error }));
     }
   }
 
@@ -62,20 +60,29 @@ export function serverFactory(existingDb: string): () => Promise<ServerInterface
     return new ServerClient(middleware);
   }
 
-  return () => new Promise((resolve, reject) => {
-    if (initialized) {
-      resolve(getServer());
-      return;
-    }
-    target.addEventListener('init', () => {
-      resolve(getServer());
-    }, { once: true });
-    target.addEventListener('error', (event) => {
-      reject((event as CustomEvent).detail);
-    }, { once: true });
+  return () =>
+    new Promise((resolve, reject) => {
+      if (initialized) {
+        resolve(getServer());
+        return;
+      }
+      target.addEventListener(
+        "init",
+        () => {
+          resolve(getServer());
+        },
+        { once: true }
+      );
+      target.addEventListener(
+        "error",
+        (event) => {
+          reject((event as CustomEvent).detail);
+        },
+        { once: true }
+      );
 
-    if (!initCalled) {
-      initialize();
-    }
-  });
+      if (!initCalled) {
+        initialize();
+      }
+    });
 }

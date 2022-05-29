@@ -1,25 +1,19 @@
-import * as _ from 'lodash';
-import {
-  useState,
-  useContext,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react';
-import Layout from '../components/Layout';
-import SearchResults from '../components/SearchResults';
-import SearchResultsSideBar from '../components/SearchResultsSideBar';
-import Timeline from '../components/Timeline';
-import { AppContext } from '../lib';
-import { Session } from '../../models';
-import { SessionResponse, QuerySessionsRequest } from '../../server';
+import * as _ from "lodash";
+import { useState, useContext, useEffect, useMemo, useCallback } from "react";
+import Layout from "../components/Layout";
+import SearchResults from "../components/SearchResults";
+import SearchResultsSideBar from "../components/SearchResultsSideBar";
+import Timeline from "../components/Timeline";
+import { AppContext } from "../lib";
+import { Session } from "../../models";
+import { SessionResponse, QuerySessionsRequest } from "../../server";
 import {
   Clause,
   AggregateOperator,
   BinaryOperator,
   IndexToken,
-} from '../../server/clause';
-import { requestsEqual, dateToSqliteString } from '../../server/utils';
+} from "../../server/clause";
+import { requestsEqual, dateToSqliteString } from "../../server/utils";
 
 export default function History() {
   const { serverClientFactory, query } = useContext(AppContext);
@@ -36,34 +30,39 @@ export default function History() {
   const pageSize = 200;
 
   const querySessions = useMemo(() => {
-    return _.debounce((
-      request: QuerySessionsRequest,
-      existingResults?: SessionResponse[],
-      isActive?: () => boolean,
-    ) => {
-      setLoading(true);
-      serverClientFactory().then(async (client) => {
-        const response = await client.querySessions(request);
+    return _.debounce(
+      (
+        request: QuerySessionsRequest,
+        existingResults?: SessionResponse[],
+        isActive?: () => boolean
+      ) => {
+        setLoading(true);
+        serverClientFactory()
+          .then(async (client) => {
+            const response = await client.querySessions(request);
 
-        if (isActive && !isActive()) {
-          return;
-        }
-        setResults((existingResults || []).concat(response.results));
-        setCount(response.totalCount);
-        setError(false);
-        setLoading(false);
-      }).catch((err) => {
-        console.trace(`Error querying "${query}"`, err);
-        setError(true);
-        setLoading(false);
-      });
-    }, debounceDelay);
+            if (isActive && !isActive()) {
+              return;
+            }
+            setResults((existingResults || []).concat(response.results));
+            setCount(response.totalCount);
+            setError(false);
+            setLoading(false);
+          })
+          .catch((err) => {
+            console.trace(`Error querying "${query}"`, err);
+            setError(true);
+            setLoading(false);
+          });
+      },
+      debounceDelay
+    );
   }, [setError, setResults, setLoading, setCount]);
 
   useEffect(() => {
     const newRequest: QuerySessionsRequest = {
       query,
-      limit: pageSize
+      limit: pageSize,
     };
     const clauses: Clause<Session>[] = [];
 
@@ -81,7 +80,7 @@ export default function History() {
     if (selectedHosts.length > 0) {
       const subClauses = selectedHosts.map((host) => ({
         operator: BinaryOperator.Equals,
-        fieldName: 'host',
+        fieldName: "host",
         value: host,
       }));
       clauses.push({
@@ -93,12 +92,12 @@ export default function History() {
       const [start, end] = dateRange;
 
       clauses.push({
-        fieldName: 'startedAt',
+        fieldName: "startedAt",
         operator: BinaryOperator.LessThan,
         value: dateToSqliteString(end),
       });
       clauses.push({
-        fieldName: 'startedAt',
+        fieldName: "startedAt",
         operator: BinaryOperator.GreaterThanOrEqualTo,
         value: dateToSqliteString(start),
       });
@@ -134,17 +133,16 @@ export default function History() {
     window.scroll(0, 0);
     querySessions(request, undefined, isActive);
 
-    return () => { active = false };
+    return () => {
+      active = false;
+    };
   }, [querySessions, request]);
 
   const onEndReached = useCallback(() => {
     if (results.length >= count) {
       return;
     }
-    querySessions(
-      { ...request, skip: results.length },
-      results,
-    );
+    querySessions({ ...request, skip: results.length }, results);
   }, [results, count, request, querySessions]);
 
   return (

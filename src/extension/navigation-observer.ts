@@ -1,10 +1,9 @@
-import EventTarget from "@ungap/event-target"
+import EventTarget from "@ungap/event-target";
 
 // Modified from here:
 // https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/mv2-archive/api/webNavigation/basic/navigation_collector.js
 export class NavigationObserver {
-
-  public pending: Record<string, NavigationObserver.PendingRequest>
+  public pending: Record<string, NavigationObserver.PendingRequest>;
   private target: EventTarget;
   private saveTime: Date | null;
 
@@ -19,8 +18,8 @@ export class NavigationObserver {
     const obj = {
       [this.storageName]: {
         pending: this.pending,
-        saveTime: this.saveTime.getTime()
-      }
+        saveTime: this.saveTime.getTime(),
+      },
     };
     chrome.storage.local.set(obj, callback);
   }
@@ -38,7 +37,9 @@ export class NavigationObserver {
       }
       if (stored) {
         this.pending = stored.pending;
-        this.saveTime = stored.saveTime ? new Date(stored.saveTime) : new Date();
+        this.saveTime = stored.saveTime
+          ? new Date(stored.saveTime)
+          : new Date();
       }
       callback();
     });
@@ -53,7 +54,7 @@ export class NavigationObserver {
       this.prepareDataStorage(id);
       patch(this.pending[id]);
       this.saveState(callback);
-    })
+    });
   }
 
   wrapEventHandler(handler: (data: any) => void) {
@@ -64,9 +65,9 @@ export class NavigationObserver {
       });
       return true;
     };
-    Object.defineProperty(wrapped, 'name', {
+    Object.defineProperty(wrapped, "name", {
       value: handler.name,
-      writable: false
+      writable: false,
     });
     return wrapped;
   }
@@ -107,7 +108,7 @@ export class NavigationObserver {
         }
 
         const start = new Date(value.start);
-        const daysOld = (now.getTime() - start.getTime()) / 1000 / 3600 / 24; 
+        const daysOld = (now.getTime() - start.getTime()) / 1000 / 3600 / 24;
         if (daysOld > 7) {
           toDelete.push(key);
         }
@@ -126,13 +127,14 @@ export class NavigationObserver {
     if (parts.length != 2) {
       return [null, null];
     }
-    return parts
-      .map(parseInt)
-      .map(x => isNaN(x) ? null : x) as [number | null, number | null];
+    return parts.map(parseInt).map((x) => (isNaN(x) ? null : x)) as [
+      number | null,
+      number | null
+    ];
   }
 
   constructId(data: any): string {
-    return data.tabId + '-' + (data.frameId ? data.frameId : 0);
+    return data.tabId + "-" + (data.frameId ? data.frameId : 0);
   }
 
   prepareDataStorage(id: string): void {
@@ -140,11 +142,11 @@ export class NavigationObserver {
       openedInNewTab: false,
       source: {
         frameId: null,
-        tabId: null
+        tabId: null,
       },
       start: null,
       transitionQualifiers: [],
-      transitionType: null
+      transitionType: null,
     };
   }
 
@@ -154,7 +156,7 @@ export class NavigationObserver {
       existing.openedInNewTab = !!data.tabId;
       existing.source = {
         tabId: data.sourceTabId,
-        frameId: data.sourceFrameId
+        frameId: data.sourceFrameId,
       };
       existing.start = data.timeStamp;
     };
@@ -174,10 +176,7 @@ export class NavigationObserver {
   onCommittedListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.debug(
-          'errorCommittedWithoutPending',
-          data.url,
-          data);
+      console.debug("errorCommittedWithoutPending", data.url, data);
     } else {
       this.prepareDataStorage(id);
       this.pending[id].transitionType = data.transitionType;
@@ -193,16 +192,19 @@ export class NavigationObserver {
         openedInNewTab: false,
         source: {
           frameId: null,
-          tabId: null
+          tabId: null,
         },
         transitionQualifiers: data.transitionQualifiers,
         transitionType: data.transitionType,
         url: data.url,
         tabId: data.tabId,
-        frameId: data.frameId
+        frameId: data.frameId,
       };
 
-      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(
+        NavigationObserver.EventType.NAVIGATION_COMPLETE,
+        { detail }
+      );
 
       this.target.dispatchEvent(event);
     } else {
@@ -220,16 +222,19 @@ export class NavigationObserver {
         openedInNewTab: false,
         source: {
           frameId: null,
-          tabId: null
+          tabId: null,
         },
         transitionQualifiers: data.transitionQualifiers,
         transitionType: data.transitionType,
         url: data.url,
         tabId: data.tabId,
-        frameId: data.frameId
+        frameId: data.frameId,
       };
 
-      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(
+        NavigationObserver.EventType.NAVIGATION_COMPLETE,
+        { detail }
+      );
 
       this.target.dispatchEvent(event);
     } else {
@@ -242,23 +247,24 @@ export class NavigationObserver {
   onCompletedListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.debug(
-          'errorCompletedWithoutPending',
-          data.url,
-          data);
+      console.debug("errorCompletedWithoutPending", data.url, data);
     } else {
       const detail: NavigationObserver.Request = {
-        duration: (data.timeStamp - this.pending[id].start),
+        duration: data.timeStamp - this.pending[id].start,
         openedInNewTab: this.pending[id].openedInNewTab,
-        source: this.pending[id].source || {tabId: null, frameId: null},
+        source: this.pending[id].source || { tabId: null, frameId: null },
         transitionQualifiers: this.pending[id].transitionQualifiers || [],
-        transitionType: this.pending[id].transitionType as NavigationObserver.NavigationType,
+        transitionType: this.pending[id]
+          .transitionType as NavigationObserver.NavigationType,
         url: data.url,
         tabId: data.tabId,
-        frameId: data.frameId
+        frameId: data.frameId,
       };
 
-      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_COMPLETE, { detail });
+      const event = new CustomEvent(
+        NavigationObserver.EventType.NAVIGATION_COMPLETE,
+        { detail }
+      );
 
       delete this.pending[id];
       this.target.dispatchEvent(event);
@@ -268,100 +274,102 @@ export class NavigationObserver {
   onErrorOccurredListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.error(
-          'errorErrorOccurredWithoutPending',
-          data.url,
-          data);
+      console.error("errorErrorOccurredWithoutPending", data.url, data);
     } else {
       this.prepareDataStorage(id);
 
       const detail: NavigationObserver.Request = {
-        duration: (data.timeStamp - this.pending[id].start),
+        duration: data.timeStamp - this.pending[id].start,
         openedInNewTab: this.pending[id].openedInNewTab,
-        source: this.pending[id].source || {tabId: null, frameId: null},
+        source: this.pending[id].source || { tabId: null, frameId: null },
         transitionQualifiers: this.pending[id].transitionQualifiers || [],
-        transitionType: this.pending[id].transitionType as NavigationObserver.NavigationType,
+        transitionType: this.pending[id]
+          .transitionType as NavigationObserver.NavigationType,
         url: data.url,
         tabId: data.tabId,
-        frameId: data.frameId
+        frameId: data.frameId,
       };
 
-      const event = new CustomEvent(NavigationObserver.EventType.NAVIGATION_ERROR, { detail });
+      const event = new CustomEvent(
+        NavigationObserver.EventType.NAVIGATION_ERROR,
+        { detail }
+      );
 
       delete this.pending[id];
       this.target.dispatchEvent(event);
     }
   }
 
-  onNavigationComplete(handler: (event: NavigationObserver.NavigationEvent) => void): void {
+  onNavigationComplete(
+    handler: (event: NavigationObserver.NavigationEvent) => void
+  ): void {
     this.target.addEventListener(
       NavigationObserver.EventType.NAVIGATION_COMPLETE,
       (evt: any) => handler(evt as NavigationObserver.NavigationEvent)
-    )
+    );
   }
 
-  onNavigationError(handler: (event: NavigationObserver.NavigationEvent) => void): void {
+  onNavigationError(
+    handler: (event: NavigationObserver.NavigationEvent) => void
+  ): void {
     this.target.addEventListener(
       NavigationObserver.EventType.NAVIGATION_ERROR,
       (evt: any) => handler(evt as NavigationObserver.NavigationEvent)
-    )
+    );
   }
-
 }
 
 export namespace NavigationObserver {
-
   export interface Source {
-    frameId: number | null,
-    tabId: number | null
+    frameId: number | null;
+    tabId: number | null;
   }
 
   export interface Request {
-    url: string,
-    tabId: number | null,
-    frameId: number | null,
-    transitionType: NavigationObserver.NavigationType,
-    transitionQualifiers: Array<NavigationObserver.NavigationQualifier>,
-    openedInNewTab?: boolean,
-    source: NavigationObserver.Source,
-    duration: number
+    url: string;
+    tabId: number | null;
+    frameId: number | null;
+    transitionType: NavigationObserver.NavigationType;
+    transitionQualifiers: Array<NavigationObserver.NavigationQualifier>;
+    openedInNewTab?: boolean;
+    source: NavigationObserver.Source;
+    duration: number;
   }
 
   export interface PendingRequest {
-    start: number,
-    openedInNewTab?: boolean,
-    source?: NavigationObserver.Source,
-    transitionType?: NavigationObserver.NavigationType,
-    transitionQualifiers?: Array<NavigationObserver.NavigationQualifier>
+    start: number;
+    openedInNewTab?: boolean;
+    source?: NavigationObserver.Source;
+    transitionType?: NavigationObserver.NavigationType;
+    transitionQualifiers?: Array<NavigationObserver.NavigationQualifier>;
   }
 
   export enum NavigationType {
-    AUTO_BOOKMARK = 'auto_bookmark',
-    AUTO_SUBFRAME = 'auto_subframe',
-    FORM_SUBMIT = 'form_submit',
-    GENERATED = 'generated',
-    KEYWORD = 'keyword',
-    KEYWORD_GENERATED = 'keyword_generated',
-    LINK = 'link',
-    MANUAL_SUBFRAME = 'manual_subframe',
-    RELOAD = 'reload',
-    START_PAGE = 'start_page',
-    TYPED = 'typed'
+    AUTO_BOOKMARK = "auto_bookmark",
+    AUTO_SUBFRAME = "auto_subframe",
+    FORM_SUBMIT = "form_submit",
+    GENERATED = "generated",
+    KEYWORD = "keyword",
+    KEYWORD_GENERATED = "keyword_generated",
+    LINK = "link",
+    MANUAL_SUBFRAME = "manual_subframe",
+    RELOAD = "reload",
+    START_PAGE = "start_page",
+    TYPED = "typed",
   }
 
   export enum NavigationQualifier {
-    CLIENT_REDIRECT = 'client_redirect',
-    FORWARD_BACK = 'forward_back',
-    SERVER_REDIRECT = 'server_redirect'
+    CLIENT_REDIRECT = "client_redirect",
+    FORWARD_BACK = "forward_back",
+    SERVER_REDIRECT = "server_redirect",
   }
 
   export enum EventType {
-    NAVIGATION_COMPLETE = 'navigation_complete',
-    NAVIGATION_ERROR = 'navigation_error'
+    NAVIGATION_COMPLETE = "navigation_complete",
+    NAVIGATION_ERROR = "navigation_error",
   }
 
   export interface NavigationEvent {
-    detail: Request
+    detail: Request;
   }
-
 }

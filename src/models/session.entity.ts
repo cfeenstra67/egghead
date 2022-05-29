@@ -6,11 +6,10 @@ import {
   OneToMany,
   OneToOne,
   Index,
-} from 'typeorm';
+} from "typeorm";
 
 @Entity()
 export class Session {
-
   @PrimaryColumn({ unique: true })
   id!: string;
 
@@ -33,17 +32,17 @@ export class Session {
   @Column({ nullable: true })
   parentSessionId?: string;
 
-  @ManyToOne(() => Session, session => session.id)
+  @ManyToOne(() => Session, (session) => session.id)
   parentSession?: Session;
 
-  @OneToMany(() => Session, session => session.parentSession)
+  @OneToMany(() => Session, (session) => session.parentSession)
   childSessions: Session[];
 
   @Index()
   @Column({ nullable: true })
   nextSessionId?: string;
 
-  @OneToOne(() => Session, session => session.id)
+  @OneToOne(() => Session, (session) => session.id)
   nextSession?: Session;
 
   @Column({ nullable: true })
@@ -58,26 +57,21 @@ export class Session {
   // Always null column used in search index as dummy
   @Column({ nullable: true })
   dum?: string;
-
 }
 
-@Entity('session_index')
+@Entity("session_index")
 export class SessionIndex extends Session {
-
   @Column()
   rowid!: number;
-
 }
 
-@Entity('session_term_index')
+@Entity("session_term_index")
 export class SessionTermIndex extends Session {
-
   @Column()
   rowid!: number;
-
 }
 
-@Entity('session_term_index_vocab')
+@Entity("session_term_index_vocab")
 export class SessionTermIndexVocab {
   @PrimaryColumn()
   term!: string;

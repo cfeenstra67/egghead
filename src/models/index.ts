@@ -3,7 +3,7 @@ import {
   SessionIndex,
   SessionTermIndex,
   SessionTermIndexVocab,
-} from './session.entity';
+} from "./session.entity";
 
 // All entities to be queried
 export const entities = [
@@ -14,8 +14,6 @@ export const entities = [
 ];
 
 // Entities to be included in migrations
-export const migrationEntities = [
-  Session,
-];
+export const migrationEntities = [Session];
 
-export * from './session.entity';
+export * from "./session.entity";

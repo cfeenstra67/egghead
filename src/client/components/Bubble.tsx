@@ -1,4 +1,4 @@
-import styles from '../styles/Bubble.module.css';
+import styles from "../styles/Bubble.module.css";
 
 interface BubbleProps {
   children?: React.ReactNode;
@@ -9,7 +9,7 @@ interface BubbleProps {
 export default function Bubble({ children, onClick, selected }: BubbleProps) {
   return (
     <div
-      className={`${styles.bubble} ${selected ? styles.selectedBubble : ''}`}
+      className={`${styles.bubble} ${selected ? styles.selectedBubble : ""}`}
       onClick={onClick}
     >
       {children}

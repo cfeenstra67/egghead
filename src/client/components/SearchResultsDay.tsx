@@ -1,6 +1,6 @@
-import SearchResultsItem, { groupSessions } from './SearchResultsItem';
-import { SessionResponse } from '../../server';
-import styles from '../styles/SearchResults.module.css';
+import SearchResultsItem, { groupSessions } from "./SearchResultsItem";
+import { SessionResponse } from "../../server";
+import styles from "../styles/SearchResults.module.css";
 
 interface SearchResultsDayProps {
   date: Date;
@@ -10,10 +10,11 @@ interface SearchResultsDayProps {
 }
 
 function dateString(date: Date): string {
-  const formatted = Intl.DateTimeFormat(
-    'en-US',
-    { month: 'short', day: 'numeric', year: 'numeric' }
-  ).format(date);
+  const formatted = Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 
   const today = new Date();
   const yesterday = new Date(today.getTime() - 24 * 3600 * 1000);
@@ -39,7 +40,7 @@ export default function SearchResultsDay({
   date,
   sessions,
   isLast,
-  onEndReached
+  onEndReached,
 }: SearchResultsDayProps) {
   return (
     <div className={styles.searchResultsDay}>

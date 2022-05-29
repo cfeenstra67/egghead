@@ -1,15 +1,18 @@
-import { useState, useMemo, useEffect } from 'react';
-import { AppRuntime } from './types';
+import { useState, useMemo, useEffect } from "react";
+import { AppRuntime } from "./types";
 
-export type NavigationHook = (to: string, ...args: any[]) => Promise<void> | void;
+export type NavigationHook = (
+  to: string,
+  ...args: any[]
+) => Promise<void> | void;
 
 export type RouterHook = () => [string, NavigationHook];
 
-export const historyUrl = 'chrome://history';
+export const historyUrl = "chrome://history";
 
 const undefinedTabId = -1;
 
-const defaultPath = '';
+const defaultPath = "";
 
 function findTabId(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -19,11 +22,11 @@ function findTabId(): Promise<number> {
         return;
       }
       if (tab?.id === undefined) {
-        reject(new Error('No tab ID found.'));
+        reject(new Error("No tab ID found."));
         return;
       }
       resolve(tab.id);
-    })
+    });
   });
 }
 
@@ -44,7 +47,7 @@ function getCurrentExtensionPath(tabId: number): Promise<string> {
       }
       const url = new URL(tab.url);
       resolve(url.pathname);
-    })
+    });
   });
 }
 
@@ -83,7 +86,9 @@ export function useExtensionLocation(): [string, NavigationHook] {
     }
 
     load();
-    return () => { active = false };
+    return () => {
+      active = false;
+    };
   }, [setTabId]);
 
   useEffect(() => {
@@ -100,8 +105,10 @@ export function useExtensionLocation(): [string, NavigationHook] {
     }
 
     load();
-    return () => { active = false; };
-  }, [tabId, loc, setLoc])
+    return () => {
+      active = false;
+    };
+  }, [tabId, loc, setLoc]);
 
   const navigate = extensionNavigator(tabId);
 

@@ -1,13 +1,6 @@
-import {
-  Session,
-  SessionIndex,
-  SessionTermIndex,
-} from '../models';
-import {
-  createFts5Index,
-  dropFts5Index,
-} from '../models/fts5';
-import { SearchService, sessionIndexTableArgs } from './search';
+import { Session, SessionIndex, SessionTermIndex } from "../models";
+import { createFts5Index, dropFts5Index } from "../models/fts5";
+import { SearchService, sessionIndexTableArgs } from "./search";
 import {
   ServerInterface,
   ServerResponseCode,
@@ -27,21 +20,20 @@ import {
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
-} from './types';
-import { cleanURL, getHost } from './utils';
-import { DataSource, Repository, IsNull } from 'typeorm';
-import { SqljsDriver } from 'typeorm/driver/sqljs/SqljsDriver';
-import { v4 as uuidv4 } from 'uuid';
+} from "./types";
+import { cleanURL, getHost } from "./utils";
+import { DataSource, Repository, IsNull } from "typeorm";
+import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
+import { v4 as uuidv4 } from "uuid";
 
 export class Server implements ServerInterface {
-
   private searchService: SearchService;
 
   constructor(readonly dataSource: DataSource) {
     this.searchService = new SearchService(dataSource);
   }
 
-  async runQuery(request: Omit<QueryRequest, 'type'>): Promise<QueryResponse> {
+  async runQuery(request: Omit<QueryRequest, "type">): Promise<QueryResponse> {
     const result = await this.dataSource.manager.query(request.query);
     return { result };
   }
@@ -60,15 +52,15 @@ export class Server implements ServerInterface {
         endedAt: IsNull(),
       },
       order: {
-        startedAt: 'DESC'
-      }
+        startedAt: "DESC",
+      },
     });
     // End any other active session(s) for the tab; data cleanup
     if (existingSessions.length > 1) {
-      const urls = existingSessions.map((session) => session.url).join(', ');
+      const urls = existingSessions.map((session) => session.url).join(", ");
       console.warn(
         `More than one session found for tab ${tabId}; urls: ${urls}.`
-      )
+      );
       for (const session of existingSessions.slice(1)) {
         session.endedAt = now;
         await repo.save(session);
@@ -81,15 +73,24 @@ export class Server implements ServerInterface {
     return await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Session);
       const now = new Date();
-      const existingSession = await this.getActiveSession(request.tabId, repo, now);
+      const existingSession = await this.getActiveSession(
+        request.tabId,
+        repo,
+        now
+      );
       let sourceSessionId: string | undefined = undefined;
-      const transitionType: string | undefined = request.transitionType || 'link';
+      const transitionType: string | undefined =
+        request.transitionType || "link";
 
       if (
         request.sourceTabId !== undefined &&
         request.sourceTabId !== request.tabId
       ) {
-        const sourceSession = await this.getActiveSession(request.sourceTabId, repo, now);
+        const sourceSession = await this.getActiveSession(
+          request.sourceTabId,
+          repo,
+          now
+        );
         sourceSessionId = sourceSession?.id;
       }
 
@@ -135,7 +136,11 @@ export class Server implements ServerInterface {
     const now = new Date();
     return await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Session);
-      const existingSession = await this.getActiveSession(request.tabId, repo, now);
+      const existingSession = await this.getActiveSession(
+        request.tabId,
+        repo,
+        now
+      );
       if (existingSession === undefined) {
         console.warn(`No active session exists for tab ${request.tabId}`);
         return { code: ServerResponseCode.Ok };
@@ -146,19 +151,27 @@ export class Server implements ServerInterface {
     });
   }
 
-  async querySessions(request: QuerySessionsRequest): Promise<QuerySessionsResponse> {
+  async querySessions(
+    request: QuerySessionsRequest
+  ): Promise<QuerySessionsResponse> {
     return await this.searchService.querySessions(request);
   }
 
-  async querySessionFacets(request: QuerySessionFacetsRequest): Promise<QuerySessionFacetsResponse> {
+  async querySessionFacets(
+    request: QuerySessionFacetsRequest
+  ): Promise<QuerySessionFacetsResponse> {
     return await this.searchService.querySessionFacets(request);
   }
 
-  async querySessionTimeline(request: QuerySessionTimelineRequest): Promise<QuerySessionTimelineResponse> {
+  async querySessionTimeline(
+    request: QuerySessionTimelineRequest
+  ): Promise<QuerySessionTimelineResponse> {
     return await this.searchService.querySessionTimeline(request);
   }
 
-  async exportDatabase(request: ExportDatabaseRequest): Promise<ExportDatabaseResponse> {
+  async exportDatabase(
+    request: ExportDatabaseRequest
+  ): Promise<ExportDatabaseResponse> {
     const driver = this.dataSource.driver as SqljsDriver;
     const database = new Blob([driver.export()]);
     const databaseUrl = URL.createObjectURL(database);
@@ -167,15 +180,17 @@ export class Server implements ServerInterface {
     };
   }
 
-  async regenerateIndex(request: RegenerateIndexRequest): Promise<RegenerateIndexResponse> {
+  async regenerateIndex(
+    request: RegenerateIndexRequest
+  ): Promise<RegenerateIndexResponse> {
     const searchIndexArgs = sessionIndexTableArgs(
       this.dataSource,
       SessionIndex,
-      'trigram',
+      "trigram"
     );
     const termIndexArgs = sessionIndexTableArgs(
       this.dataSource,
-      SessionTermIndex,
+      SessionTermIndex
     );
 
     const runner = this.dataSource.createQueryRunner();
@@ -186,8 +201,7 @@ export class Server implements ServerInterface {
       await createFts5Index(args, runner);
     }
 
-    await runner.commitTransaction()
+    await runner.commitTransaction();
     return {};
   }
-
 }

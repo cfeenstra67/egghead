@@ -1,5 +1,5 @@
-import DbTool from '../components/DbTool';
-import Layout from '../components/Layout';
+import DbTool from "../components/DbTool";
+import Layout from "../components/Layout";
 
 export default function Settings() {
   return (

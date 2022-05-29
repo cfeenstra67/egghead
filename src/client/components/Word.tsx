@@ -1,4 +1,4 @@
-import Bubble from './Bubble';
+import Bubble from "./Bubble";
 
 interface WordProps {
   value: string;
@@ -9,10 +9,7 @@ interface WordProps {
 
 export default function Word({ value, count, onClick, selected }: WordProps) {
   return (
-    <Bubble
-      selected={selected}
-      onClick={onClick}
-    >
+    <Bubble selected={selected} onClick={onClick}>
       <div>
         <span title={value}>{value}</span>
         <span>{count}</span>

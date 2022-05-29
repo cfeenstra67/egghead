@@ -1,9 +1,11 @@
-import SearchResultsDay from './SearchResultsDay';
-import { SessionResponse } from '../../server';
-import { dateFromSqliteString } from '../../server/utils';
-import styles from '../styles/SearchResults.module.css';
+import SearchResultsDay from "./SearchResultsDay";
+import { SessionResponse } from "../../server";
+import { dateFromSqliteString } from "../../server/utils";
+import styles from "../styles/SearchResults.module.css";
 
-function groupSessionsByDay(sessions: SessionResponse[]): [Date, SessionResponse[]][] {
+function groupSessionsByDay(
+  sessions: SessionResponse[]
+): [Date, SessionResponse[]][] {
   const out: [Date, SessionResponse[]][] = [];
 
   sessions.forEach((session) => {
@@ -45,13 +47,8 @@ export default function SearchResults({
           isLast={idx === groupedSessions.length - 1}
         />
       ))}
-      {sessions.length === 0 && (
-        isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          <p>No Results.</p>
-        )
-      )}
+      {sessions.length === 0 &&
+        (isLoading ? <p>Loading...</p> : <p>No Results.</p>)}
     </div>
   );
 }

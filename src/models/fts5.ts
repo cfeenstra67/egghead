@@ -1,6 +1,6 @@
-import type { QueryRunner } from 'typeorm';
+import type { QueryRunner } from "typeorm";
 
-const dummyColumnName = 'dum';
+const dummyColumnName = "dum";
 
 export type ColumnInput = string | [string, boolean];
 
@@ -36,17 +36,22 @@ function getFullTableName(tableName: string, schemaName?: string): string {
 export function fts5createTableSql(args: Fts5TableArgs): string {
   const tableName = getFullTableName(args.tableName, args.schemaName);
 
-  const columnStrings = args.columns.map((colInput) => {
-    const [colName, indexed] = getColumn(colInput);
-    return `${quoteDdlName(colName)}${indexed ? '' : ' UNINDEXED'}`;
-  }).concat([quoteDdlName(dummyColumnName)]);
+  const columnStrings = args.columns
+    .map((colInput) => {
+      const [colName, indexed] = getColumn(colInput);
+      return `${quoteDdlName(colName)}${indexed ? "" : " UNINDEXED"}`;
+    })
+    .concat([quoteDdlName(dummyColumnName)]);
 
   const components = [
-    'CREATE VIRTUAL TABLE',
+    "CREATE VIRTUAL TABLE",
     tableName,
-    'USING fts5(',
-    columnStrings.join(', '),
-    `, content=${getFullTableName(args.contentTableName, args.contentSchemaName)}`
+    "USING fts5(",
+    columnStrings.join(", "),
+    `, content=${getFullTableName(
+      args.contentTableName,
+      args.contentSchemaName
+    )}`,
   ];
 
   if (args.contentRowId !== undefined) {
@@ -56,163 +61,151 @@ export function fts5createTableSql(args: Fts5TableArgs): string {
     components.push(`, tokenize='${args.tokenize}'`);
   }
 
-  components.push(');');
-  return components.join(' ');
+  components.push(");");
+  return components.join(" ");
 }
 
 export function fts5InsertIntoIndexSql(args: Fts5TableArgs): string {
   const tableName = getFullTableName(args.tableName, args.schemaName);
 
-  const insertCols = ['rowid', ...args.columns]
+  const insertCols = ["rowid", ...args.columns]
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([quoteDdlName(dummyColumnName)]);
 
-  const selectCols = [args.contentRowId || 'rowid', ...args.columns]
+  const selectCols = [args.contentRowId || "rowid", ...args.columns]
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
   const components = [
-    'INSERT INTO',
+    "INSERT INTO",
     tableName,
-    '(',
-    insertCols.join(', '),
-    ') SELECT',
-    selectCols.join(', '),
-    'FROM',
+    "(",
+    insertCols.join(", "),
+    ") SELECT",
+    selectCols.join(", "),
+    "FROM",
     getFullTableName(args.contentTableName, args.contentSchemaName),
-    ';'
-  ]
+    ";",
+  ];
 
-  return components.join(' ');
+  return components.join(" ");
 }
 
 function insertTriggerName(args: Fts5TableArgs): string {
-  return [
-    args.schemaName,
-    args.tableName,
-    'ai'
-  ].filter((comp) => comp !== undefined)
-   .join('_');
+  return [args.schemaName, args.tableName, "ai"]
+    .filter((comp) => comp !== undefined)
+    .join("_");
 }
 
 export function fts5InsertTriggerSql(args: Fts5TableArgs): string {
-
   const triggerName = insertTriggerName(args);
 
-  const insertCols = ['rowid', ...args.columns]
+  const insertCols = ["rowid", ...args.columns]
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([quoteDdlName(dummyColumnName)]);
 
-  const selectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+  const selectCols = [args.contentRowId || "rowid", ...args.columns]
+    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
   const components = [
-    'CREATE TRIGGER',
+    "CREATE TRIGGER",
     quoteDdlName(triggerName),
-    'AFTER INSERT ON',
+    "AFTER INSERT ON",
     getFullTableName(args.contentTableName, args.contentSchemaName),
-    'BEGIN INSERT INTO',
+    "BEGIN INSERT INTO",
     getFullTableName(args.tableName, args.schemaName),
-    '(',
-    insertCols.join(', '),
-    ') VALUES (',
-    selectCols.join(', '),
-    '); END;'
+    "(",
+    insertCols.join(", "),
+    ") VALUES (",
+    selectCols.join(", "),
+    "); END;",
   ];
 
-  return components.join(' ');
+  return components.join(" ");
 }
 
 function updateTriggerName(args: Fts5TableArgs): string {
-  return [
-    args.schemaName,
-    args.tableName,
-    'au'
-  ].filter((comp) => comp !== undefined)
-   .join('_');
+  return [args.schemaName, args.tableName, "au"]
+    .filter((comp) => comp !== undefined)
+    .join("_");
 }
 
 export function fts5UpdateTriggerSql(args: Fts5TableArgs): string {
-
   const triggerName = updateTriggerName(args);
 
-  const insertCols = ['rowid', ...args.columns]
+  const insertCols = ["rowid", ...args.columns]
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([quoteDdlName(dummyColumnName)]);
 
-  const oldSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'old.' + quoteDdlName(getColumn(input)[0]))
+  const oldSelectCols = [args.contentRowId || "rowid", ...args.columns]
+    .map((input) => "old." + quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
-  const newSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+  const newSelectCols = [args.contentRowId || "rowid", ...args.columns]
+    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
 
   const components = [
-    'CREATE TRIGGER',
+    "CREATE TRIGGER",
     quoteDdlName(triggerName),
-    'AFTER UPDATE ON',
+    "AFTER UPDATE ON",
     getFullTableName(args.contentTableName, args.contentSchemaName),
-    'BEGIN INSERT INTO',
+    "BEGIN INSERT INTO",
     fullTableName,
     `( ${fullTableName}, `,
-    insertCols.join(', '),
+    insertCols.join(", "),
     ") VALUES ('delete', ",
-    oldSelectCols.join(', '),
-    ');',
-    'INSERT INTO',
+    oldSelectCols.join(", "),
+    ");",
+    "INSERT INTO",
     getFullTableName(args.tableName, args.schemaName),
-    '(',
-    insertCols.join(', '),
-    ') VALUES (',
-    newSelectCols.join(', '),
-    '); END;'
+    "(",
+    insertCols.join(", "),
+    ") VALUES (",
+    newSelectCols.join(", "),
+    "); END;",
   ];
 
-  return components.join(' ');
+  return components.join(" ");
 }
 
 function deleteTriggerName(args: Fts5TableArgs): string {
-  return [
-    args.schemaName,
-    args.tableName,
-    'ad'
-  ].filter((comp) => comp !== undefined)
-   .join('_');
+  return [args.schemaName, args.tableName, "ad"]
+    .filter((comp) => comp !== undefined)
+    .join("_");
 }
 
 export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
-
   const triggerName = deleteTriggerName(args);
 
-  const insertCols = ['rowid', ...args.columns]
+  const insertCols = ["rowid", ...args.columns]
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([quoteDdlName(dummyColumnName)]);
 
-  const newSelectCols = [args.contentRowId || 'rowid', ...args.columns]
-    .map((input) => 'new.' + quoteDdlName(getColumn(input)[0]))
+  const newSelectCols = [args.contentRowId || "rowid", ...args.columns]
+    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
 
   const components = [
-    'CREATE TRIGGER',
+    "CREATE TRIGGER",
     quoteDdlName(triggerName),
-    'AFTER DELETE ON',
+    "AFTER DELETE ON",
     getFullTableName(args.contentTableName, args.contentSchemaName),
-    'BEGIN INSERT INTO',
+    "BEGIN INSERT INTO",
     fullTableName,
     `( ${fullTableName}, `,
-    insertCols.join(', '),
+    insertCols.join(", "),
     ") VALUES ('delete', ",
-    newSelectCols.join(', '),
-    '); END;'
+    newSelectCols.join(", "),
+    "); END;",
   ];
 
-  return components.join(' ');
+  return components.join(" ");
 }
 
 export function fts5VocabTableName(args: Fts5TableArgs): string {
@@ -224,29 +217,35 @@ export function fts5VocabTableName(args: Fts5TableArgs): string {
 }
 
 export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
-  const tableArgs = [args.tableName, 'instance'].join(', ');
+  const tableArgs = [args.tableName, "instance"].join(", ");
 
   const components = [
-    'CREATE VIRTUAL TABLE',
+    "CREATE VIRTUAL TABLE",
     fts5VocabTableName(args),
-    'USING fts5vocab(',
+    "USING fts5vocab(",
     tableArgs,
-    ');'
+    ");",
   ];
 
-  return components.join(' ');
+  return components.join(" ");
 }
 
-export async function createFts5Index(args: Fts5TableArgs, runner: QueryRunner): Promise<void> {
+export async function createFts5Index(
+  args: Fts5TableArgs,
+  runner: QueryRunner
+): Promise<void> {
   await runner.query(fts5createTableSql(args));
-  await runner.query(fts5CreateVocabTableSql(args))
+  await runner.query(fts5CreateVocabTableSql(args));
   await runner.query(fts5InsertIntoIndexSql(args));
   await runner.query(fts5InsertTriggerSql(args));
   await runner.query(fts5UpdateTriggerSql(args));
   await runner.query(fts5DeleteTriggerSql(args));
 }
 
-export async function dropFts5Index(args: Fts5TableArgs, runner: QueryRunner): Promise<void> {
+export async function dropFts5Index(
+  args: Fts5TableArgs,
+  runner: QueryRunner
+): Promise<void> {
   await runner.query(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(insertTriggerName(args))}`
   );
@@ -256,9 +255,7 @@ export async function dropFts5Index(args: Fts5TableArgs, runner: QueryRunner): P
   await runner.query(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(deleteTriggerName(args))}`
   );
-  await runner.query(
-    `DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`
-  );
+  await runner.query(`DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`);
   await runner.query(
     `DROP TABLE IF EXISTS ${getFullTableName(args.tableName, args.schemaName)}`
   );

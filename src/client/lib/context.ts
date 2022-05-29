@@ -1,6 +1,6 @@
-import { createContext } from 'react';
-import { ServerInterface } from '../../server';
-import { AppRuntime } from './types';
+import { createContext } from "react";
+import { ServerInterface } from "../../server";
+import { AppRuntime } from "./types";
 
 export interface AppContext {
   runtime: AppRuntime;
@@ -11,7 +11,9 @@ export interface AppContext {
 
 export const AppContext = createContext<AppContext>({
   runtime: AppRuntime.Web,
-  serverClientFactory: async () => { throw new Error('Not Implemented.'); },
-  query: '',
-  setQuery: () => {}
+  serverClientFactory: async () => {
+    throw new Error("Not Implemented.");
+  },
+  query: "",
+  setQuery: () => {},
 });

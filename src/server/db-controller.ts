@@ -1,14 +1,13 @@
 // import initSqlJs from '@jlongster/sql.js';
-import initSqlJs from '../../lib/sql-wasm.js';
-import { SQLiteFS } from 'absurd-sql';
-import IndexedDBBackend from 'absurd-sql/dist/indexeddb-backend';
-import EventTarget from '@ungap/event-target';
-import { DataSource } from 'typeorm';
-import { migrations } from '../migrations';
-import { entities } from '../models';
+import initSqlJs from "../../lib/sql-wasm.js";
+import { SQLiteFS } from "absurd-sql";
+import IndexedDBBackend from "absurd-sql/dist/indexeddb-backend";
+import EventTarget from "@ungap/event-target";
+import { DataSource } from "typeorm";
+import { migrations } from "../migrations";
+import { entities } from "../models";
 
 export class DBController {
-
   initCalled: boolean;
   dataSource: DataSource | undefined;
   private dbEvents: EventTarget;
@@ -24,29 +23,31 @@ export class DBController {
     const sqlFS = new SQLiteFS(SQL.FS, new IndexedDBBackend());
     SQL.register_for_idb(sqlFS);
 
-    SQL.FS.mkdir('/sql');
-    SQL.FS.mount(sqlFS, {}, '/sql');
+    SQL.FS.mkdir("/sql");
+    SQL.FS.mount(sqlFS, {}, "/sql");
 
-    const path = '/sql/db.sqlite';
+    const path = "/sql/db.sqlite";
 
     class PatchedDatabase extends SQL.Database {
       constructor() {
         super(path, { filename: true });
-        this.exec('PRAGMA journal_mode=MEMORY; PRAGMA page_size=8192;');
+        this.exec("PRAGMA journal_mode=MEMORY; PRAGMA page_size=8192;");
       }
     }
 
     SQL.Database = PatchedDatabase;
 
-    if (typeof SharedArrayBuffer === 'undefined') {
-      console.warn("Running without SharedArrayBuffer, this will hurt performance.");
-      const stream = SQL.FS.open(path, 'a+');
+    if (typeof SharedArrayBuffer === "undefined") {
+      console.warn(
+        "Running without SharedArrayBuffer, this will hurt performance."
+      );
+      const stream = SQL.FS.open(path, "a+");
       await stream.node.contents.readIfFallback();
       SQL.FS.close(stream);
     }
 
     this.dataSource = new DataSource({
-      type: 'sqljs',
+      type: "sqljs",
       driver: SQL,
       autoSave: false,
       migrations,
@@ -56,7 +57,7 @@ export class DBController {
 
     await this.dataSource.initialize();
 
-    this.dbEvents.dispatchEvent(new CustomEvent('init'));
+    this.dbEvents.dispatchEvent(new CustomEvent("init"));
   }
 
   useDataSource(): Promise<DataSource> {
@@ -67,27 +68,29 @@ export class DBController {
       }
 
       const cleanUp = () => {
-        this.dbEvents.removeEventListener('error', handleError);
-        this.dbEvents.removeEventListener('init', handleInit);
-      }
+        this.dbEvents.removeEventListener("error", handleError);
+        this.dbEvents.removeEventListener("init", handleInit);
+      };
 
       const handleInit = (event: Event) => {
         resolve(this.dataSource as DataSource);
         cleanUp();
-      }
+      };
 
       const handleError = (event: Event) => {
         reject((event as CustomEvent).detail);
         cleanUp();
-      }
+      };
 
-      this.dbEvents.addEventListener('init', handleInit);
-      this.dbEvents.addEventListener('error', handleError);
+      this.dbEvents.addEventListener("init", handleInit);
+      this.dbEvents.addEventListener("error", handleError);
 
       if (!this.initCalled) {
         this.initCalled = true;
         this.initializeDb().catch((err) => {
-          this.dbEvents.dispatchEvent(new CustomEvent('error', { detail: err }));
+          this.dbEvents.dispatchEvent(
+            new CustomEvent("error", { detail: err })
+          );
           this.initCalled = false;
         });
       }
@@ -117,5 +120,4 @@ export class DBController {
   //     }
   //   });
   // }
-
 }

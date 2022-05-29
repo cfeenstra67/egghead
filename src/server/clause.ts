@@ -1,34 +1,39 @@
 import queryStringGrammar, {
-  QueryStringSemantics
-} from './query-string.ohm-bundle';
+  QueryStringSemantics,
+} from "./query-string.ohm-bundle";
 
-export const IndexToken = '__index__';
+export const IndexToken = "__index__";
 
 export enum UnaryOperator {
-  Not = 'NOT',
+  Not = "NOT",
 }
 
 export enum BinaryOperator {
-  Equals = '=',
-  NotEquals = '!=',
-  GreaterThan = '>',
-  GreaterThanOrEqualTo = '>=',
-  LessThan = '<',
-  LessthanOrEqualTo = '<=',
-  In = 'IN',
-  NotIn = 'NOT IN',
-  Match = 'MATCH',
+  Equals = "=",
+  NotEquals = "!=",
+  GreaterThan = ">",
+  GreaterThanOrEqualTo = ">=",
+  LessThan = "<",
+  LessthanOrEqualTo = "<=",
+  In = "IN",
+  NotIn = "NOT IN",
+  Match = "MATCH",
 }
 
 export enum AggregateOperator {
-  And = 'AND',
-  Or = 'OR',
+  And = "AND",
+  Or = "OR",
 }
 
-export type FilterValue<T, O extends BinaryOperator> =
-  O extends BinaryOperator.In ? T[]
-  : O extends BinaryOperator.Equals ? T | null
-  : O extends BinaryOperator.NotEquals ? T | null
+export type FilterValue<
+  T,
+  O extends BinaryOperator
+> = O extends BinaryOperator.In
+  ? T[]
+  : O extends BinaryOperator.Equals
+  ? T | null
+  : O extends BinaryOperator.NotEquals
+  ? T | null
   : T;
 
 type Keys<T> = keyof T | typeof IndexToken;
@@ -54,19 +59,28 @@ export type Clause<T> =
   | Unary<T, any>
   | AggregateClause<T, any>;
 
-export type FiltersClauseDsl<T> =
-  { [key in Keys<T>]?: (
-      FilterValue<key extends keyof T ? T[key] : string, BinaryOperator.Equals>
-      | { [op in BinaryOperator]?: FilterValue<key extends keyof T ? T[key] : string, op> }
-  ) };
+export type FiltersClauseDsl<T> = {
+  [key in Keys<T>]?:
+    | FilterValue<key extends keyof T ? T[key] : string, BinaryOperator.Equals>
+    | {
+        [op in BinaryOperator]?: FilterValue<
+          key extends keyof T ? T[key] : string,
+          op
+        >;
+      };
+};
 
-export type ClauseDsl<T> = {
-  'AND': ClauseDsl<T>[]
-} | {
-  'OR': ClauseDsl<T>[]
-} | {
-  'NOT': ClauseDsl<T>
-} | FiltersClauseDsl<T>;
+export type ClauseDsl<T> =
+  | {
+      AND: ClauseDsl<T>[];
+    }
+  | {
+      OR: ClauseDsl<T>[];
+    }
+  | {
+      NOT: ClauseDsl<T>;
+    }
+  | FiltersClauseDsl<T>;
 
 export function isFilter<T>(clause: Clause<T>): clause is Filter<T, any, any> {
   return Object.values(BinaryOperator).includes(clause.operator);
@@ -76,20 +90,22 @@ export function isUnary<T>(clause: Clause<T>): clause is Unary<T, any> {
   return Object.values(UnaryOperator).includes(clause.operator);
 }
 
-export function isAggregate<T>(clause: Clause<T>): clause is AggregateClause<T, any> {
+export function isAggregate<T>(
+  clause: Clause<T>
+): clause is AggregateClause<T, any> {
   return Object.values(AggregateOperator).includes(clause.operator);
 }
 
 export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
-  if (dsl.hasOwnProperty('AND')) {
+  if (dsl.hasOwnProperty("AND")) {
     const clauses = (dsl as any).AND.map(dslToClause);
     return { operator: AggregateOperator.And, clauses };
   }
-  if (dsl.hasOwnProperty('OR')) {
+  if (dsl.hasOwnProperty("OR")) {
     const clauses = (dsl as any).AND.map(dslToClause);
     return { operator: AggregateOperator.Or, clauses };
   }
-  if (dsl.hasOwnProperty('NOT')) {
+  if (dsl.hasOwnProperty("NOT")) {
     const clause = dslToClause<T>((dsl as any).NOT);
     return { operator: UnaryOperator.Not, clause };
   }
@@ -101,7 +117,7 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
         operator: BinaryOperator.In,
         value,
       });
-    } else if (value === null || typeof value !== 'object') {
+    } else if (value === null || typeof value !== "object") {
       filters.push({
         fieldName: key,
         operator: BinaryOperator.Equals,
@@ -112,7 +128,7 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
         filters.push({
           fieldName: key,
           operator: key2,
-          value: value2 as any
+          value: value2 as any,
         });
       });
     }
@@ -210,7 +226,6 @@ export function renderClause<T>({
   getFilter = (filter) => filter,
   paramStartIndex = 0,
 }: RenderClauseArgs<T>): [string, Record<string, any>, number] {
-
   let paramIndex = paramStartIndex;
   function getParamName(fieldName: string): string {
     paramIndex += 1;
@@ -220,24 +235,18 @@ export function renderClause<T>({
   if (isFilter(clause)) {
     clause = getFilter(clause);
     if (clause.operator === BinaryOperator.Equals && clause.value === null) {
-      return [
-        `${getFieldName(clause.fieldName)} IS NULL`,
-        {},
-        paramIndex,
-      ];
+      return [`${getFieldName(clause.fieldName)} IS NULL`, {}, paramIndex];
     }
     if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
-      return [
-        `${getFieldName(clause.fieldName)} IS NOT NULL`,
-        {},
-        paramIndex,
-      ];
+      return [`${getFieldName(clause.fieldName)} IS NOT NULL`, {}, paramIndex];
     }
 
     const paramName = getParamName(clause.fieldName);
     if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
       return [
-        `${getFieldName(clause.fieldName)} ${clause.operator} (:...${paramName})`,
+        `${getFieldName(clause.fieldName)} ${
+          clause.operator
+        } (:...${paramName})`,
         { [paramName]: clause.value },
         paramIndex,
       ];
@@ -276,12 +285,15 @@ export function renderClause<T>({
     paramIndex = newParamIndex;
     parts.push(isFilter(subClause) ? sql : `(${sql})`);
     Object.assign(allParams, params);
-  })
+  });
   const outSql = parts.join(` ${clause.operator} `);
   return [outSql, allParams, paramIndex];
 }
 
-export function clausesEqual<T>(clause1: Clause<T>, clause2: Clause<T>): boolean {
+export function clausesEqual<T>(
+  clause1: Clause<T>,
+  clause2: Clause<T>
+): boolean {
   if (clause1.operator !== clause2.operator) {
     return false;
   }
@@ -319,11 +331,11 @@ export function clausesEqual<T>(clause1: Clause<T>, clause2: Clause<T>): boolean
 }
 
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
-  semantics.addOperation<Clause<T>>('clause', {
+  semantics.addOperation<Clause<T>>("clause", {
     Query: (queries) => {
       return {
         operator: AggregateOperator.And,
-        clauses: queries.children.map((child) => child.clause())
+        clauses: queries.children.map((child) => child.clause()),
       };
     },
     // TODO: this is not really complete, everything in NOT gets passed
@@ -332,11 +344,9 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       return {
         operator: BinaryOperator.Match,
         fieldName: IndexToken,
-        value: [
-          'dum:dum',
-          'NOT',
-          JSON.stringify(notQuery.sourceString),
-        ].join(' ') as any,
+        value: ["dum:dum", "NOT", JSON.stringify(notQuery.sourceString)].join(
+          " "
+        ) as any,
       };
     },
     QueryComp_parentheses: (_1, query, _2) => {
@@ -355,8 +365,8 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       };
     },
     rawTerm: (term1, term2) => {
-      let value: any = [term1.sourceString, term2.sourceString].join('');
-      if (value === 'null') {
+      let value: any = [term1.sourceString, term2.sourceString].join("");
+      if (value === "null") {
         value = null;
       } else {
         value = JSON.stringify(value.replace(/"/g, '""'));

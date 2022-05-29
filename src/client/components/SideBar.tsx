@@ -1,4 +1,4 @@
-import styles from '../styles/SideBar.module.css';
+import styles from "../styles/SideBar.module.css";
 
 // interface SideBarItemProps {
 //   path: string;
@@ -28,11 +28,7 @@ export interface SideBarComponentProps {
 }
 
 export function SideBarComponent({ children }: SideBarComponentProps) {
-  return (
-    <div className={styles.sideBarComponent}>
-      {children}
-    </div>
-  );
+  return <div className={styles.sideBarComponent}>{children}</div>;
 }
 
 export interface SideBarProps {
@@ -40,9 +36,5 @@ export interface SideBarProps {
 }
 
 export default function SideBar({ children }: SideBarProps) {
-  return (
-    <div className={styles.sideBar}>
-      {children}
-    </div>
-  );
+  return <div className={styles.sideBar}>{children}</div>;
 }

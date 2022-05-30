@@ -1,4 +1,4 @@
-import { TransitionGroup, CSSTransition } from 'react-transition-group';
+import { TransitionGroup } from 'react-transition-group';
 import SearchResultsItem, { groupSessions } from "./SearchResultsItem";
 import { SessionResponse } from "../../server";
 import styles from "../styles/SearchResults.module.css";

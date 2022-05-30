@@ -97,7 +97,7 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
     <div className={styles.option}>
       <span>Regenerate Index:</span>
       <button onClick={regenerateIndex}>Regenerate</button>
-      <OptionStatus state={state} setState={setState} />
+      <OptionStatus state={state} />
       {state === LoadingState.Failed && (
         <span className={styles.errorText}>{error}</span>
       )}

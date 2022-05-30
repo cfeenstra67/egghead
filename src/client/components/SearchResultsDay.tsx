@@ -1,3 +1,4 @@
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import SearchResultsItem, { groupSessions } from "./SearchResultsItem";
 import { SessionResponse } from "../../server";
 import styles from "../styles/SearchResults.module.css";
@@ -47,14 +48,16 @@ export default function SearchResultsDay({
       <div className={styles.searchResultsDaySticky}>
         <h3>{dateString(date)}</h3>
       </div>
-      {groupSessions(sessions).map((session, idx) => (
-        <SearchResultsItem
-          aggSession={session}
-          key={session.session.id}
-          isLast={isLast && idx === sessions.length - 1}
-          onEndReached={onEndReached}
-        />
-      ))}
+      <TransitionGroup component={null}>
+        {groupSessions(sessions).flatMap((session, idx) => (
+          <SearchResultsItem
+            aggSession={session}
+            key={session.session.id}
+            isLast={isLast && idx === sessions.length - 1}
+            onEndReached={onEndReached}
+          />
+        ))}
+      </TransitionGroup>
     </div>
   );
 }

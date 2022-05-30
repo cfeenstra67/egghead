@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { useState, createRef, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { Link } from "wouter";
 import Word from "./Word";
 import Connection from "./Connection";
@@ -218,9 +219,11 @@ function SingleAggregatedSearchResultsItem({
   isLast,
   onEndReached,
   indent,
+  ...transitionProps
 }: SingleAggregatedSearchResultsItemProps) {
   const [isInView, setIsInView] = useState<boolean>(false);
   const session = aggSession.session;
+  const url = new URL(session.url);
   const { ref, inView } = useInView({
     threshold: [0],
     trackVisibility: true,
@@ -247,109 +250,125 @@ function SingleAggregatedSearchResultsItem({
 
   return (
     <>
-      <div
-        className={
-          (indent || 0) > 0
-            ? styles.searchResultsItemChild
-            : styles.searchResultsItem
-        }
-        ref={ref}
-        style={{ marginLeft: 24 * (indent || 0) + "px" }}
+      <CSSTransition
+        {...transitionProps}
+        key={`${indent ?? 0} ${session.id}`}
+        timeout={200}
+        appear={(indent ?? 0) > 0}
+        classNames={{
+          appear: styles.itemEnter,
+          enter: styles.itemEnter,
+          exit: styles.itemExit,
+        }}
       >
-        <Connection />
-        <div className={styles.searchResultsItemTime}>
-          <span
-            title={dateFromSqliteString(session.startedAt).toLocaleString()}
-          >
-            {getTimeString(session.startedAt)}
-          </span>
-        </div>
-        <img src={getFaviconUrlPublicApi(url.hostname, 16)} />
-        <div className={styles.searchResultsItemContent}>
-          <div className={styles.searchResultsItemContentInner}>
-            <div className={styles.searchResultsItemTitle}>
-              <a href={session.rawUrl} target="_blank" rel="noreferrer">
-                <span title={session.title}>
-                  <Highlighted title={session.highlightedTitle} />
-                </span>
-              </a>
-            </div>
-            <div className={styles.searchResultsItemHost}>
-              <span title={session.url}>
-                <Highlighted title={session.highlightedHost ?? url.hostname} />
-              </span>
-            </div>
+        <div
+          className={
+            (indent || 0) > 0
+              ? styles.searchResultsItemChild
+              : styles.searchResultsItem
+          }
+          ref={ref}
+          style={{ marginLeft: 24 * (indent || 0) + "px" }}
+        >
+          <Connection />
+          <div className={styles.searchResultsItemTime}>
+            <span
+              title={dateFromSqliteString(session.startedAt).toLocaleString()}
+            >
+              {getTimeString(session.startedAt)}
+            </span>
           </div>
-          {!hideChildTypes && (
-            <div>
-              {Object.entries(childTypeCounts).map(
-                ([childType, count]) =>
-                  count > 0 && (
-                    <ChildTypeBubble
-                      childType={childType as ChildType}
-                      count={count}
-                      selected={childTypesExpanded.includes(
-                        childType as ChildType
-                      )}
-                      onClick={() => {
-                        const type = childType as ChildType;
-                        if (childTypesExpanded.includes(type)) {
-                          setChildTypesExpanded(
-                            childTypesExpanded.filter((x) => x !== type)
-                          );
-                        } else {
-                          setChildTypesExpanded(
-                            childTypesExpanded.concat([type])
-                          );
-                        }
-                      }}
-                    />
-                  )
-              )}
+          <img src={getFaviconUrlPublicApi(url.hostname, 16)} />
+          <div className={styles.searchResultsItemContent}>
+            <div className={styles.searchResultsItemContentInner}>
+              <div className={styles.searchResultsItemTitle}>
+                <a href={session.rawUrl} target="_blank" rel="noreferrer">
+                  <span title={session.title}>
+                    <Highlighted title={session.highlightedTitle} />
+                  </span>
+                </a>
+              </div>
+              <div className={styles.searchResultsItemHost}>
+                <span title={session.url}>
+                  <Highlighted title={session.highlightedHost ?? url.hostname} />
+                </span>
+              </div>
             </div>
-          )}
+            {!hideChildTypes && (
+              <div>
+                {Object.entries(childTypeCounts).map(
+                  ([childType, count]) =>
+                    count > 0 && (
+                      <ChildTypeBubble
+                        childType={childType as ChildType}
+                        count={count}
+                        selected={childTypesExpanded.includes(
+                          childType as ChildType
+                        )}
+                        onClick={() => {
+                          const type = childType as ChildType;
+                          if (childTypesExpanded.includes(type)) {
+                            setChildTypesExpanded(
+                              childTypesExpanded.filter((x) => x !== type)
+                            );
+                          } else {
+                            setChildTypesExpanded(
+                              childTypesExpanded.concat([type])
+                            );
+                          }
+                        }}
+                      />
+                    )
+                )}
+              </div>
+            )}
+          </div>
+          <DetailsDropdown session={session} />
         </div>
-        <DetailsDropdown session={session} />
-      </div>
-      {Object.values(ChildType).map((childType) =>
-        childrenSessions[aggSession.session.id]?.[childType]?.map(
-          (aggSession2) => {
-            if (childType === ChildType.Duplicate) {
-              const sessionChildren = childTypesExpanded.flatMap((type) => {
-                return childrenSessions[aggSession2.session.id]?.[type] ?? [];
-              });
-              if (
-                childTypesExpanded.includes(childType) ||
-                sessionChildren.length > 0
-              ) {
-                const newChildren = _.pick(childrenSessions, [
-                  aggSession2.session.id,
-                ]);
+      </CSSTransition>
+      <TransitionGroup component={null}>
+        {Object.values(ChildType).map((childType) =>
+          (transitionProps as any)['in'] ? childrenSessions[aggSession.session.id]?.[childType]?.map(
+            (aggSession2) => {
+              if (childType === ChildType.Duplicate) {
+                const sessionChildren = childTypesExpanded.flatMap((type) => {
+                  return childrenSessions[aggSession2.session.id]?.[type] ?? [];
+                });
+                if (
+                  childTypesExpanded.includes(childType) ||
+                  sessionChildren.length > 0
+                ) {
+                  const newChildren = _.pick(childrenSessions, [
+                    aggSession2.session.id,
+                  ]);
+                  return (
+                    <SingleAggregatedSearchResultsItem
+                      key={aggSession2.session.id}
+                      aggSession={aggSession2}
+                      childTypesExpanded={childTypesExpanded}
+                      setChildTypesExpanded={setChildTypesExpanded}
+                      hideChildTypes
+                      childrenSessions={newChildren}
+                      isLast={false}
+                      onEndReached={() => {}}
+                      indent={(indent || 0) + 1}
+                    />
+                  );
+                }
+              } else if (childTypesExpanded.includes(childType)) {
                 return (
-                  <SingleAggregatedSearchResultsItem
+                  <SearchResultsItem
+                    key={aggSession2.session.id}
                     aggSession={aggSession2}
-                    childTypesExpanded={childTypesExpanded}
-                    setChildTypesExpanded={setChildTypesExpanded}
-                    hideChildTypes
-                    childrenSessions={newChildren}
-                    isLast={false}
-                    onEndReached={() => {}}
                     indent={(indent || 0) + 1}
                   />
                 );
               }
-            } else if (childTypesExpanded.includes(childType)) {
-              return (
-                <SearchResultsItem
-                  aggSession={aggSession2}
-                  indent={(indent || 0) + 1}
-                />
-              );
+              return <></>;
             }
-            return <></>;
-          }
-        )
-      )}
+          ) : <></>
+        )}
+      </TransitionGroup>
     </>
   );
 }
@@ -367,6 +386,7 @@ export default function SearchResultsItem({
   isLast,
   onEndReached,
   indent,
+  ...transitionProps
 }: SearchResultsItemProps) {
   const [childTypesExpanded, setChildTypesExpanded] = useState<ChildType[]>([]);
 
@@ -476,6 +496,7 @@ export default function SearchResultsItem({
 
   return (
     <SingleAggregatedSearchResultsItem
+      {...transitionProps}
       aggSession={aggSession}
       isLast={isLast}
       onEndReached={onEndReached}

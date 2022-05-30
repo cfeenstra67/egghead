@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import type { ServerInterface } from "../server";
 
 // Global CSS
+import 'animate.css';
 import "./styles/App.css";
 
 export interface AppProps {

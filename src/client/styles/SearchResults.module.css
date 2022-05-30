@@ -1,7 +1,7 @@
 
 .searchResults {
     font-size: 14px;
-    --animation-length: 200ms;
+    --animate-duration: 200ms;
 }
 
 .searchResultsDay {
@@ -36,7 +36,7 @@
     column-gap: var(--padding-2);
     padding: var(--padding) var(--padding-2);
 }
-
+/*
 .itemEnter {
     animation-name: itemEntering;
     animation-duration: var(--animation-length);
@@ -52,7 +52,7 @@
     margin-top: calc(-35px - var(--padding)) !important;
     opacity: 0;
     transition: all ease var(--animation-length);
-}
+}*/
 
 .moreDetails {
     transform: rotate(90deg);

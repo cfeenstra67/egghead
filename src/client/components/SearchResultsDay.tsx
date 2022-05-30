@@ -43,17 +43,18 @@ export default function SearchResultsDay({
   isLast,
   onEndReached,
 }: SearchResultsDayProps) {
+  const groupedSessions = groupSessions(sessions);
   return (
     <div className={styles.searchResultsDay}>
       <div className={styles.searchResultsDaySticky}>
         <h3>{dateString(date)}</h3>
       </div>
       <TransitionGroup component={null}>
-        {groupSessions(sessions).flatMap((session, idx) => (
+        {groupedSessions.flatMap((session, idx) => (
           <SearchResultsItem
             aggSession={session}
             key={session.session.id}
-            isLast={isLast && idx === sessions.length - 1}
+            isLast={isLast && idx === groupedSessions.length - 1}
             onEndReached={onEndReached}
           />
         ))}

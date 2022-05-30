@@ -248,25 +248,22 @@ function SingleAggregatedSearchResultsItem({
     }
   }, [inView, isInView, setIsInView]);
 
+  const classNames = [
+    (indent || 0) > 0 ? styles.searchResultsItemChild : styles.searchResultsItem,
+    'animate__animated',
+    'animate__fadeInRight',
+  ]
+
   return (
     <>
       <CSSTransition
         {...transitionProps}
         key={`${indent ?? 0} ${session.id}`}
         timeout={200}
-        appear={(indent ?? 0) > 0}
-        classNames={{
-          appear: styles.itemEnter,
-          enter: styles.itemEnter,
-          exit: styles.itemExit,
-        }}
+        classNames={{ exit: 'animate__fadeOutRight' }}
       >
         <div
-          className={
-            (indent || 0) > 0
-              ? styles.searchResultsItemChild
-              : styles.searchResultsItem
-          }
+          className={classNames.join(' ')}
           ref={ref}
           style={{ marginLeft: 24 * (indent || 0) + "px" }}
         >
@@ -349,8 +346,6 @@ function SingleAggregatedSearchResultsItem({
                       setChildTypesExpanded={setChildTypesExpanded}
                       hideChildTypes
                       childrenSessions={newChildren}
-                      isLast={false}
-                      onEndReached={() => {}}
                       indent={(indent || 0) + 1}
                     />
                   );

@@ -39,7 +39,9 @@ export default function History() {
         setLoading(true);
         serverClientFactory()
           .then(async (client) => {
+            console.log("REQUESt", request);
             const response = await client.querySessions(request);
+            console.log("RESPONSE", response);
 
             if (isActive && !isActive()) {
               return;

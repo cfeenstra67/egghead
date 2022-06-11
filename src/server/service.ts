@@ -70,66 +70,65 @@ export class Server implements ServerInterface {
   }
 
   async tabChanged(request: TabChangedRequest): Promise<TabChangedResponse> {
-    return await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
-      const now = new Date();
-      const existingSession = await this.getActiveSession(
-        request.tabId,
+    const manager = this.dataSource.manager;
+    const repo = manager.getRepository(Session);
+    const now = new Date();
+    const existingSession = await this.getActiveSession(
+      request.tabId,
+      repo,
+      now
+    );
+    let sourceSessionId: string | undefined = undefined;
+    const transitionType: string | undefined =
+      request.transitionType || "link";
+
+    if (
+      request.sourceTabId !== undefined &&
+      request.sourceTabId !== request.tabId
+    ) {
+      const sourceSession = await this.getActiveSession(
+        request.sourceTabId,
         repo,
         now
       );
-      let sourceSessionId: string | undefined = undefined;
-      const transitionType: string | undefined =
-        request.transitionType || "link";
+      sourceSessionId = sourceSession?.id;
+    }
 
-      if (
-        request.sourceTabId !== undefined &&
-        request.sourceTabId !== request.tabId
-      ) {
-        const sourceSession = await this.getActiveSession(
-          request.sourceTabId,
-          repo,
-          now
-        );
-        sourceSessionId = sourceSession?.id;
+    if (existingSession) {
+      // Check if session hasn't changed.
+      const cleanUrl = cleanURL(request.url);
+      if (cleanURL(existingSession.url) === cleanUrl) {
+        return { code: ServerResponseCode.Ok };
       }
-
-      if (existingSession) {
-        // Check if session hasn't changed.
-        const cleanUrl = cleanURL(request.url);
-        if (cleanURL(existingSession.url) === cleanUrl) {
-          return { code: ServerResponseCode.Ok };
-        }
-        // Otherwise: use as source unless it's already defined
-        if (sourceSessionId === undefined) {
-          sourceSessionId = existingSession.id;
-        }
-        // either way, mark as done; we'll save it later
-        existingSession.endedAt = now;
+      // Otherwise: use as source unless it's already defined
+      if (sourceSessionId === undefined) {
+        sourceSessionId = existingSession.id;
       }
+      // either way, mark as done; we'll save it later
+      existingSession.endedAt = now;
+    }
 
-      const newSession = repo.create({
-        id: uuidv4(),
-        tabId: request.tabId,
-        url: cleanURL(request.url),
-        rawUrl: request.url,
-        host: getHost(request.url),
-        title: request.title,
-        startedAt: now,
-        parentSessionId: sourceSessionId,
-        transitionType,
-      });
-
-      await repo.save(newSession);
-
-      if (existingSession && sourceSessionId === existingSession.id) {
-        existingSession.nextSessionId = newSession.id;
-      }
-      if (existingSession) {
-        await repo.save(existingSession);
-      }
-      return {};
+    const newSession = repo.create({
+      id: uuidv4(),
+      tabId: request.tabId,
+      url: cleanURL(request.url),
+      rawUrl: request.url,
+      host: getHost(request.url),
+      title: request.title,
+      startedAt: now,
+      parentSessionId: sourceSessionId,
+      transitionType,
     });
+
+    await repo.save(newSession);
+
+    if (existingSession && sourceSessionId === existingSession.id) {
+      existingSession.nextSessionId = newSession.id;
+    }
+    if (existingSession) {
+      await repo.save(existingSession);
+    }
+    return {};
   }
 
   async tabClosed(request: TabClosedRequest): Promise<TabClosedResponse> {

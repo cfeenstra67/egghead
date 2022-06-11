@@ -20,3 +20,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   return true;
 });
+
+// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+//   console.log("HERE WTF");
+//   sendResponse({
+//     code: 'Error',
+//     message: 'FUK U'
+//   });
+// });

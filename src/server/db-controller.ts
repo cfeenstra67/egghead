@@ -37,7 +37,7 @@ export class DBController {
 
     SQL.Database = PatchedDatabase;
 
-    if (typeof SharedArrayBuffer === "undefined" || true) {
+    if (typeof SharedArrayBuffer === "undefined") {
       console.warn(
         "Running without SharedArrayBuffer, this will hurt performance."
       );

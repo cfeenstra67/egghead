@@ -31,7 +31,7 @@
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "@ungap/event-target": "^0.2.3",
-    "absurd-sql": "file:../../random/absurd-sql",
+    "absurd-sql": "^0.0.53",
     "animate.css": "^4.1.1",
     "chart.js": "^3.7.1",
     "copy-webpack-plugin": "^10.2.4",

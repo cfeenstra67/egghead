@@ -42,9 +42,7 @@ export class ServerClient implements ServerInterface {
   private async sendRequestAndRaiseForError<T extends ServerMessage>(
     request: TypedServerRequestForMessage<T>
   ): Promise<ServerResponseForMessage<T>> {
-    console.log('REQUEST', request);
     const response = await this.processRequest(request);
-    console.log('RESPONSE', response);
     if (response.code === ServerResponseCode.Error) {
       throw new Error(response.message);
     }

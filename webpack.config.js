@@ -100,7 +100,7 @@ function createModule(name, entry) {
 module.exports = [
   createModule('prod', {
     background: './src/background.ts',
-    // 'server-worker': './src/server/worker.ts',
+    'server-worker': './src/server/worker.ts',
     'content-script': './src/content-script.ts',
     client: './src/client/extension.tsx',
   }),

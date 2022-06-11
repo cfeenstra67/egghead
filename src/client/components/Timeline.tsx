@@ -56,7 +56,7 @@ function dateStringToLabel(
   granularity: QuerySessionTimelineRequest["granularity"] & string,
   dateString: string
 ): string {
-  const [start] = dateStringToDateRange(granularity, dateString);
+  const [start, end] = dateStringToDateRange(granularity, dateString);
   const localeName = "en-US";
   switch (granularity) {
     case "hour":
@@ -66,11 +66,21 @@ function dateStringToLabel(
         hour: "numeric",
       });
     case "day":
-    case "week":
       return start.toLocaleString(localeName, {
         day: "numeric",
         month: "short",
       });
+    case "week":
+      const weekStart = start.toLocaleString(localeName, {
+        day: "numeric",
+        month: "short",
+      });
+      const offset = 24 * 3600 * 1000 - 1;
+      const weekEnd = new Date(end.getTime() - offset).toLocaleString(localeName, {
+        day: "numeric",
+        month: "short",
+      });
+      return `${weekStart} - ${weekEnd}`;
     case "month":
       return start.toLocaleString(localeName, { month: "short" });
   }

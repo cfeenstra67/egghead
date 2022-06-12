@@ -1,0 +1,10 @@
+
+.form {}
+
+.form input, .form label {
+    padding: var(--padding);
+}
+
+.form input {
+    margin-right: var(--padding);
+}

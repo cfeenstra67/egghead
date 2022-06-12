@@ -21,6 +21,12 @@ import {
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
+  GetSettingsRequest,
+  GetSettingsResponse,
+  UpdateSettingsRequest,
+  UpdateSettingsResponse,
+  ImportDatabaseRequest,
+  ImportDatabaseResponse,
 } from "./types";
 
 // For use in a web page
@@ -114,4 +120,32 @@ export class ServerClient implements ServerInterface {
       ...request,
     });
   }
+
+  async getSettings(
+    request: GetSettingsRequest
+  ): Promise<GetSettingsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.GetSettings,
+      ...request
+    });
+  }
+
+  async updateSettings(
+    request: UpdateSettingsRequest
+  ): Promise<UpdateSettingsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.UpdateSettings,
+      ...request
+    });
+  }
+
+  async importDatabase(
+    request: ImportDatabaseRequest
+  ): Promise<ImportDatabaseResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.ImportDatabase,
+      ...request
+    });
+  }
+
 }

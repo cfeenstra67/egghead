@@ -1,0 +1,25 @@
+
+.item:first-child {
+    margin-top: calc(var(--padding) * 2.5);
+}
+
+.item {
+    padding: var(--padding);
+    margin: var(--padding) calc(var(--padding) * 3);
+    cursor: pointer;
+    border-radius: var(--border-radius);
+}
+
+.activeItem {
+    background-color: var(--secondary-bg-color);
+    cursor: default;
+}
+
+/*.item a {
+    color: var(--primary-text-color);
+    text-decoration: none;
+}*/
+
+.item:hover {
+    background-color: var(--secondary-bg-color);
+}

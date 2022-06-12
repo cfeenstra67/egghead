@@ -1,7 +1,13 @@
-import { useContext, useState } from "react";
+import hljs from 'highlight.js/lib/core';
+import sqlLang from 'highlight.js/lib/languages/sql';
+import { useContext, useState, useCallback } from "react";
+import Editor from 'react-simple-code-editor';
+import Card from './Card';
 import { AppContext, downloadUrl, cleanupUrl } from "../lib";
-import { ServerInterface } from "../../server";
+import { ServerInterface, ErrorResponse } from "../../server";
 import styles from "../styles/DbTool.module.css";
+
+hljs.registerLanguage('sql', sqlLang);
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
@@ -105,15 +111,111 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
   );
 }
 
+interface QueryToolResultProps {
+  results: any[];
+}
+
+function QueryToolResult({ results }: QueryToolResultProps) {
+  if (results.length === 0) {
+    return <></>;
+  }
+  const columns = Object.keys(results[0]);
+  const page = 25;
+  const [limit, setLimit] = useState(page);
+  const showResults = results.slice(0, limit);
+  const isMore = results.length > limit;
+
+  return (
+    <div className={styles.resultTable}>
+      <span>Results:</span>
+
+      <table>
+        <thead>
+          {columns.map((colName, idx) => (
+            <th key={idx}>{colName}</th>
+          ))}
+        </thead>
+        <tbody>
+          {showResults.map((row, idx) => (
+            <tr key={idx}>
+              {columns.map((colName, idx) => (
+                <td key={idx}>{row[colName]}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {isMore && (
+        <span
+          className={styles.queryToolSeeMore}
+          onClick={() => setLimit(limit + page)}
+        >
+          {results.length - limit} more results...
+        </span>
+      )}
+    </div>
+  );
+}
+
+function QueryToolOption({ serverClientFactory }: OptionProps) {
+  const [code, setCode] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const runQuery = useCallback(async () => {
+    setLoading(true);
+    try {
+      const client = await serverClientFactory();
+      const result = await client.runQuery({ query: code });
+      console.log("RESULT", result);
+      setResults(result.result);
+      setError(null);
+    } catch (error: any) {
+      const errorResp = error as ErrorResponse;
+      setResults([]);
+      setError(errorResp.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [code]);
+
+  return (
+    <div className={styles.queryTool}>
+      <span>Query Editor:</span>
+
+      <Editor
+        value={code}
+        onValueChange={(code) => setCode(code)}
+        highlight={(code) => hljs.highlight(code, { language: 'sql' }).value}
+        padding={10}
+        className={styles.editor}
+      />
+
+      <button onClick={runQuery} {...(loading && { disabled: true })}>
+        Run query
+      </button>
+
+      {error && (
+        <span>Error: {error}</span>
+      )}
+
+      <QueryToolResult results={results} />
+    </div>
+  );
+}
+
 export default function DbTool() {
   const { serverClientFactory } = useContext(AppContext);
 
   return (
-    <div className={styles.dbTool}>
+    <Card>
       <h2>DB Tool</h2>
 
       <ExportDbOption serverClientFactory={serverClientFactory} />
       <RefreshSearchIndexOption serverClientFactory={serverClientFactory} />
-    </div>
+      <QueryToolOption serverClientFactory={serverClientFactory} />
+    </Card>
   );
 }

@@ -1,10 +1,4 @@
 
-.dbTool {
-    background-color: var(--secondary-bg-color);
-    border-radius: var(--padding);
-    padding: var(--padding-2);
-}
-
 .option {
     display: grid;
     grid-template-columns: 172px 24px 100px min-content auto;
@@ -87,4 +81,43 @@
 .errorText {
     font-size: 14px;
     color: #ad2915;
+}
+
+.queryTool {
+    margin-top: var(--padding);
+}
+
+.editor {
+    margin-top: var(--padding-2);
+    margin-bottom: var(--padding-2);
+    border:  1px solid var(--secondary-text-color);
+    font-family: "Fira code", "Fira Mono", monospace;
+    font-size: var(--paragraph-font-size);
+    border-radius: var(--border-radius);
+}
+
+.resultTable {
+    margin-top: var(--padding-2);
+    overflow-x: scroll;
+}
+
+.resultTable table, .resultTable th, .resultTable td {
+    border:  1px solid var(--primary-text-color);
+}
+
+.resultTable th, .resultTable td {
+    padding: var(--padding);
+}
+
+.resultTable th {
+    font-weight: bolder;
+}
+
+.resultTable table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.queryToolSeeMore {
+    cursor: pointer;
 }

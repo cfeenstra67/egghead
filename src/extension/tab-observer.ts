@@ -86,12 +86,9 @@ export class TabObserver {
     await Promise.all(
       diff.updates.map(async (update) => {
         await this.server.tabChanged(update);
-      })
-    );
-    await Promise.all(
-      diff.deletes.map(async (tabId) => {
+      }).concat(diff.deletes.map(async (tabId) => {
         await this.server.tabClosed({ tabId });
-      })
+      }))
     );
   }
 

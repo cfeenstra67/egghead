@@ -1,4 +1,4 @@
-import { Session, SessionIndex, SessionTermIndex } from "../models";
+import { Session, SessionIndex, SessionTermIndex, Settings, defaultSettings } from "../models";
 import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
 import {
@@ -20,6 +20,12 @@ import {
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
+  GetSettingsRequest,
+  GetSettingsResponse,
+  UpdateSettingsRequest,
+  UpdateSettingsResponse,
+  ImportDatabaseRequest,
+  ImportDatabaseResponse,
 } from "./types";
 import { cleanURL, getHost } from "./utils";
 import { DataSource, Repository, IsNull } from "typeorm";
@@ -204,4 +210,50 @@ export class Server implements ServerInterface {
     await runner.commitTransaction();
     return {};
   }
+
+  private async getOrCreateSettings(repo: Repository<Settings>): Promise<Settings> {
+    const allItems = await repo.find();
+    if (allItems.length > 1) {
+      console.warn(`Found ${allItems.length} settings items, expecting one. Deleting other.`);
+      for (const item of allItems.slice(1)) {
+        await repo.delete(item);
+      }
+    }
+    if (allItems.length !== 0) {
+      return allItems[0];
+    }
+    const now = new Date();
+    const settings = repo.create({
+      ...defaultSettings(),
+      createdAt: now,
+      updatedAt: now,
+    });
+    await repo.save(settings);
+    return settings;
+  }
+
+  async getSettings(
+    request: GetSettingsRequest
+  ): Promise<GetSettingsResponse> {
+    const repo = this.dataSource.getRepository(Settings);
+    return { settings: await this.getOrCreateSettings(repo) };
+  }
+
+  async updateSettings(
+    request: UpdateSettingsRequest
+  ): Promise<UpdateSettingsResponse> {
+    const repo = this.dataSource.getRepository(Settings);
+    const settings = await this.getOrCreateSettings(repo);
+    Object.assign(settings, request.settings);
+    settings.updatedAt = new Date();
+    await repo.save(settings);
+    return { settings };
+  }
+
+  async importDatabase(
+    request: ImportDatabaseRequest
+  ): Promise<ImportDatabaseResponse> {
+    return {};
+  }
+
 }

@@ -1,5 +1,5 @@
 import type { Clause } from "./clause";
-import type { Session } from "../models";
+import type { Session, SettingsItems } from "../models";
 
 export enum ServerMessage {
   Query = "runQuery",
@@ -8,8 +8,11 @@ export enum ServerMessage {
   QuerySessions = "querySessions",
   QuerySessionFacets = "querySessionFacets",
   QuerySessionTimeline = "querySessionTimeline",
+  ImportDatabase = "importDatabase",
   ExportDatabase = "exportDatabase",
   RegenerateIndex = "regenerateIndex",
+  GetSettings = "getSettings",
+  UpdateSettings = "updateSettings",
 }
 
 export enum ServerResponseCode {
@@ -101,9 +104,29 @@ export interface ExportDatabaseResponse {
   databaseUrl: string;
 }
 
+export interface ImportDatabaseRequest {
+  databaseUrl: string;
+}
+
+export interface ImportDatabaseResponse {}
+
 export interface RegenerateIndexRequest {}
 
 export interface RegenerateIndexResponse {}
+
+export interface GetSettingsRequest {}
+
+export interface GetSettingsResponse {
+  settings: SettingsItems;
+}
+
+export interface UpdateSettingsRequest {
+  settings: Partial<SettingsItems>;
+}
+
+export interface UpdateSettingsResponse {
+  settings: SettingsItems;
+}
 
 export type ServerMessageMapping = {
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
@@ -126,6 +149,9 @@ export type ServerMessageMapping = {
   ];
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];
   [ServerMessage.TabClosed]: [TabClosedRequest, TabClosedResponse];
+  [ServerMessage.GetSettings]: [GetSettingsRequest, GetSettingsResponse];
+  [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
+  [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage

@@ -29,7 +29,7 @@ export function serverFactory(
   let initialized = false;
   let initCalled = false;
 
-  async function initialize() {
+  async function initialize(override?: Uint8Array) {
     try {
       const SQL = await initSqlJs({ locateFile: (file: any) => file });
 
@@ -39,7 +39,7 @@ export function serverFactory(
       dataSource = new DataSource({
         type: "sqljs",
         driver: SQL,
-        database,
+        database: override ?? database,
         entities,
         migrations,
         migrationsRun: true,
@@ -54,8 +54,18 @@ export function serverFactory(
     }
   }
 
+  async function importDb(database: Uint8Array): Promise<void> {
+    await dataSource?.close();
+    dataSource = undefined;
+    initialized = false;
+    await initialize(database);
+  }
+
   function getServer() {
-    const server = new Server(dataSource as DataSource);
+    const server = new Server(
+      dataSource as DataSource,
+      importDb,
+    );
     const middleware = serializationMiddleware(requestHandler(server));
     return new ServerClient(middleware);
   }

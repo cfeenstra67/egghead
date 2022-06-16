@@ -18,7 +18,7 @@ export class DBController {
     this.dbEvents = new EventTarget();
   }
 
-  private async initializeDb() {
+  private async initializeDb(database?: Uint8Array) {
     const SQL = await initSqlJs({ locateFile: (file: any) => file });
     const sqlFS = new SQLiteFS(SQL.FS, new IndexedDBBackend());
     SQL.register_for_idb(sqlFS);
@@ -53,11 +53,22 @@ export class DBController {
       migrations,
       migrationsRun: true,
       entities,
+      database,
     });
 
     await this.dataSource.initialize();
 
     this.dbEvents.dispatchEvent(new CustomEvent("init"));
+  }
+
+  private async teardownDb() {
+    await this.dataSource?.close();
+    this.dataSource = undefined;
+  }
+
+  async importDb(database: Uint8Array): Promise<void> {
+    await this.teardownDb();
+    await this.initializeDb(database);
   }
 
   useDataSource(): Promise<DataSource> {
@@ -96,28 +107,4 @@ export class DBController {
       }
     });
   }
-
-  // useDb<T>(func: (db: DataSource) => T): Promise<T> {
-  //   return new Promise((resolve, reject) => {
-  //     if (this.dataSource !== undefined) {
-  //       resolve(func(this.dataSource));
-  //       return;
-  //     }
-  //     this.dbEvents.addEventListener(
-  //       'init',
-  //       async () => {
-  //         try {
-  //           resolve(await func(this.dataSource as DataSource));
-  //         } catch (err) {
-  //           reject(err);
-  //         }
-  //       },
-  //       { once: true }
-  //     );
-  //     if (!this.initCalled) {
-  //       this.initCalled = true;
-  //       this.initializeDb();
-  //     }
-  //   });
-  // }
 }

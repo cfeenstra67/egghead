@@ -1,6 +1,6 @@
 import hljs from 'highlight.js/lib/core';
 import sqlLang from 'highlight.js/lib/languages/sql';
-import { useContext, useState, useCallback } from "react";
+import { useContext, useState, useCallback, createRef } from "react";
 import Editor from 'react-simple-code-editor';
 import Card from './Card';
 import { AppContext, downloadUrl, cleanupUrl } from "../lib";
@@ -70,6 +70,51 @@ function ExportDbOption({ serverClientFactory }: OptionProps) {
     <div className={styles.option}>
       <span>Export DB:</span>
       <button onClick={downloadDb}>Export</button>
+      <OptionStatus state={state} />
+      {state === LoadingState.Failed && (
+        <span className={styles.errorText}>{error}</span>
+      )}
+    </div>
+  );
+}
+
+function ImportDbOption({ serverClientFactory }: OptionProps) {
+  const [state, setState] = useState(LoadingState.None);
+  const [error, setError] = useState("");
+
+  const fileRef = createRef<HTMLInputElement>();
+
+  async function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const client = await serverClientFactory();
+    const file = event.target.files?.[0];
+    const reader = new FileReader();
+
+    setState(LoadingState.Loading);
+
+    reader.addEventListener('load', async () => {
+      try {
+        const resp = await client.importDatabase({
+          databaseUrl: reader.result as string,
+        });
+        setError('');
+        setState(LoadingState.Success);
+        console.log('success', resp);
+      } catch (error: any) {
+        setError(error.toString());
+        setState(LoadingState.Failed);
+      }
+    }, false);
+
+    if (file) {
+      reader.readAsDataURL(file);
+    }
+  }
+
+  return (
+    <div className={styles.option}>
+      <span>Import DB:</span>
+      <input ref={fileRef} type="file" onChange={handleChange} />
+
       <OptionStatus state={state} />
       {state === LoadingState.Failed && (
         <span className={styles.errorText}>{error}</span>
@@ -169,7 +214,6 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
     try {
       const client = await serverClientFactory();
       const result = await client.runQuery({ query: code });
-      console.log("RESULT", result);
       setResults(result.result);
       setError(null);
     } catch (error: any) {
@@ -181,6 +225,15 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
     }
   }, [code]);
 
+  function handleKeyDown(
+    evt: React.KeyboardEvent<HTMLTextAreaElement | HTMLDivElement>
+  ) {
+    // Cmd + return for submit
+    if (evt.keyCode === 13 && evt.metaKey) {
+      runQuery();
+    }
+  }
+
   return (
     <div className={styles.queryTool}>
       <span>Query Editor:</span>
@@ -191,6 +244,7 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
         highlight={(code) => hljs.highlight(code, { language: 'sql' }).value}
         padding={10}
         className={styles.editor}
+        onKeyDown={handleKeyDown}
       />
 
       <button onClick={runQuery} {...(loading && { disabled: true })}>
@@ -213,6 +267,7 @@ export default function DbTool() {
     <Card>
       <h2>DB Tool</h2>
 
+      <ImportDbOption serverClientFactory={serverClientFactory} />
       <ExportDbOption serverClientFactory={serverClientFactory} />
       <RefreshSearchIndexOption serverClientFactory={serverClientFactory} />
       <QueryToolOption serverClientFactory={serverClientFactory} />

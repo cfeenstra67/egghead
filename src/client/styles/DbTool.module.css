@@ -1,13 +1,17 @@
 
 .option {
     display: grid;
-    grid-template-columns: 172px 24px 100px min-content auto;
+    grid-template-columns: 172px 24px max-content min-content auto;
     align-items: center;
     column-gap: var(--padding-2);
 }
 
-.option > button {
+.option > *:nth-child(2) {
     grid-column: 3;
+}
+
+.option > input[type="file"] {
+    color:  rgba(0, 0, 0, 0);
 }
 
 .optionStatus {

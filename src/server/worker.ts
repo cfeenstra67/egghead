@@ -20,7 +20,7 @@ const requestQueue = queue({
 
 const handleRequest: RequestHandler = async (request) => {
   const dataSource = await dbController.useDataSource();
-  const server = new Server(dataSource);
+  const server = new Server(dataSource, dbController.importDb.bind(dbController));
   const handler = requestHandler(server);
   return await handler(request);
 };

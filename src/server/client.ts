@@ -27,6 +27,8 @@ import {
   UpdateSettingsResponse,
   ImportDatabaseRequest,
   ImportDatabaseResponse,
+  TabInteractionRequest,
+  TabInteractionResponse,
 } from "./types";
 
 // For use in a web page
@@ -144,6 +146,15 @@ export class ServerClient implements ServerInterface {
   ): Promise<ImportDatabaseResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ImportDatabase,
+      ...request
+    });
+  }
+
+  async tabInteraction(
+    request: TabInteractionRequest
+  ): Promise<TabInteractionResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.TabInteraction,
       ...request
     });
   }

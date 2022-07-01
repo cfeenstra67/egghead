@@ -9,6 +9,10 @@ const serverClient = new ServerClient(serverConnection);
 setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request === 'me') {
+    sendResponse(sender.tab?.id);
+    return false;
+  }
   serverConnection(request)
     .then(sendResponse)
     .catch((error) => {

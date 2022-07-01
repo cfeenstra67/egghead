@@ -5,6 +5,7 @@ export enum ServerMessage {
   Query = "runQuery",
   TabChanged = "tabChanged",
   TabClosed = "tabClosed",
+  TabInteraction = "tabInteraction",
   QuerySessions = "querySessions",
   QuerySessionFacets = "querySessionFacets",
   QuerySessionTimeline = "querySessionTimeline",
@@ -43,6 +44,14 @@ export interface TabClosedRequest {
 }
 
 export interface TabClosedResponse {}
+
+export interface TabInteractionRequest {
+  tabId: number;
+  url?: string;
+  title?: string;
+}
+
+export interface TabInteractionResponse {}
 
 export interface QuerySessionsRequest {
   query?: string;
@@ -149,6 +158,7 @@ export type ServerMessageMapping = {
   ];
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];
   [ServerMessage.TabClosed]: [TabClosedRequest, TabClosedResponse];
+  [ServerMessage.TabInteraction]: [TabInteractionRequest, TabInteractionResponse];
   [ServerMessage.GetSettings]: [GetSettingsRequest, GetSettingsResponse];
   [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
   [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];

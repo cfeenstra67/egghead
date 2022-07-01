@@ -54,6 +54,15 @@ export class Session {
   @Column({ nullable: true })
   endedAt?: Date;
 
+  @Column()
+  interactionCount!: number;
+
+  @Column()
+  lastInteractionAt!: Date;
+
+  @Column({ nullable: true })
+  chromeVisitId?: string;
+
   // Always null column used in search index as dummy
   @Column({ nullable: true })
   dum?: string;

@@ -2,15 +2,16 @@ import { useContext } from "react";
 import { Link } from "wouter";
 import { AppContext } from "../lib";
 import styles from "../styles/NavBar.module.css";
-import SearchIcon from "../icons/search-icon.svg";
 import CloseCircleIcon from "../icons/close-circle.svg";
+import EggheadIcon from '../icons/egghead.svg';
+import SearchIcon from "../icons/search-icon.svg";
 import SettingsIcon from "../icons/settings.svg";
 
 function LeftContent() {
   return (
-    <div>
+    <div className={styles.leftContent}>
       <Link to="/">
-        <h1>History</h1>
+        <EggheadIcon fill="white" className={styles.eggheadIcon} />
       </Link>
     </div>
   );

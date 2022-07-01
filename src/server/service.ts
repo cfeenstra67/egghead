@@ -3,7 +3,6 @@ import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
 import {
   ServerInterface,
-  ServerResponseCode,
   QueryRequest,
   QueryResponse,
   QuerySessionsRequest,
@@ -26,6 +25,8 @@ import {
   UpdateSettingsResponse,
   ImportDatabaseRequest,
   ImportDatabaseResponse,
+  TabInteractionRequest,
+  TabInteractionResponse,
 } from "./types";
 import { cleanURL, getHost } from "./utils";
 import { DataSource, Repository, IsNull } from "typeorm";
@@ -132,7 +133,7 @@ export class Server implements ServerInterface {
         // Check if session hasn't changed.
         const cleanUrl = cleanURL(request.url);
         if (cleanURL(existingSession.url) === cleanUrl) {
-          return { code: ServerResponseCode.Ok };
+          return {};
         }
         // Otherwise: use as source unless it's already defined
         if (sourceSessionId === undefined) {
@@ -152,6 +153,8 @@ export class Server implements ServerInterface {
         startedAt: now,
         parentSessionId: sourceSessionId,
         transitionType,
+        interactionCount: 0,
+        lastInteractionAt: now,
       });
 
       await repo.save(newSession);
@@ -177,11 +180,39 @@ export class Server implements ServerInterface {
       );
       if (existingSession === undefined) {
         console.warn(`No active session exists for tab ${request.tabId}`);
-        return { code: ServerResponseCode.Ok };
+        return {};
       }
       existingSession.endedAt = now;
       await repo.save(existingSession);
       return {};
+    });
+  }
+
+  async tabInteraction(
+    request: TabInteractionRequest
+  ): Promise<TabInteractionResponse> {
+    const now = new Date();
+    return await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(Session);
+      const existingSession = await this.getActiveSession(
+        request.tabId,
+        repo,
+        now
+      );
+      if (existingSession === undefined) {
+        console.warn(`No active session exists for tab ${request.tabId}`);
+        return {};
+      }
+      existingSession.interactionCount += 1;
+      existingSession.lastInteractionAt = now;
+      if (request.title) {
+        existingSession.title = request.title;
+      }
+      if (request.url) {
+        existingSession.rawUrl = request.url;
+      }
+      await manager.save(existingSession);
+      return {}
     });
   }
 

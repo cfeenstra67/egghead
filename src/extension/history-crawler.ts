@@ -1,12 +1,19 @@
+import { ServerInterface } from "../server";
 
 export interface HistoryCrawlerState {
   startTimestamp: Date;
   upToDate: boolean;
 }
 
+const initialDate = new Date("2020-01-01");
+
 export class HistoryCrawler {
 
-  constructor(readonly ns: string, readonly interval: number) {}
+  constructor(
+    readonly server: ServerInterface,
+    readonly ns: string,
+    readonly interval: number,
+  ) {}
 
   setState({ startTimestamp, upToDate }: HistoryCrawlerState): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -38,7 +45,7 @@ export class HistoryCrawler {
           });
         } else {
           resolve({
-            startTimestamp: new Date(0),
+            startTimestamp: initialDate,
             upToDate: false,
           });
         }
@@ -46,79 +53,100 @@ export class HistoryCrawler {
     });
   }
 
-  private async crawlInterval(start: Date, end: Date): Promise<chrome.history.HistoryItem[]> {
-
-    let interval = end.getTime() - start.getTime();
+  private async crawlInterval(start: Date, end: Date): Promise<void> {
+    console.log('crawling', start, end);
+    const startInterval = end.getTime() - start.getTime();
+    let interval = startInterval;
+    let currentStart = start;
 
     const limit = 100;
+    const intervalCutoff = 1000;
 
-    const out: chrome.history.HistoryItem[] = [];
+    const promises: Promise<void>[] = [];
 
-    while (true) {
+    while (currentStart.getTime() < end.getTime()) {
       const results: chrome.history.HistoryItem[] = await new Promise((resolve, reject) => {
-        chrome.history.search({
+        const params = {
           text: '',
-          startTime: start.getTime(),
-          endTime: start.getTime() + interval,
+          startTime: currentStart.getTime(),
+          endTime: currentStart.getTime() + interval,
           maxResults: limit,
+        };
+        chrome.history.search(params, (results) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(results);
+          }
         });
       });
 
+      // A little bit of safety here: to avoid an infinite loop, we handle
+      // the (seemingly impossible, but who knows) case where there are >100
+      // results in a single second. It doesn't seem like there's any good way to
+      // handle this, so just bail and take the 100 we can get.
       if (results.length === limit) {
         interval /= 2;
-      } else {
-        for (const item of results) {
-          out.push(item);
+        if (interval >= intervalCutoff) {
+          continue;
         }
-        start = new Date(start.getTime() + )
-        break;
       }
+      promises.push(this.handleItems(results));
+      currentStart = new Date(currentStart.getTime() + interval);
+      interval = Math.min(end.getTime() - currentStart.getTime(), startInterval);
     }
 
-    let step = 2;
-    while (true) {
-      const results: chrome.history.HistoryItem[] = await new Promise((resolve, reject) => {
-        chrome.history.search({
-          text: '',
-          startTime: start.getTime() + interval * (step - 1),
-          endTime: start.getTime() + interval * step,
-          maxResults: limit,
-        });
-      });
-      for (const item of results) {
-        out.push(item);
-      }
-      if (!results.length) {
-        break;
-      }
-      step += 1;
-    }
-
-    return out;
+    await Promise.all(promises);
   }
 
-  async crawl({ startTimestamp, upToDate }: HistoryCrawlerState): HistoryCrawlerState {
-    const limit = 100;
-
-    const items: chrome.history.HistoryItem[] = [];
+  async crawl({ startTimestamp, upToDate }: HistoryCrawlerState, stop?: Date): Promise<HistoryCrawlerState> {
+    if (stop === undefined) {
+      stop = new Date();
+    }
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
 
-    const out: chrome.history.HistoryItem[] = [];
+    const promises: Promise<void>[] = [];
 
-    while (endTimestamp.getTime() < startTimestamp.getTime()) {
-      for (const item of await this.crawlInterval(startTimestamp, endTimestamp)) {
-        out.push(item);
-      }
+    while (endTimestamp.getTime() <= stop.getTime()) {
+      promises.push(this.crawlInterval(startTimestamp, endTimestamp));
       startTimestamp = new Date(startTimestamp.getTime() + this.interval);
       endTimestamp = new Date(endTimestamp.getTime() + this.interval);
     }
 
-    console.log("OUT", out);
+    await Promise.all(promises);
+
     return {
-      startTimestamp: endTimestamp,
+      startTimestamp: stop,
       upToDate: true,
     };
+  }
+
+  async handleItems(items: chrome.history.HistoryItem[]): Promise<void> {
+    console.log("OUT", items);
+  }
+
+  async runCrawler() {
+    const state = await this.getState();
+    const newState = await this.crawl(state);
+    await this.setState(newState);
+  }
+
+  registerCrawler(crawlerAlarm: string): void {
+    this.setState({ startTimestamp: initialDate, upToDate: false })
+      .then(this.runCrawler.bind(this));
+    // chrome.alarms.create(crawlerAlarm, {
+    //   delayInMinutes: 0,
+    //   periodInMinutes: 1,
+    // });
+    // chrome.alarms.onAlarm.addListener(async (alarm) => {
+    //   if (alarm.name !== crawlerAlarm) {
+    //     return;
+    //   }
+    //   // Reset state on each run for now
+    //   await this.setState({ startTimestamp: initialDate, upToDate: false });
+    //   await this.runCrawler();
+    // });
   }
 
 }

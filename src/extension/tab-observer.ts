@@ -40,16 +40,15 @@ export class TabObserver {
   }
 
   registerCleanup(cleanupAlarm: string): void {
-    chrome.alarms.create(cleanupAlarm, {
-      delayInMinutes: 0,
-      periodInMinutes: 1,
-    });
+    chrome.alarms.create(cleanupAlarm, { periodInMinutes: 1 });
     chrome.alarms.onAlarm.addListener(async (alarm) => {
       if (alarm.name !== cleanupAlarm) {
         return;
       }
       await this.cleanupSessions();
     });
+    // Run once now, on initial registration
+    this.cleanupSessions();
   }
 
   handleNavigationComplete(event: NavigationObserver.NavigationEvent): void {

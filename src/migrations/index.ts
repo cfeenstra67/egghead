@@ -9,6 +9,7 @@ import { index1652947986280 } from "./1652947986280-index";
 import { dummyColumn1653238599617 } from "./1653238599617-dummy-column";
 import { addSettings1655016473038 } from './1655016473038-add-settings';
 import { addInteractions1656568975256 } from './1656568975256-add-interactions';
+import { addChromeVisitId1656829928767 } from './1656829928767-add-chrome-visit-id';
 
 export const migrations = [
   createUser1651729792149,
@@ -22,4 +23,5 @@ export const migrations = [
   dummyColumn1653238599617,
   addSettings1655016473038,
   addInteractions1656568975256,
+  addChromeVisitId1656829928767,
 ];

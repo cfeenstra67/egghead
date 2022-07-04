@@ -10,6 +10,8 @@ import { dummyColumn1653238599617 } from "./1653238599617-dummy-column";
 import { addSettings1655016473038 } from './1655016473038-add-settings';
 import { addInteractions1656568975256 } from './1656568975256-add-interactions';
 import { addChromeVisitId1656829928767 } from './1656829928767-add-chrome-visit-id';
+import { hostIndex1656900179493 } from './1656900179493-host-index';
+import { moreIndexes1656901146387 } from "./1656901146387-more-indexes";
 
 export const migrations = [
   createUser1651729792149,
@@ -24,4 +26,6 @@ export const migrations = [
   addSettings1655016473038,
   addInteractions1656568975256,
   addChromeVisitId1656829928767,
+  hostIndex1656900179493,
+  moreIndexes1656901146387,
 ];

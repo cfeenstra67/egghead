@@ -9,6 +9,9 @@ import {
 } from "typeorm";
 
 @Entity()
+@Index(["host", "startedAt"])
+@Index(["tabId", "startedAt"])
+@Index(["chromeVisitId", "startedAt", "url"])
 export class Session {
   @PrimaryColumn({ unique: true })
   id!: string;

@@ -164,6 +164,7 @@ function TermsComponent({
 interface SearchSideBarProps {
   request: QuerySessionsRequest;
   selectedHosts: string[];
+  loading?: boolean;
   setSelectedHosts: (hosts: string[]) => void;
   selectedTerms: string[];
   setSelectedTerms: (terms: string[]) => void;
@@ -175,6 +176,7 @@ export default function SearchSideBar({
   setSelectedHosts,
   selectedTerms,
   setSelectedTerms,
+  loading,
 }: SearchSideBarProps) {
   const [hosts, setHosts] = useState<QuerySessionFacetsFacetValue[]>([]);
   const [terms, setTerms] = useState<QuerySessionFacetsFacetValue[]>([]);
@@ -182,6 +184,10 @@ export default function SearchSideBar({
   const { serverClientFactory } = useContext(AppContext);
 
   useEffect(() => {
+    if (loading) {
+      return;
+    }
+
     let active = true;
 
     async function load() {
@@ -211,7 +217,7 @@ export default function SearchSideBar({
     return () => {
       active = false;
     };
-  }, [request, selectedTerms, selectedHosts]);
+  }, [loading, request, selectedTerms, selectedHosts]);
 
   return (
     <SideBar>

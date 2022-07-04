@@ -1,4 +1,5 @@
 import { DataSource, EntityTarget, SelectQueryBuilder } from "typeorm";
+import { maybeAbort } from "./abort";
 import {
   renderClause,
   IndexToken,
@@ -60,25 +61,30 @@ export class SearchService {
 
   private async searchQueryBuilder(
     request: QuerySessionsRequest,
-    includeChildCounts?: boolean
-  ): Promise<SelectQueryBuilder<SessionIndex>> {
-    const repo = this.dataSource.getRepository(SessionIndex);
+    isSearch?: boolean,
+    includeChildren?: boolean,
+  ): Promise<SelectQueryBuilder<SessionIndex | Session>> {
+    const repo = this.dataSource.getRepository(isSearch ? SessionIndex : Session);
 
     const stophosts = stophostsTxt.split("\n").filter((x) => x);
 
     let builder = await repo
       .createQueryBuilder("s")
       .select("*")
-      .addSelect(
-        `highlight("session_index", 4, '{~{~{', '}~}~}')`,
-        "highlightedTitle"
-      )
-      .addSelect(
-        `highlight("session_index", 2, '{~{~{', '}~}~}')`,
-        "highlightedHost"
-      )
       .where("s.host NOT IN (:...stophosts)", { stophosts })
       .orderBy("s.startedAt", "DESC");
+
+    if (isSearch) {
+      builder = builder
+        .addSelect(
+          `highlight("session_index", 4, '{~{~{', '}~}~}')`,
+          "highlightedTitle"
+        )
+        .addSelect(
+          `highlight("session_index", 2, '{~{~{', '}~}~}')`,
+          "highlightedHost"
+        );
+    }
 
     const getFieldName = (fieldName: string) => {
       if (fieldName === IndexToken) {
@@ -89,7 +95,7 @@ export class SearchService {
 
     let paramIndex = 0;
 
-    if (request.query) {
+    if (isSearch && request.query) {
       const clause = parseQueryString<Session>(request.query);
       const indexArgs = sessionIndexTableArgs(this.dataSource, SessionIndex);
       const indexedMap = Object.fromEntries(indexArgs.columns.map(getColumn));
@@ -130,7 +136,7 @@ export class SearchService {
       builder = builder.andWhere(sql, params);
     }
 
-    if (includeChildCounts) {
+    if (isSearch && includeChildren) {
       const childCountsSql = `
         SELECT
           s.parentSessionId as joinId,
@@ -155,7 +161,7 @@ export class SearchService {
   }
 
   private async getHostStats(
-    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     count: number
   ): Promise<any[]> {
     const sessionRepo = this.dataSource.getRepository(Session);
@@ -179,7 +185,7 @@ export class SearchService {
   }
 
   private async getTermStats(
-    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     count: number
   ): Promise<any[]> {
     const sql = `
@@ -270,7 +276,7 @@ export class SearchService {
   }
 
   private async detectGranularity(
-    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     maxBuckets: number
   ): Promise<QuerySessionTimelineRequest["granularity"] & string> {
     const minMaxQueryBuilder = this.dataSource
@@ -306,7 +312,7 @@ export class SearchService {
   }
 
   private async getTimeline(
-    rowIdBuilder: SelectQueryBuilder<SessionIndex>,
+    rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     granularity: QuerySessionTimelineRequest["granularity"]
   ): Promise<QuerySessionTimelineResponse> {
     let stringGranularity: QuerySessionTimelineRequest["granularity"] & string;
@@ -362,18 +368,31 @@ export class SearchService {
   async querySessions(
     request: QuerySessionsRequest
   ): Promise<QuerySessionsResponse> {
-    let builder = await this.searchQueryBuilder(request, true);
+    const builder = await this.searchQueryBuilder(request, request.isSearch, true);
+    maybeAbort(request.abort);
 
-    const totalCount = await builder.getCount();
+    let builderWithCount = this.dataSource
+      .createQueryBuilder()
+      .select('*')
+      .addSelect('COUNT(1) OVER ()', 'totalCount')
+      .from(`(${builder.getQuery()})`, 't')
+      .setParameters(builder.getParameters());
 
     if (request.skip) {
-      builder = builder.offset(request.skip);
+      builderWithCount = builder.offset(request.skip);
     }
     if (request.limit) {
-      builder = builder.limit(request.limit);
+      builderWithCount = builder.limit(request.limit);
     }
 
-    const results = (await builder.getRawMany()).map(sessionToSessionResponse);
+    const before = new Date()
+    const rawResults = await builderWithCount.getRawMany();
+    maybeAbort(request.abort);
+    console.log('Search', (new Date().getTime() - before.getTime()) / 1000);
+
+    const totalCount = rawResults.length === 0 ? 0 : rawResults[0].totalCount;
+
+    const results = rawResults.map(sessionToSessionResponse);
 
     return {
       totalCount,
@@ -384,15 +403,18 @@ export class SearchService {
   async querySessionFacets(
     request: QuerySessionFacetsRequest
   ): Promise<QuerySessionFacetsResponse> {
-    const builder = await this.searchQueryBuilder(request);
+    const builder = await this.searchQueryBuilder(request, true);
+    maybeAbort(request.abort);
 
     const rowIdBuilder = builder.clone().select("s.rowid");
 
     const facetsSize = request.facetsSize ?? 25;
 
     const hostStats = await this.getHostStats(rowIdBuilder, facetsSize);
+    maybeAbort(request.abort);
 
     const termStats = await this.getTermStats(rowIdBuilder, facetsSize);
+    maybeAbort(request.abort);
 
     return {
       host: hostStats,
@@ -403,7 +425,8 @@ export class SearchService {
   async querySessionTimeline(
     request: QuerySessionTimelineRequest
   ): Promise<QuerySessionTimelineResponse> {
-    const builder = await this.searchQueryBuilder(request);
+    const builder = await this.searchQueryBuilder(request, true);
+    maybeAbort(request.abort);
 
     const rowIdBuilder = builder.clone().select("s.rowid");
 

@@ -185,8 +185,8 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
     .map((input) => quoteDdlName(getColumn(input)[0]))
     .concat([quoteDdlName(dummyColumnName)]);
 
-  const newSelectCols = [args.contentRowId || "rowid", ...args.columns]
-    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
+  const oldSelectCols = [args.contentRowId || "rowid", ...args.columns]
+    .map((input) => "old." + quoteDdlName(getColumn(input)[0]))
     .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
@@ -201,7 +201,7 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
     `( ${fullTableName}, `,
     insertCols.join(", "),
     ") VALUES ('delete', ",
-    newSelectCols.join(", "),
+    oldSelectCols.join(", "),
     "); END;",
   ];
 

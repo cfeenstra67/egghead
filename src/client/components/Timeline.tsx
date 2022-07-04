@@ -13,6 +13,7 @@ import styles from "../styles/Timeline.module.css";
 export interface TimelineProps {
   request: QuerySessionsRequest;
   dateRange: [Date, Date] | null;
+  loading?: boolean;
   setDateRange: (range: [Date, Date] | null) => void;
 }
 
@@ -207,6 +208,7 @@ export default function Timeline({
   request,
   dateRange,
   setDateRange,
+  loading,
 }: TimelineProps) {
   const { serverClientFactory } = useContext(AppContext);
   const [timeline, setTimeline] = useState<QuerySessionTimelineResponse>({
@@ -234,6 +236,10 @@ export default function Timeline({
   }, [dateRangeStack, setDateRangeStack]);
 
   useEffect(() => {
+    if (loading) {
+      return;
+    }
+
     let active = true;
 
     async function load() {
@@ -258,7 +264,7 @@ export default function Timeline({
     return () => {
       active = false;
     };
-  }, [request, setTimeline]);
+  }, [loading, request, setTimeline]);
 
   const labels = timeline.timeline.map((x) => {
     return dateStringToLabel(timeline.granularity, x.dateString);

@@ -1,3 +1,4 @@
+import { Aborted } from './abort';
 import {
   ServerInterface,
   TypedServerRequestForMessage,
@@ -29,12 +30,18 @@ import {
   ImportDatabaseResponse,
   TabInteractionRequest,
   TabInteractionResponse,
+  CorrelateChromeVisitRequest,
+  CorrelateChromeVisitResponse,
+  CreateGhostSessionsRequest,
+  CreateGhostSessionsResponse,
 } from "./types";
 
 // For use in a web page
 export const processExtensionRequest: RequestHandler = (request) => {
+  // Abort won't work yet :(
+  const { abort, ...baseRequest } = request;
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(request, (response) => {
+    chrome.runtime.sendMessage(baseRequest, (response) => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
@@ -51,10 +58,13 @@ export class ServerClient implements ServerInterface {
     request: TypedServerRequestForMessage<T>
   ): Promise<ServerResponseForMessage<T>> {
     const response = await this.processRequest(request);
-    if (response.code === ServerResponseCode.Error) {
-      throw new Error(response.message);
+    if (response.code === ServerResponseCode.Ok) {
+      return response;
     }
-    return response;
+    if (response.code === ServerResponseCode.Aborted) {
+      throw new Aborted();
+    }
+    throw new Error(response.message);
   }
 
   async runQuery(request: QueryRequest): Promise<QueryResponse> {
@@ -156,6 +166,24 @@ export class ServerClient implements ServerInterface {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.TabInteraction,
       ...request
+    });
+  }
+
+  async correlateChromeVisit(
+    request: CorrelateChromeVisitRequest
+  ): Promise<CorrelateChromeVisitResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.CorrelateChromeVisit,
+      ...request
+    });
+  }
+
+  async createGhostSessions(
+    request: CreateGhostSessionsRequest
+  ): Promise<CreateGhostSessionsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.CreateGhostSessions,
+      ...request,
     });
   }
 

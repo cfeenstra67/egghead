@@ -1,3 +1,4 @@
+import { maybeAbort } from './abort';
 import { Session, SessionIndex, SessionTermIndex, Settings, defaultSettings } from "../models";
 import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
@@ -27,6 +28,10 @@ import {
   ImportDatabaseResponse,
   TabInteractionRequest,
   TabInteractionResponse,
+  CorrelateChromeVisitRequest,
+  CorrelateChromeVisitResponse,
+  CreateGhostSessionsRequest,
+  CreateGhostSessionsResponse,
 } from "./types";
 import { cleanURL, getHost } from "./utils";
 import { DataSource, Repository, IsNull } from "typeorm";
@@ -58,6 +63,9 @@ function dataURItoBlob(dataURI: string): Blob {
   return blob;
 }
 
+// Some arbitrary negative value (so it won't overlap w/ real IDs)
+const GhostSessionTabId = -12;
+
 export class Server implements ServerInterface {
   private searchService: SearchService;
 
@@ -76,7 +84,7 @@ export class Server implements ServerInterface {
   private async getActiveSession(
     tabId: number,
     repo: Repository<Session>,
-    now?: Date
+    now?: Date,
   ): Promise<Session | undefined> {
     if (now === undefined) {
       now = new Date();
@@ -113,6 +121,7 @@ export class Server implements ServerInterface {
         repo,
         now
       );
+      maybeAbort(request.abort);
       let sourceSessionId: string | undefined = undefined;
       const transitionType: string | undefined =
         request.transitionType || "link";
@@ -126,6 +135,7 @@ export class Server implements ServerInterface {
           repo,
           now
         );
+        maybeAbort(request.abort);
         sourceSessionId = sourceSession?.id;
       }
 
@@ -158,6 +168,7 @@ export class Server implements ServerInterface {
       });
 
       await repo.save(newSession);
+      maybeAbort(request.abort);
 
       if (existingSession && sourceSessionId === existingSession.id) {
         existingSession.nextSessionId = newSession.id;
@@ -178,6 +189,7 @@ export class Server implements ServerInterface {
         repo,
         now
       );
+      maybeAbort(request.abort);
       if (existingSession === undefined) {
         console.warn(`No active session exists for tab ${request.tabId}`);
         return {};
@@ -199,10 +211,16 @@ export class Server implements ServerInterface {
         repo,
         now
       );
+      maybeAbort(request.abort);
       if (existingSession === undefined) {
         console.warn(`No active session exists for tab ${request.tabId}`);
         return {};
       }
+      if (!request.url || cleanURL(request.url) !== existingSession.url) {
+        console.warn(`Invalid URL for tab ${request.tabId}.`);
+        return {};
+      }
+
       existingSession.interactionCount += 1;
       existingSession.lastInteractionAt = now;
       if (request.title) {
@@ -263,7 +281,9 @@ export class Server implements ServerInterface {
 
     for (const args of [searchIndexArgs, termIndexArgs]) {
       await dropFts5Index(args, runner);
+      maybeAbort(request.abort);
       await createFts5Index(args, runner);
+      maybeAbort(request.abort);
     }
 
     await runner.commitTransaction();
@@ -303,6 +323,7 @@ export class Server implements ServerInterface {
   ): Promise<UpdateSettingsResponse> {
     const repo = this.dataSource.getRepository(Settings);
     const settings = await this.getOrCreateSettings(repo);
+    maybeAbort(request.abort);
     Object.assign(settings, request.settings);
     settings.updatedAt = new Date();
     await repo.save(settings);
@@ -316,6 +337,102 @@ export class Server implements ServerInterface {
     const array = new Uint8Array(await blob.arrayBuffer());
     await this.importDb(array);
     return {};
+  }
+
+  async correlateChromeVisit(
+    request: CorrelateChromeVisitRequest
+  ): Promise<CorrelateChromeVisitResponse> {
+    return await this.dataSource.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Session);
+      const existingSession = await repo.findOne({
+        where: { id: request.sessionId },
+      });
+      maybeAbort(request.abort);
+      if (existingSession === null) {
+        console.warn(`No session found: ${request.sessionId}`);
+        return {};
+      }
+      if (existingSession.chromeVisitId) {
+        if (existingSession.chromeVisitId !== request.visitId) {
+          console.warn(`Session already had a visit id: ${request.sessionId}`);
+        }
+        return {};
+      }
+      existingSession.chromeVisitId = request.visitId;
+      await manager.save(existingSession);
+      maybeAbort(request.abort);
+      // Delete any associated ghost session(s) when we correlate a visit
+      // should only be 1, but making this robust to duplicates
+      const ghostSessions = await repo.find({
+        where: {
+          chromeVisitId: request.visitId,
+          tabId: GhostSessionTabId,
+        }
+      });
+      maybeAbort(request.abort);
+      for (const session of ghostSessions) {
+        await manager.remove(session);
+        maybeAbort(request.abort);
+      }
+      return {};
+    });
+  }
+
+  async createGhostSessions(
+    request: CreateGhostSessionsRequest
+  ): Promise<CreateGhostSessionsResponse> {
+    return await this.dataSource.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Session);
+      for (const session of request.sessions) {
+        const existingSession = await repo.findOne({
+          where: { chromeVisitId: session.visitId }
+        });
+        maybeAbort(request.abort);
+        if (existingSession !== null) {
+          const isGhostSession = existingSession.tabId === GhostSessionTabId;
+          console.warn(
+            `Session already exists for ${session.visitId}: ` +
+            `${existingSession.id}. Ghost: ${isGhostSession}`
+          );
+          return {};
+        }
+
+        let referringSessionId: string | undefined = undefined;
+        let referringSessionTransition: string | undefined = undefined;
+        if (session.referringVisitId && session.referringVisitId !== '0') {
+          const referringSession = await repo.findOne({
+            where: { chromeVisitId: session.referringVisitId }
+          });
+          maybeAbort(request.abort);
+          if (referringSession) {
+            referringSessionId = referringSession.id;
+            referringSessionTransition = session.transition;
+          } else {
+            console.warn(`No session found for visit: ${session.referringVisitId}`);
+          }
+        }
+
+        const visitDate = new Date(session.visitTime);
+        const newSession = repo.create({
+          id: uuidv4(),
+          tabId: GhostSessionTabId,
+          url: cleanURL(session.url),
+          rawUrl: session.url,
+          host: getHost(session.url),
+          title: session.title,
+          startedAt: visitDate,
+          endedAt: visitDate,
+          parentSessionId: referringSessionId,
+          transitionType: referringSessionTransition,
+          interactionCount: 0,
+          lastInteractionAt: visitDate,
+          chromeVisitId: session.visitId,
+        });
+        await manager.save(newSession);
+        maybeAbort(request.abort);
+      }
+      return {};
+    });
   }
 
 }

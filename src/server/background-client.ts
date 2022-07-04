@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import { initBackend } from "absurd-sql/dist/indexeddb-main-thread";
 import EventTarget from "@ungap/event-target";
-import { WorkerRequest, WorkerResponse, RequestHandler } from "./types";
+import { WorkerRequest, WorkerAbortRequest, WorkerResponse, RequestHandler } from "./types";
 
 export function backgroundServerRequestProcessor(
   worker: Worker,
-  requestTimeout = 60000
+  requestTimeout: number = 60 * 1000
 ): RequestHandler {
   const target = new EventTarget();
 
@@ -32,8 +32,14 @@ export function backgroundServerRequestProcessor(
         { once: true }
       );
 
-      const workerRequest: WorkerRequest<any> = { requestId, request };
+      const { abort, ...bareRequest } = request;
+      const workerRequest: WorkerRequest<any> = { type: 'request', requestId, request: bareRequest };
       worker.postMessage(workerRequest);
+
+      abort?.addEventListener('abort', () => {
+        const abortRequest: WorkerAbortRequest = { type: 'abort', requestId };
+        worker.postMessage(abortRequest);
+      });
 
       const timeout = setTimeout(() => {
         reject(

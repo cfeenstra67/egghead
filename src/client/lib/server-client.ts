@@ -14,7 +14,9 @@ function convertDataURIToBinary(dataURI: string): Uint8Array {
 
 function serializationMiddleware(handler: RequestHandler): RequestHandler {
   const handleRequest: RequestHandler = async (request) => {
-    const result = await handler(JSON.parse(JSON.stringify(request)));
+    const { abort, ...bareRequest } = request;
+    const serializedRequest = JSON.parse(JSON.stringify(bareRequest));
+    const result = await handler({ ...serializedRequest, abort });
     return JSON.parse(JSON.stringify(result));
   };
 

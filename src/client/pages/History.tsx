@@ -34,16 +34,11 @@ export default function History() {
       (
         request: QuerySessionsRequest,
         existingResults?: SessionResponse[],
-        isActive?: () => boolean
       ) => {
         setLoading(true);
         serverClientFactory()
           .then(async (client) => {
             const response = await client.querySessions(request);
-
-            if (isActive && !isActive()) {
-              return;
-            }
             setResults((existingResults || []).concat(response.results));
             setCount(response.totalCount);
             setError(false);
@@ -63,6 +58,7 @@ export default function History() {
     const newRequest: QuerySessionsRequest = {
       query,
       limit: pageSize,
+      isSearch: true,
     };
     const clauses: Clause<Session>[] = [];
 
@@ -127,28 +123,36 @@ export default function History() {
   ]);
 
   useEffect(() => {
-    let active = true;
-    const isActive = () => active;
+    const abortController = new AbortController();
 
     window.scroll(0, 0);
-    querySessions(request, undefined, isActive);
+    querySessions({
+      ...request,
+      abort: abortController.signal
+    });
 
-    return () => {
-      active = false;
-    };
+    return () => abortController.abort();
   }, [querySessions, request]);
 
   const onEndReached = useCallback(() => {
     if (results.length >= count) {
       return;
     }
-    querySessions({ ...request, skip: results.length }, results);
+    const abortController = new AbortController();
+    querySessions({
+      ...request,
+      skip: results.length,
+      abort: abortController.signal
+    }, results);
+
+    return () => abortController.abort();
   }, [results, count, request, querySessions]);
 
   return (
     <Layout>
       <h1>History</h1>
       <SearchResultsSideBar
+        loading={loading}
         request={request}
         selectedHosts={selectedHosts}
         setSelectedHosts={setSelectedHosts}
@@ -156,6 +160,7 @@ export default function History() {
         setSelectedTerms={setSelectedTerms}
       />
       <Timeline
+        loading={loading}
         request={request}
         dateRange={dateRange}
         setDateRange={setDateRange}

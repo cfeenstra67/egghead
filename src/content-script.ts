@@ -1,11 +1,11 @@
-import * as _ from 'lodash';
+import throttle from 'lodash/throttle';
 import { ServerClient, processExtensionRequest } from "./server/client";
 
 const serverClient = new ServerClient(processExtensionRequest);
 
 const interactionInterval = 3000;
 
-const postInteraction = _.throttle(() => {
+const postInteraction = throttle(() => {
   chrome.runtime.sendMessage('me', async (tabId) => {
     await serverClient.tabInteraction({
       tabId: tabId,

@@ -6,6 +6,8 @@ export enum ServerMessage {
   TabChanged = "tabChanged",
   TabClosed = "tabClosed",
   TabInteraction = "tabInteraction",
+  CorrelateChromeVisit = "correlateChromeVisit",
+  CreateGhostSessions = "createGhostSessions",
   QuerySessions = "querySessions",
   QuerySessionFacets = "querySessionFacets",
   QuerySessionTimeline = "querySessionTimeline",
@@ -19,9 +21,14 @@ export enum ServerMessage {
 export enum ServerResponseCode {
   Ok = "Ok",
   Error = "Error",
+  Aborted = "Aborted",
 }
 
-export interface QueryRequest {
+export interface BaseRequest {
+  abort?: AbortSignal;
+}
+
+export interface QueryRequest extends BaseRequest {
   query: string;
 }
 
@@ -29,7 +36,7 @@ export interface QueryResponse {
   result: Record<string, any>[];
 }
 
-export interface TabChangedRequest {
+export interface TabChangedRequest extends BaseRequest {
   tabId: number;
   url: string;
   title: string;
@@ -39,13 +46,13 @@ export interface TabChangedRequest {
 
 export interface TabChangedResponse {}
 
-export interface TabClosedRequest {
+export interface TabClosedRequest extends BaseRequest {
   tabId: number;
 }
 
 export interface TabClosedResponse {}
 
-export interface TabInteractionRequest {
+export interface TabInteractionRequest extends BaseRequest {
   tabId: number;
   url?: string;
   title?: string;
@@ -53,11 +60,32 @@ export interface TabInteractionRequest {
 
 export interface TabInteractionResponse {}
 
-export interface QuerySessionsRequest {
+export interface CorrelateChromeVisitRequest extends BaseRequest {
+  sessionId: string;
+  visitId: string;
+}
+
+export interface CorrelateChromeVisitResponse {}
+
+export interface CreateGhostSessionsRequest extends BaseRequest {
+  sessions: {
+    visitTime: number;
+    visitId: string;
+    title: string;
+    url: string;
+    referringVisitId?: string;
+    transition?: string;
+  }[];
+}
+
+export interface CreateGhostSessionsResponse {}
+
+export interface QuerySessionsRequest extends BaseRequest {
   query?: string;
   filter?: Clause<Session>;
   skip?: number;
   limit?: number;
+  isSearch?: boolean;
 }
 
 export interface SessionResponse
@@ -75,7 +103,7 @@ export interface QuerySessionsResponse {
   results: SessionResponse[];
 }
 
-export interface QuerySessionFacetsRequest {
+export interface QuerySessionFacetsRequest extends BaseRequest {
   query?: string;
   filter?: Clause<Session>;
   facetsSize?: number;
@@ -91,7 +119,7 @@ export interface QuerySessionFacetsResponse {
   term: QuerySessionFacetsFacetValue[];
 }
 
-export interface QuerySessionTimelineRequest {
+export interface QuerySessionTimelineRequest extends BaseRequest {
   query?: string;
   filter?: Clause<Session>;
   granularity: "hour" | "day" | "week" | "month" | number;
@@ -107,29 +135,29 @@ export interface QuerySessionTimelineResponse {
   timeline: QuerySessionTimelineResponseItem[];
 }
 
-export interface ExportDatabaseRequest {}
+export interface ExportDatabaseRequest extends BaseRequest {}
 
 export interface ExportDatabaseResponse {
   databaseUrl: string;
 }
 
-export interface ImportDatabaseRequest {
+export interface ImportDatabaseRequest extends BaseRequest {
   databaseUrl: string;
 }
 
 export interface ImportDatabaseResponse {}
 
-export interface RegenerateIndexRequest {}
+export interface RegenerateIndexRequest extends BaseRequest {}
 
 export interface RegenerateIndexResponse {}
 
-export interface GetSettingsRequest {}
+export interface GetSettingsRequest extends BaseRequest {}
 
 export interface GetSettingsResponse {
   settings: SettingsItems;
 }
 
-export interface UpdateSettingsRequest {
+export interface UpdateSettingsRequest extends BaseRequest {
   settings: Partial<SettingsItems>;
 }
 
@@ -159,6 +187,8 @@ export type ServerMessageMapping = {
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];
   [ServerMessage.TabClosed]: [TabClosedRequest, TabClosedResponse];
   [ServerMessage.TabInteraction]: [TabInteractionRequest, TabInteractionResponse];
+  [ServerMessage.CorrelateChromeVisit]: [CorrelateChromeVisitRequest, CorrelateChromeVisitResponse];
+  [ServerMessage.CreateGhostSessions]: [CreateGhostSessionsRequest, CreateGhostSessionsResponse];
   [ServerMessage.GetSettings]: [GetSettingsRequest, GetSettingsResponse];
   [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
   [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
@@ -193,7 +223,7 @@ export type ServerInterface = {
 };
 
 export interface ErrorResponse {
-  code: ServerResponseCode.Error;
+  code: ServerResponseCode.Error | ServerResponseCode.Aborted;
   message: string;
 }
 
@@ -202,9 +232,17 @@ export type RequestHandler = <T extends ServerMessage>(
 ) => Promise<ServerResponseForMessageWithCode<T>>;
 
 export interface WorkerRequest<T extends ServerMessage> {
+  type: 'request';
   requestId: string;
-  request: TypedServerRequestForMessage<T>;
+  request: Omit<TypedServerRequestForMessage<T>, 'abort'>;
 }
+
+export interface WorkerAbortRequest {
+  type: 'abort';
+  requestId: string;
+}
+
+export type WorkerMessage = WorkerRequest<any> | WorkerAbortRequest;
 
 export interface WorkerResponse<T extends ServerMessage> {
   requestId: string;

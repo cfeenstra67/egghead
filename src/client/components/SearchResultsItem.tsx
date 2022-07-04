@@ -3,9 +3,9 @@ import { useState, createRef, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { Link } from "wouter";
-import Word from "./Word";
-import Connection from "./Connection";
+import ExternalLink from "./ExternalLink";
 import Highlighted from "./Highlighted";
+import ItemStatus from "./ItemStatus";
 import EllipsisIcon from "../icons/ellipsis.svg";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
@@ -14,6 +14,7 @@ import { SessionResponse } from "../../server";
 import { dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
 import styles from "../styles/SearchResults.module.css";
+import Word from "./Word";
 
 function cleanRawUrl(url: string): string {
   const urlObj = new URL(url);
@@ -267,7 +268,7 @@ function SingleAggregatedSearchResultsItem({
           ref={ref}
           style={{ marginLeft: 24 * (indent || 0) + "px" }}
         >
-          <Connection />
+          <ItemStatus active={!session.endedAt} />
           <div className={styles.searchResultsItemTime}>
             <span
               title={dateFromSqliteString(session.startedAt).toLocaleString()}
@@ -279,11 +280,16 @@ function SingleAggregatedSearchResultsItem({
           <div className={styles.searchResultsItemContent}>
             <div className={styles.searchResultsItemContentInner}>
               <div className={styles.searchResultsItemTitle}>
-                <a href={session.rawUrl} target="_blank" rel="noreferrer">
+                <ExternalLink
+                  href={session.rawUrl}
+                  newTab={true}
+                  rel="noreferrer"
+                  tabId={session.endedAt ? undefined : session.tabId}
+                >
                   <span title={session.title}>
                     <Highlighted title={session.highlightedTitle} />
                   </span>
-                </a>
+                </ExternalLink>
               </div>
               <div className={styles.searchResultsItemHost}>
                 <span title={session.url}>

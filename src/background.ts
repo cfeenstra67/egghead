@@ -14,6 +14,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse(sender.tab?.id);
     return false;
   }
+  if (request.type === 'openTabId') {
+    chrome.tabs.update(request.tabId, { active: true }, () => {
+      sendResponse('OK');
+    });
+    return true;
+  }
   if (request.type === 'abort') {
     if (aborts[request.requestId]) {
       console.log('aborting', request.requestId);

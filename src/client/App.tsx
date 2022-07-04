@@ -18,9 +18,10 @@ import "./styles/App.css";
 export interface AppProps {
   runtime: AppRuntime;
   serverClientFactory: () => Promise<ServerInterface>;
+  openTabId?: (tabId: number) => void;
 }
 
-function Routes({ runtime, serverClientFactory }: AppProps) {
+function Routes({ runtime, serverClientFactory, openTabId }: AppProps) {
   const [location, setLocation] = useLocation();
   const [query, setQueryValue] = useState("");
 
@@ -36,6 +37,7 @@ function Routes({ runtime, serverClientFactory }: AppProps) {
     serverClientFactory,
     query,
     setQuery,
+    openTabId,
   };
 
   return (

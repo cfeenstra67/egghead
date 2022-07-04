@@ -385,10 +385,8 @@ export class SearchService {
       builderWithCount = builder.limit(request.limit);
     }
 
-    const before = new Date()
     const rawResults = await builderWithCount.getRawMany();
     maybeAbort(request.abort);
-    console.log('Search', rawResults, (new Date().getTime() - before.getTime()) / 1000);
 
     const totalCount = rawResults.length === 0 ? 0 : rawResults[0].totalCount;
 

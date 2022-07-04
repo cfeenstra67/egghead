@@ -7,6 +7,7 @@ export interface AppContext {
   serverClientFactory: () => Promise<ServerInterface>;
   query: string;
   setQuery: (input: string) => void;
+  openTabId?: (tabId: number) => void;
 }
 
 export const AppContext = createContext<AppContext>({

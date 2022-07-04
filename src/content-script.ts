@@ -6,7 +6,7 @@ const serverClient = new ServerClient(processExtensionRequest);
 const interactionInterval = 3000;
 
 const postInteraction = throttle(() => {
-  chrome.runtime.sendMessage('me', async (tabId) => {
+  chrome.runtime.sendMessage({ type: 'me' }, async (tabId) => {
     await serverClient.tabInteraction({
       tabId: tabId,
       url: window.location.href,

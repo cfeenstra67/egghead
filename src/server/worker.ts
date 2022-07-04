@@ -28,7 +28,8 @@ const handleRequest: RequestHandler = async (request) => {
   const dataSource = await dbController.useDataSource();
   const server = new Server(dataSource, dbController.importDb.bind(dbController));
   const handler = requestHandler(server);
-  return await handler(request);
+  const out = await handler(request);
+  return out;
 };
 
 function handleMessage(event: MessageEvent) {

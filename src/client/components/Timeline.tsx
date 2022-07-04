@@ -240,17 +240,15 @@ export default function Timeline({
       return;
     }
 
-    let active = true;
+    const abortController = new AbortController();
 
     async function load() {
       const client = await serverClientFactory();
       const timelineResp = await client.querySessionTimeline({
         ...request,
         granularity: 24,
+        abort: abortController.signal,
       });
-      if (!active) {
-        return;
-      }
       setTimeline({
         granularity: timelineResp.granularity,
         timeline: fillMissingLabels(
@@ -261,9 +259,7 @@ export default function Timeline({
     }
 
     load();
-    return () => {
-      active = false;
-    };
+    return () => abortController.abort();
   }, [loading, request, setTimeline]);
 
   const labels = timeline.timeline.map((x) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback, useMemo } from "react";
 import CloseCircle from "../icons/close-circle.svg";
 import DropdownIcon from "../icons/dropdown.svg";
 import { AppContext } from "../lib";
@@ -183,19 +183,19 @@ export default function SearchSideBar({
 
   const { serverClientFactory } = useContext(AppContext);
 
-  useEffect(() => {
+  useMemo(() => {
     if (loading) {
       return;
     }
 
-    let active = true;
+    const abortController = new AbortController();
 
     async function load() {
       const client = await serverClientFactory();
-      const facets = await client.querySessionFacets(request);
-      if (!active) {
-        return;
-      }
+      const facets = await client.querySessionFacets({
+        ...request,
+        abort: abortController.signal
+      });
       const hostValues = new Set(facets.host.map((host) => host.value));
       selectedHosts.forEach((host) => {
         if (!hostValues.has(host)) {
@@ -214,10 +214,8 @@ export default function SearchSideBar({
     }
 
     load();
-    return () => {
-      active = false;
-    };
-  }, [loading, request, selectedTerms, selectedHosts]);
+    return () => abortController.abort();
+  }, [loading, request]);
 
   return (
     <SideBar>

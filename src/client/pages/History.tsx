@@ -17,6 +17,7 @@ import { requestsEqual, dateToSqliteString } from "../../server/utils";
 
 export default function History() {
   const { serverClientFactory, query } = useContext(AppContext);
+  const [resultsLoaded, setResultsLoaded] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [results, setResults] = useState<SessionResponse[]>([]);
@@ -33,22 +34,27 @@ export default function History() {
     return _.debounce(
       (
         request: QuerySessionsRequest,
+        callback?: () => void,
         existingResults?: SessionResponse[],
       ) => {
+        const now = new Date();
         setLoading(true);
         serverClientFactory()
           .then(async (client) => {
             const response = await client.querySessions(request);
             setResults((existingResults || []).concat(response.results));
             setCount(response.totalCount);
-            setError(false);
-            setLoading(false);
+            if (!request.abort?.aborted) {
+              setError(false);
+              setLoading(false);
+            }
           })
           .catch((err) => {
             console.trace(`Error querying "${query}"`, err);
             setError(true);
             setLoading(false);
-          });
+          })
+          .finally(() => callback && callback());
       },
       debounceDelay
     );
@@ -110,6 +116,7 @@ export default function History() {
     }
 
     if (!requestsEqual(newRequest, request)) {
+      setResultsLoaded(false);
       setRequest(newRequest);
     }
   }, [
@@ -129,6 +136,10 @@ export default function History() {
     querySessions({
       ...request,
       abort: abortController.signal
+    }, () => {
+      if (!abortController.signal.aborted) {
+        setResultsLoaded(true);
+      }
     });
 
     return () => abortController.abort();
@@ -143,7 +154,7 @@ export default function History() {
       ...request,
       skip: results.length,
       abort: abortController.signal
-    }, results);
+    }, undefined, results);
 
     return () => abortController.abort();
   }, [results, count, request, querySessions]);
@@ -152,7 +163,7 @@ export default function History() {
     <Layout>
       <h1>History</h1>
       <SearchResultsSideBar
-        loading={loading}
+        loading={!resultsLoaded}
         request={request}
         selectedHosts={selectedHosts}
         setSelectedHosts={setSelectedHosts}
@@ -160,7 +171,7 @@ export default function History() {
         setSelectedTerms={setSelectedTerms}
       />
       <Timeline
-        loading={loading}
+        loading={!resultsLoaded}
         request={request}
         dateRange={dateRange}
         setDateRange={setDateRange}

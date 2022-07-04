@@ -5,15 +5,28 @@ import { setupObservers } from "./extension/utils";
 
 const serverConnection = createBackgroundServerRequestProcessor();
 const serverClient = new ServerClient(serverConnection);
+const aborts: Record<string, AbortController> = {};
 
 setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request === 'me') {
+  if (request.type === 'me') {
     sendResponse(sender.tab?.id);
     return false;
   }
-  serverConnection(request)
+  if (request.type === 'abort') {
+    if (aborts[request.requestId]) {
+      console.log('aborting', request.requestId);
+      aborts[request.requestId].abort();
+    }
+    sendResponse('OK');
+    return false;
+  }
+  const { request: innerRequest, requestId } = request;
+  const abortController = new AbortController();
+  aborts[requestId] = abortController;
+
+  serverConnection({ ...innerRequest, abort: abortController.signal })
     .then(sendResponse)
     .catch((error) => {
       console.trace("Error handling extension request.", error);
@@ -21,6 +34,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         code: ServerResponseCode.Error,
         message: error.toString(),
       });
+    })
+    .finally(() => {
+      delete aborts[requestId];
     });
   return true;
 });

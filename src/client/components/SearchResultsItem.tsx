@@ -423,6 +423,7 @@ export default function SearchResultsItem({
         filter: dslToClause<Session>({
           parentSessionId: { IN: sessionIds },
         }),
+        isSearch: true,
       });
       const outChildren: Record<
         string,

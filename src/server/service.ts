@@ -237,7 +237,10 @@ export class Server implements ServerInterface {
   async querySessions(
     request: QuerySessionsRequest
   ): Promise<QuerySessionsResponse> {
-    return await this.searchService.querySessions(request);
+    const now = new Date();
+    const out = await this.searchService.querySessions(request);
+    console.log('query', out.results.length, (new Date().getTime() - now.getTime()) / 1000);
+    return out;
   }
 
   async querySessionFacets(

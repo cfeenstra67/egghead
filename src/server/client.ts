@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Aborted } from './abort';
 import {
   ServerInterface,
@@ -40,8 +41,14 @@ import {
 export const processExtensionRequest: RequestHandler = (request) => {
   // Abort won't work yet :(
   const { abort, ...baseRequest } = request;
+  const requestId = uuidv4();
+
+  abort?.addEventListener('abort', () => {
+    chrome.runtime.sendMessage({ type: 'abort', requestId });
+  });
+
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(baseRequest, (response) => {
+    chrome.runtime.sendMessage({ requestId, request: baseRequest }, (response) => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {

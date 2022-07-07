@@ -2,6 +2,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 function createModule(name, entry) {
   return {
@@ -77,6 +78,8 @@ function createModule(name, entry) {
         ]
       }),
       new MiniCssExtractPlugin(),
+      // Enable for analysis when necessary
+      // new BundleAnalyzerPlugin(),
     ],
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.css'],

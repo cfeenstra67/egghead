@@ -1,11 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
 import { initBackend } from "absurd-sql/dist/indexeddb-main-thread";
 import EventTarget from "@ungap/event-target";
+import { JobManager } from "./job-manager";
 import { WorkerRequest, WorkerAbortRequest, WorkerResponse, RequestHandler } from "./types";
 
+const requestTimeout = 60 * 1000;
+const jobManager = new JobManager(requestTimeout);
+
 export function backgroundServerRequestProcessor(
-  worker: Worker,
-  requestTimeout: number = 60 * 1000
+  worker: Worker
 ): RequestHandler {
   const target = new EventTarget();
 
@@ -21,36 +24,31 @@ export function backgroundServerRequestProcessor(
 
   return (request) => {
     const requestId = uuidv4();
+    
+    const { abort, ...bareRequest } = request;
 
-    return new Promise((resolve, reject) => {
+    abort?.addEventListener('abort', () => jobManager.abortJob(requestId));
+
+    const job = (abortJob: AbortSignal) => new Promise((resolve, reject) => {
       target.addEventListener(
         requestId,
-        (event) => {
-          clearTimeout(timeout);
-          resolve((event as CustomEvent).detail);
-        },
+        (event) => resolve((event as CustomEvent).detail),
         { once: true }
       );
 
-      const { abort, ...bareRequest } = request;
+      const abortJobListener = () => {
+        worker.postMessage({ type: 'abort', requestId });
+        abortJob.removeEventListener("abort", abortJobListener);
+      }
+      abortJob.addEventListener('abort', abortJobListener);
+
       const workerRequest: WorkerRequest<any> = { type: 'request', requestId, request: bareRequest };
       worker.postMessage(workerRequest);
-
-      abort?.addEventListener('abort', () => {
-        const abortRequest: WorkerAbortRequest = { type: 'abort', requestId };
-        worker.postMessage(abortRequest);
-      });
-
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Request ${JSON.stringify(
-              request
-            )} timed out after ${requestTimeout}ms.`
-          )
-        );
-      }, requestTimeout);
     });
+
+    jobManager.addJob(requestId, job)
+
+    return jobManager.jobPromise(requestId);
   };
 }
 

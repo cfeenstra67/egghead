@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { ServerInterface } from "../../server";
+import type { ServerInterface } from "../../server";
 import { AppRuntime } from "./types";
 
 export interface AppContext {

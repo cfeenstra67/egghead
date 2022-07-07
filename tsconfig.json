@@ -1,6 +1,10 @@
 {
-    "include": ["**/*.ts", "**/*.tsx"],
-    "exclude": ["node_modules"],
+    "include": [
+        "local-db.ts",
+        "custom.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
     "compilerOptions": {
         "lib": ["es6", "dom"],
         "target": "es6",
@@ -17,6 +21,7 @@
         "strict": true,
         "strictPropertyInitialization": false,
         "jsx": "react-jsx",
-        "allowJs": true
+        "allowJs": true,
+        "isolatedModules": true
     }
 }

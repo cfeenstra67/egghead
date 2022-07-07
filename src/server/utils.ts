@@ -1,4 +1,5 @@
 import { clausesEqual } from "./clause";
+import type { SettingsItems } from "../models";
 import {
   ServerMessage,
   ErrorResponse,
@@ -83,4 +84,11 @@ export function dateFromSqliteString(dateString: string): Date {
 
 export function dateToSqliteString(date: Date): string {
   return date.toISOString().replace("T", " ").replace("Z", "");
+}
+
+export function defaultSettings(): SettingsItems {
+  return {
+    dataCollectionEnabled: true,
+    devModeEnabled: false
+  };
 }

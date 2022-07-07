@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { useState, createRef, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -9,8 +8,8 @@ import ItemStatus from "./ItemStatus";
 import EllipsisIcon from "../icons/ellipsis.svg";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
-import { Session } from "../../models";
-import { SessionResponse } from "../../server";
+import type { Session } from "../../models";
+import type { SessionResponse } from "../../server";
 import { dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
 import styles from "../styles/SearchResults.module.css";
@@ -341,9 +340,9 @@ function SingleAggregatedSearchResultsItem({
                   childTypesExpanded.includes(childType) ||
                   sessionChildren.length > 0
                 ) {
-                  const newChildren = _.pick(childrenSessions, [
-                    aggSession2.session.id,
-                  ]);
+                  const newChildren = {
+                    [aggSession2.session.id]: childrenSessions[aggSession2.session.id]
+                  };
                   return (
                     <SingleAggregatedSearchResultsItem
                       key={aggSession2.session.id}

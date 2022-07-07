@@ -1,5 +1,5 @@
 import SearchResultsDay from "./SearchResultsDay";
-import { SessionResponse } from "../../server";
+import type { SessionResponse } from "../../server";
 import { dateFromSqliteString } from "../../server/utils";
 import styles from "../styles/SearchResults.module.css";
 

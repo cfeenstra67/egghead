@@ -1,12 +1,13 @@
-import * as _ from "lodash";
+import debounce from "lodash/debounce";
 import { useState, useContext, useEffect, useMemo, useCallback } from "react";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SearchResultsSideBar from "../components/SearchResultsSideBar";
 import Timeline from "../components/Timeline";
 import { AppContext } from "../lib";
-import { Session } from "../../models";
-import { SessionResponse, QuerySessionsRequest } from "../../server";
+import type { Session } from "../../models";
+import type { SessionResponse, QuerySessionsRequest } from "../../server";
+import { Aborted } from "../../server/abort";
 import {
   Clause,
   AggregateOperator,
@@ -31,7 +32,7 @@ export default function History() {
   const pageSize = 200;
 
   const querySessions = useMemo(() => {
-    return _.debounce(
+    return debounce(
       (
         request: QuerySessionsRequest,
         callback?: () => void,
@@ -50,6 +51,9 @@ export default function History() {
             }
           })
           .catch((err) => {
+            if (err instanceof Aborted) {
+              return;
+            }
             console.trace(`Error querying "${query}"`, err);
             setError(true);
             setLoading(false);

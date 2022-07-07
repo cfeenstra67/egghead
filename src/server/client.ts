@@ -1,11 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Aborted } from './abort';
 import {
+  ServerMessage,
+  ServerResponseCode,
+} from './types';
+import type {
   ServerInterface,
   TypedServerRequestForMessage,
   ServerResponseForMessage,
-  ServerMessage,
-  ServerResponseCode,
   QueryRequest,
   QueryResponse,
   QuerySessionsRequest,

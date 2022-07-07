@@ -1,11 +1,15 @@
 import { ServerResponseCode } from "./server";
+import { Aborted } from "./server/abort";
 import { createBackgroundServerRequestProcessor } from "./server/background-client";
 import { ServerClient } from "./server/client";
+import { JobManager } from "./server/job-manager";
 import { setupObservers } from "./extension/utils";
 
 const serverConnection = createBackgroundServerRequestProcessor();
 const serverClient = new ServerClient(serverConnection);
-const aborts: Record<string, AbortController> = {};
+
+const requestTimeout = 60 * 1000;
+const jobManager = new JobManager(requestTimeout);
 
 setupObservers(serverClient);
 
@@ -21,28 +25,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
   if (request.type === 'abort') {
-    if (aborts[request.requestId]) {
-      console.log('aborting', request.requestId);
-      aborts[request.requestId].abort();
-    }
+    jobManager.abortJob(request.requestId);
     sendResponse('OK');
     return false;
   }
   const { request: innerRequest, requestId } = request;
-  const abortController = new AbortController();
-  aborts[requestId] = abortController;
+  jobManager.addJob(requestId, (abortSignal) => {
+    return serverConnection({ ...innerRequest, abort: abortSignal });
+  });
 
-  serverConnection({ ...innerRequest, abort: abortController.signal })
+  jobManager.jobPromise(requestId)
     .then(sendResponse)
     .catch((error) => {
+      if (error instanceof Aborted) {
+        sendResponse({
+          code: ServerResponseCode.Aborted,
+          message: 'Aborted',
+        });
+        return;
+      }
       console.trace("Error handling extension request.", error);
       sendResponse({
         code: ServerResponseCode.Error,
         message: error.toString(),
       });
     })
-    .finally(() => {
-      delete aborts[requestId];
-    });
   return true;
 });

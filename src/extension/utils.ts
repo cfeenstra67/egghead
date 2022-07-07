@@ -9,7 +9,7 @@ export function setupObservers(server: ServerInterface): void {
   const historyCrawler = new HistoryCrawler(
     server,
     "historyCrawler",
-    60 * 60 * 1000
+    24 * 60 * 60 * 1000
   );
   tabObserver.observeTabs(navigationObserver);
   tabObserver.registerCleanup("TabObserver_cleanup");

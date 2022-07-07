@@ -4,7 +4,7 @@ import { useContext, useState, useCallback, createRef } from "react";
 import Editor from 'react-simple-code-editor';
 import Card from './Card';
 import { AppContext, downloadUrl, cleanupUrl } from "../lib";
-import { ServerInterface, ErrorResponse } from "../../server";
+import type { ServerInterface, ErrorResponse } from "../../server";
 import styles from "../styles/DbTool.module.css";
 
 hljs.registerLanguage('sql', sqlLang);

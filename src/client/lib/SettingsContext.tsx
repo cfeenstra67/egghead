@@ -5,7 +5,8 @@ import {
   useEffect,
 } from 'react';
 import { AppContext } from './context';
-import { defaultSettings, SettingsItems } from '../../models';
+import type { SettingsItems } from '../../models';
+import { defaultSettings } from "../../server/utils";
 
 export interface SettingsContext {
   items: SettingsItems;

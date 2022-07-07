@@ -1,6 +1,6 @@
 import { TransitionGroup } from 'react-transition-group';
 import SearchResultsItem, { groupSessions } from "./SearchResultsItem";
-import { SessionResponse } from "../../server";
+import type { SessionResponse } from "../../server";
 import styles from "../styles/SearchResults.module.css";
 
 interface SearchResultsDayProps {

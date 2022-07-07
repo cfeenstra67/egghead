@@ -1,5 +1,5 @@
 import { maybeAbort } from './abort';
-import { Session, SessionIndex, SessionTermIndex, Settings, defaultSettings } from "../models";
+import { Session, SessionIndex, SessionTermIndex, Settings } from "../models";
 import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
 import {
@@ -33,8 +33,8 @@ import {
   CreateGhostSessionsRequest,
   CreateGhostSessionsResponse,
 } from "./types";
-import { cleanURL, getHost } from "./utils";
-import { DataSource, Repository, IsNull } from "typeorm";
+import { cleanURL, getHost, defaultSettings } from "./utils";
+import { DataSource, Repository, IsNull, In } from "typeorm";
 import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
 import { v4 as uuidv4 } from "uuid";
 
@@ -383,27 +383,39 @@ export class Server implements ServerInterface {
   ): Promise<CreateGhostSessionsResponse> {
     return await this.dataSource.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Session);
-      for (const session of request.sessions) {
-        const existingSession = await repo.findOne({
-          where: { chromeVisitId: session.visitId }
-        });
-        maybeAbort(request.abort);
+
+      const visitIds = request.sessions.map((session) => session.visitId);
+      const referringVisitIds = request.sessions.flatMap((session) => {
+        if (session.referringVisitId && session.referringVisitId !== '0') {
+          return [session.referringVisitId];
+        }
+        return [];
+      });
+
+      const existingSessions = await repo.find({
+        where: { chromeVisitId: In(visitIds.concat(referringVisitIds)) }
+      });
+      maybeAbort(request.abort);
+
+      const existingSessionMap = Object.fromEntries(existingSessions.map((session) => {
+        return [session.chromeVisitId, session];
+      }));
+
+      const newSessions = request.sessions.flatMap((session) => {
+        const existingSession = existingSessionMap[session.visitId];
         if (existingSession !== null) {
           const isGhostSession = existingSession.tabId === GhostSessionTabId;
           console.warn(
             `Session already exists for ${session.visitId}: ` +
             `${existingSession.id}. Ghost: ${isGhostSession}`
           );
-          return {};
+          return [];
         }
 
         let referringSessionId: string | undefined = undefined;
         let referringSessionTransition: string | undefined = undefined;
         if (session.referringVisitId && session.referringVisitId !== '0') {
-          const referringSession = await repo.findOne({
-            where: { chromeVisitId: session.referringVisitId }
-          });
-          maybeAbort(request.abort);
+          const referringSession = existingSessionMap[session.referringVisitId];
           if (referringSession) {
             referringSessionId = referringSession.id;
             referringSessionTransition = session.transition;
@@ -428,9 +440,10 @@ export class Server implements ServerInterface {
           lastInteractionAt: visitDate,
           chromeVisitId: session.visitId,
         });
-        await manager.save(newSession);
-        maybeAbort(request.abort);
-      }
+        return [newSession];
+      });
+
+      await manager.save(newSessions);
       return {};
     });
   }

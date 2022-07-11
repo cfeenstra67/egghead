@@ -8,6 +8,8 @@ export interface AppContext {
   query: string;
   setQuery: (input: string) => void;
   openTabId?: (tabId: number) => void;
+  openHistory: () => void;
+  getCurrentUrl: () => Promise<string>;
 }
 
 export const AppContext = createContext<AppContext>({
@@ -17,4 +19,6 @@ export const AppContext = createContext<AppContext>({
   },
   query: "",
   setQuery: () => {},
+  openHistory: () => {},
+  getCurrentUrl: async () => 'NOT_IMPLEMENTED',
 });

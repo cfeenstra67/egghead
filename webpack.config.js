@@ -106,8 +106,10 @@ module.exports = [
     'server-worker': './src/server/worker.ts',
     'content-script': './src/content-script.ts',
     client: './src/client/extension.tsx',
+    popup: './src/client/extension-popup.tsx',
   }),
   createModule('dev', {
     'web-client': './src/client/web.tsx',
+    'web-popup': './src/client/web-popup.tsx',
   })
 ];

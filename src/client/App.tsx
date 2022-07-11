@@ -19,9 +19,11 @@ export interface AppProps {
   runtime: AppRuntime;
   serverClientFactory: () => Promise<ServerInterface>;
   openTabId?: (tabId: number) => void;
+  openHistory: () => void;
+  getCurrentUrl: () => Promise<string>;
 }
 
-function Routes({ runtime, serverClientFactory, openTabId }: AppProps) {
+function Routes({ runtime, serverClientFactory, openTabId, openHistory, getCurrentUrl }: AppProps) {
   const [location, setLocation] = useLocation();
   const [query, setQueryValue] = useState("");
 
@@ -38,6 +40,8 @@ function Routes({ runtime, serverClientFactory, openTabId }: AppProps) {
     query,
     setQuery,
     openTabId,
+    openHistory,
+    getCurrentUrl,
   };
 
   return (

@@ -1,0 +1,16 @@
+
+.searchBar {
+    top: 0;
+    position: fixed;
+    background-color: var(--secondary-bg-color);
+    width: var(--width);
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+    z-index: 100;
+}
+
+.searchField {
+    width: calc(100% - 4 * var(--padding));
+    margin: auto var(--padding);
+}

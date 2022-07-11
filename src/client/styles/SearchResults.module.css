@@ -36,23 +36,6 @@
     column-gap: var(--padding-2);
     padding: var(--padding) var(--padding-2);
 }
-/*
-.itemEnter {
-    animation-name: itemEntering;
-    animation-duration: var(--animation-length);
-    animation-iteration-count: 1;
-}
-
-@keyframes itemEntering {
-    from { margin-top: calc(-35px - var(--padding)); opacity: 0; }
-    to { margin-top: 0px; opacity: 1; }
-}
-
-.itemExit {
-    margin-top: calc(-35px - var(--padding)) !important;
-    opacity: 0;
-    transition: all ease var(--animation-length);
-}*/
 
 .moreDetails {
     transform: rotate(90deg);
@@ -95,6 +78,19 @@
     display: flex;
     flex-direction: row;
     column-gap: var(--padding-2);
+}
+
+/* For popups */
+@media (max-width: 500px) {
+    .searchResultsItem {
+        column-gap: calc(var(--padding) * 1.5);
+        padding: var(--padding);
+    }
+
+    .searchResultsItemContentInner {
+        flex-direction: column;
+        row-gap: calc(var(--padding) / 2);
+    }
 }
 
 .searchResultsItemTime {

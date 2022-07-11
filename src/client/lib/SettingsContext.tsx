@@ -6,6 +6,7 @@ import {
 } from 'react';
 import { AppContext } from './context';
 import type { SettingsItems } from '../../models';
+import { Aborted } from '../../server/abort';
 import { defaultSettings } from "../../server/utils";
 
 export interface SettingsContext {
@@ -51,19 +52,22 @@ export function SettingsContextProvider({ children }: SettingsContextProps) {
     if (!shouldRefresh) {
       return;
     }
-    let active = true;
+    const abort = new AbortController();
 
     async function load() {
       const client = await appContext.serverClientFactory();
-      const { settings } = await client.getSettings({});
-      if (active) {
-        setShouldRefresh(false);
-        setSettings((prev) => ({ ...prev, items: settings }));
+      try {
+        const { settings } = await client.getSettings({ abort: abort.signal });
+      } catch (error: any) {
+        if (error instanceof Aborted) {
+          return;
+        }
+        throw error;
       }
     }
 
     load();
-    return () => { active = false; };
+    return () => abort.abort();
   }, [shouldRefresh]);
 
   return (

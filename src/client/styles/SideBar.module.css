@@ -54,3 +54,7 @@
 .seeMore:hover {
     cursor: pointer;
 }
+
+.icon {
+    fill: var(--primary-text-color);
+}

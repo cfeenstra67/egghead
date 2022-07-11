@@ -24,6 +24,12 @@ export enum ServerResponseCode {
   Aborted = "Aborted",
 }
 
+export enum Theme {
+  Auto = 'auto',
+  Light = 'light',
+  Dark = 'dark',
+}
+
 export interface BaseRequest {
   abort?: AbortSignal;
 }

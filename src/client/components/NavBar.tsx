@@ -11,7 +11,7 @@ function LeftContent() {
   return (
     <div className={styles.leftContent}>
       <Link to="/">
-        <EggheadIcon fill="white" className={styles.eggheadIcon} />
+        <EggheadIcon className={styles.eggheadIcon} />
       </Link>
     </div>
   );
@@ -21,7 +21,7 @@ function RightContent() {
   return (
     <div className={styles.rightContent}>
       <Link to="/settings">
-        <SettingsIcon fill="white" className={styles.settingsIcon} />
+        <SettingsIcon className={styles.settingsIcon} />
       </Link>
     </div>
   );
@@ -32,7 +32,7 @@ function SearchField() {
 
   return (
     <div className={styles.searchField}>
-      <SearchIcon fill="white" className={styles.searchFieldIcon} />
+      <SearchIcon className={styles.searchFieldIcon} />
       <input
         type="search"
         autoCapitalize="off"
@@ -45,7 +45,6 @@ function SearchField() {
       />
       {query ? (
         <CloseCircleIcon
-          fill="white"
           className={styles.searchFieldClearIcon}
           onClick={() => setQuery("")}
         />

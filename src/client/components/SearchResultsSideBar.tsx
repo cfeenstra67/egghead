@@ -32,10 +32,16 @@ function CollapsibleComponent({
           collapsed ? styles.collapsed : ""
         }`}
       >
-        <DropdownIcon fill="white" onClick={() => setCollapsed(!collapsed)} />
+        <DropdownIcon
+          onClick={() => setCollapsed(!collapsed)}
+          className={styles.icon}
+        />
         <span>{title}</span>
         {clearable && (
-          <CloseCircle fill="white" onClick={() => onClear && onClear()} />
+          <CloseCircle
+            className={styles.icon}
+            onClick={() => onClear && onClear()}
+          />
         )}
       </div>
       <div className={styles.collapsibleSideBarContent}>

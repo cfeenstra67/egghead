@@ -1,7 +1,5 @@
 
 .navBar {
-    --search-field-text-color: white;
-    --search-field-focus-outline: #CBCBCB;
     --title-width: calc(var(--sidebar-width) - var(--padding));
     position: fixed;
     top: 0;
@@ -74,6 +72,7 @@
 .eggheadIcon {
     width: 30px;
     height: 30px;
+    fill: var(--primary-text-color);
 }
 
 .eggheadIcon:hover {
@@ -83,6 +82,7 @@
 .settingsIcon {
     width: 20px;
     height: 20px;
+    fill: var(--primary-text-color);
 }
 
 .settingsIcon:hover {
@@ -130,6 +130,7 @@
     --icon-size: calc(var(--navbar-height) - var(--padding) * 4.5);
     height: var(--icon-size);
     width: var(--icon-size);
+    fill: var(--primary-text-color);
 }
 
 .searchFieldClearIcon {
@@ -137,4 +138,5 @@
     height: var(--icon-size);
     width: var(--icon-size);
     cursor: pointer;
+    fill: var(--primary-text-color);
 }

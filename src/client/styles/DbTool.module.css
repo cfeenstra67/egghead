@@ -14,79 +14,6 @@
     color:  rgba(0, 0, 0, 0);
 }
 
-.optionStatus {
-    background-color: white;
-    mask-image:  linear-gradient(0deg, transparent, transparent);
-    -webkit-mask-image:  linear-gradient(0deg, transparent, transparent);
-    mask-size: 16px 16px;
-    -webkit-mask-size: 16px 16px;
-    transition:  mask-image 0.2s ease-in-out;
-    width: 16px;
-    height: 16px;
-}
-
-.optionLoading {
-    mask-image: url('../icons/loading.svg');
-    -webkit-mask-image: url('../icons/loading.svg');
-    animation-name: loading;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-}
-
-@keyframes loading {
-    25% {
-        transform: rotate(90deg);
-    }
-
-    50% {
-        transform: rotate(180deg);
-    }
-
-    75% {
-        transform: rotate(270deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.optionSuccess {
-    background-color: #31cc5a;
-    animation-name: success;
-    animation-duration: 2s;
-    animation-iteration-count: 1;
-}
-
-@keyframes success {
-    from {
-        mask-image:  linear-gradient(0deg, transparent, transparent);
-        -webkit-mask-image:  linear-gradient(0deg, transparent, transparent);   
-    }
-
-    50% {
-        mask-image: url('../icons/success.svg');
-        -webkit-mask-image: url('../icons/success.svg');        
-    }
-
-    to {
-        mask-image:  linear-gradient(0deg, transparent, transparent);
-        -webkit-mask-image:  linear-gradient(0deg, transparent, transparent);   
-    }
-}
-
-.optionError {
-    mask-image: url('../icons/x.svg');
-    -webkit-mask-image: url('../icons/x.svg');
-    background-color: #ad2915;
-}
-
-.errorText {
-    font-size: 14px;
-    color: #ad2915;
-}
-
 .queryTool {
     margin-top: var(--padding);
 }
@@ -98,6 +25,10 @@
     font-family: "Fira code", "Fira Mono", monospace;
     font-size: var(--paragraph-font-size);
     border-radius: var(--border-radius);
+}
+
+.editorTextArea {
+    background-color: var(--bg-color) !important;
 }
 
 .resultTable {

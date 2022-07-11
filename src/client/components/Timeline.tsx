@@ -3,6 +3,8 @@ import { useEffect, useState, useContext, useCallback } from "react";
 import { Chart } from "react-chartjs-2";
 import Bubble from "./Bubble";
 import { AppContext } from "../lib";
+import { useTheme } from "../lib/theme";
+import { Theme } from "../../server/types";
 import type {
   QuerySessionsRequest,
   QuerySessionTimelineRequest,
@@ -267,6 +269,13 @@ export default function Timeline({
   });
   const dataPoints = timeline.timeline.map((x) => x.count);
 
+  const theme = useTheme();
+  const backgroundColor = theme === Theme.Light ? (
+    '#535453'
+  ) : (
+    "rgba(255, 255, 255, 0.2)"
+  );
+
   return (
     <>
       {dateRange !== null && (
@@ -284,7 +293,7 @@ export default function Timeline({
                 {
                   label: "Count",
                   data: dataPoints,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  backgroundColor,
                 },
               ],
             }}

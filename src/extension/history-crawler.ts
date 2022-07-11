@@ -304,9 +304,9 @@ export class HistoryCrawler {
     }
     const now = new Date();
 
-    // Add interval / 3 cushion before the start timestamp
+    // Add interval cushion before the start timestamp
     startTimestamp = new Date(
-      Math.max(startTimestamp.getTime() - this.interval / 3, 0)
+      Math.max(startTimestamp.getTime() - this.interval, 0)
     );
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
@@ -343,14 +343,19 @@ export class HistoryCrawler {
 
   registerCrawler(crawlerAlarm: string): void {
     chrome.alarms.create(crawlerAlarm, { periodInMinutes: 5 });
+    const resetAlarm = crawlerAlarm + '_reset';
+    chrome.alarms.create(resetAlarm, { periodInMinutes: 60 * 24 });
     chrome.alarms.onAlarm.addListener(async (alarm) => {
-      if (alarm.name !== crawlerAlarm) {
-        return;
+      if (alarm.name === crawlerAlarm) {
+        await this.runCrawler();
+      } else if (alarm.name === resetAlarm) {
+        const state = await this.getState();
+        await this.setState({
+          startTimestamp: new Date(state.startTimestamp.getTime() - 24 * 60 * 1000),
+          upToDate: false,
+        });
       }
-      await this.runCrawler();
     });
-    this.setState({ startTimestamp: initialDate, upToDate: false })
-      .then(() => this.runCrawler());
   }
 
 }

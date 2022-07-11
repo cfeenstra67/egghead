@@ -403,7 +403,7 @@ export class Server implements ServerInterface {
 
       const newSessions = request.sessions.flatMap((session) => {
         const existingSession = existingSessionMap[session.visitId];
-        if (existingSession !== null) {
+        if (existingSession) {
           const isGhostSession = existingSession.tabId === GhostSessionTabId;
           console.warn(
             `Session already exists for ${session.visitId}: ` +

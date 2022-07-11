@@ -5,42 +5,14 @@ import Editor from 'react-simple-code-editor';
 import Card from './Card';
 import { AppContext, downloadUrl, cleanupUrl } from "../lib";
 import type { ServerInterface, ErrorResponse } from "../../server";
+import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
 import styles from "../styles/DbTool.module.css";
+import settingsStyles from "../styles/Settings.module.css";
 
 hljs.registerLanguage('sql', sqlLang);
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
-}
-
-enum LoadingState {
-  None = "None",
-  Loading = "Loading",
-  Success = "Success",
-  Failed = "Failed",
-}
-
-function getOptionStatusClassName(state: LoadingState): string {
-  switch (state) {
-    case LoadingState.None:
-      return "";
-    case LoadingState.Loading:
-      return styles.optionLoading;
-    case LoadingState.Success:
-      return styles.optionSuccess;
-    case LoadingState.Failed:
-      return styles.optionError;
-  }
-}
-
-interface OptionStatusProps {
-  state: LoadingState;
-}
-
-function OptionStatus({ state }: OptionStatusProps) {
-  const className = getOptionStatusClassName(state);
-
-  return <div className={`${styles.optionStatus} ${className}`} />;
 }
 
 function ExportDbOption({ serverClientFactory }: OptionProps) {
@@ -70,9 +42,9 @@ function ExportDbOption({ serverClientFactory }: OptionProps) {
     <div className={styles.option}>
       <span>Export DB:</span>
       <button onClick={downloadDb}>Export</button>
-      <OptionStatus state={state} />
+      <SettingsOptionStatus state={state} />
       {state === LoadingState.Failed && (
-        <span className={styles.errorText}>{error}</span>
+        <span className={settingsStyles.errorText}>{error}</span>
       )}
     </div>
   );
@@ -98,7 +70,6 @@ function ImportDbOption({ serverClientFactory }: OptionProps) {
         });
         setError('');
         setState(LoadingState.Success);
-        console.log('success', resp);
       } catch (error: any) {
         setError(error.toString());
         setState(LoadingState.Failed);
@@ -115,9 +86,9 @@ function ImportDbOption({ serverClientFactory }: OptionProps) {
       <span>Import DB:</span>
       <input ref={fileRef} type="file" onChange={handleChange} />
 
-      <OptionStatus state={state} />
+      <SettingsOptionStatus state={state} />
       {state === LoadingState.Failed && (
-        <span className={styles.errorText}>{error}</span>
+        <span className={settingsStyles.errorText}>{error}</span>
       )}
     </div>
   );
@@ -148,9 +119,9 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
     <div className={styles.option}>
       <span>Regenerate Index:</span>
       <button onClick={regenerateIndex}>Regenerate</button>
-      <OptionStatus state={state} />
+      <SettingsOptionStatus state={state} />
       {state === LoadingState.Failed && (
-        <span className={styles.errorText}>{error}</span>
+        <span className={settingsStyles.errorText}>{error}</span>
       )}
     </div>
   );
@@ -244,6 +215,7 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
         highlight={(code) => hljs.highlight(code, { language: 'sql' }).value}
         padding={10}
         className={styles.editor}
+        textareaClassName={styles.editorTextArea}
         onKeyDown={handleKeyDown}
       />
 

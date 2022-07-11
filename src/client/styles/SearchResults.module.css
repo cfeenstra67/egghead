@@ -58,6 +58,7 @@
     transform: rotate(90deg);
     height: 16px;
     width: 16px;
+    fill: var(--primary-text-color);
 }
 
 .moreDetails:hover {

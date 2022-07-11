@@ -1,9 +1,12 @@
 import { clausesEqual } from "./clause";
 import type { SettingsItems } from "../models";
 import {
+  Theme,
   ServerMessage,
-  ErrorResponse,
   ServerResponseCode,
+} from "./types";
+import type {
+  ErrorResponse,
   TypedServerRequestForMessage,
   ServerInterface,
   RequestHandler,
@@ -89,6 +92,7 @@ export function dateToSqliteString(date: Date): string {
 export function defaultSettings(): SettingsItems {
   return {
     dataCollectionEnabled: true,
-    devModeEnabled: false
+    devModeEnabled: false,
+    theme: Theme.Auto,
   };
 }

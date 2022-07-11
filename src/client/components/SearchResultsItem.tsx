@@ -1,7 +1,7 @@
 import { useState, createRef, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import ExternalLink from "./ExternalLink";
 import Highlighted from "./Highlighted";
 import ItemStatus from "./ItemStatus";
@@ -30,40 +30,14 @@ function getTimeString(date: string): string {
 }
 
 function DetailsDropdown({ session }: { session: SessionResponse }) {
-  const [expanded, setExpanded] = useState(false);
-  const ref = createRef<HTMLDivElement>();
-
-  useEffect(() => {
-    if (!expanded) {
-      return;
-    }
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as any)) {
-        setExpanded(false);
-        cancel();
-      }
-    };
-
-    const cancel = () =>
-      document.removeEventListener("click", handleClickOutside, true);
-
-    document.addEventListener("click", handleClickOutside, true);
-
-    return cancel;
-  }, [expanded, setExpanded]);
+  const [location, setLocation] = useLocation();
 
   return (
     <div>
       <EllipsisIcon
         className={styles.moreDetails}
-        fill="white"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setLocation(`/session/${session.id}`)}
       />
-      {expanded && (
-        <div className={styles.expandedDetails} ref={ref}>
-          <Link to={`/session/${session.id}`}>Details</Link>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,6 +10,17 @@ export interface ExternalLinkProps {
   rel?: string;
 }
 
+export function useExternalLinkOpener(): (url: string, tabId?: number) => void {
+  const { openTabId } = useContext(AppContext);
+
+  return useCallback((url, tabId) => {
+    if (tabId && openTabId) {
+      openTabId(tabId);
+    }
+    window.open(url);
+  }, [openTabId]);
+}
+
 export default function ExternalLink({
   href,
   newTab,
@@ -20,14 +31,12 @@ export default function ExternalLink({
 }: ExternalLinkProps) {
   const props: any = {};
 
-  const { openTabId } = useContext(AppContext);
+  const openLink = useExternalLinkOpener();
 
   const onClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (tabId && openTabId) {
-      openTabId(tabId);
-      event.preventDefault();
-    }
-  }, [tabId, openTabId]);
+    openLink(href, tabId);
+    event.preventDefault();
+  }, [tabId, openLink]);
 
   return (
     <a

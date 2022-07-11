@@ -2,7 +2,7 @@ import { useState, createRef, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useLocation } from "wouter";
-import ExternalLink from "./ExternalLink";
+import ExternalLink, { useExternalLinkOpener } from "./ExternalLink";
 import Highlighted from "./Highlighted";
 import ItemStatus from "./ItemStatus";
 import EllipsisIcon from "../icons/ellipsis.svg";
@@ -226,7 +226,10 @@ function SingleAggregatedSearchResultsItem({
     (indent || 0) > 0 ? styles.searchResultsItemChild : styles.searchResultsItem,
     'animate__animated',
     'animate__fadeInRight',
-  ]
+  ];
+
+  const openLink = useExternalLinkOpener();
+  const tabId = session.endedAt ? undefined : session.tabId;
 
   return (
     <>
@@ -249,7 +252,11 @@ function SingleAggregatedSearchResultsItem({
               {getTimeString(session.startedAt)}
             </span>
           </div>
-          <img src={getFaviconUrlPublicApi(url.hostname, 16)} />
+          <img
+            src={getFaviconUrlPublicApi(url.hostname, 16)}
+            className={styles.favicon}
+            onClick={(evt) => openLink(session.rawUrl, tabId)}
+          />
           <div className={styles.searchResultsItemContent}>
             <div className={styles.searchResultsItemContentInner}>
               <div className={styles.searchResultsItemTitle}>
@@ -257,7 +264,7 @@ function SingleAggregatedSearchResultsItem({
                   href={session.rawUrl}
                   newTab={true}
                   rel="noreferrer"
-                  tabId={session.endedAt ? undefined : session.tabId}
+                  tabId={tabId}
                 >
                   <span title={session.title}>
                     <Highlighted title={session.highlightedTitle} />

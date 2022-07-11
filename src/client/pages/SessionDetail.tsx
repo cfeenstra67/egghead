@@ -78,6 +78,7 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
     if (session && sessionId !== session.id) {
       setSession(null);
       setSessionError(null);
+      setDateRange(null);
       return;
     }
     if (session || sessionError) {

@@ -38,7 +38,6 @@ export default function History() {
         callback?: () => void,
         existingResults?: SessionResponse[],
       ) => {
-        const now = new Date();
         setLoading(true);
         serverClientFactory()
           .then(async (client) => {

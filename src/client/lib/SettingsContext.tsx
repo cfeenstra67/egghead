@@ -58,6 +58,7 @@ export function SettingsContextProvider({ children }: SettingsContextProps) {
       const client = await appContext.serverClientFactory();
       try {
         const { settings } = await client.getSettings({ abort: abort.signal });
+        setSettings((prev) => ({ ...prev, items: settings }));
       } catch (error: any) {
         if (error instanceof Aborted) {
           return;

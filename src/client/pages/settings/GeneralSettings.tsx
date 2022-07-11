@@ -20,8 +20,8 @@ export default function Settings() {
           <div className={styles.column}>
             <label htmlFor="theme">Theme</label>
             <small>
-              Change the look and feel of Egghead. Choosing "auto" will
-              respect your system-wide theme preference.
+              {'Change the look and feel of Egghead. Choosing "auto" will '}
+              {'respect your system-wide theme preference.'}
             </small>
           </div>
           <select
@@ -39,7 +39,7 @@ export default function Settings() {
           <div className={styles.column}>
             <label htmlFor="devModeEnabled">Dev Mode Enabled</label>
             <small>
-              Only enable this if you know what you're doing.
+              {"Only enable this if you know what you're doing."}
             </small>
           </div>
           <input

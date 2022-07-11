@@ -4,7 +4,6 @@ import styles from "../styles/Layout.module.css";
 import themes from '../styles/themes.module.css';
 import NavBar from "./NavBar";
 import SideBar from "./SideBar";
-import { Theme } from "../../server/types";
 
 export interface LayoutProps {
   children: React.ReactNode | React.ReactNode[];

@@ -1,4 +1,3 @@
-import queue from "queue";
 import { Aborted } from "./abort";
 import { DBController } from "./db-controller";
 import { JobManager } from "./job-manager";

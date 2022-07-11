@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { initBackend } from "absurd-sql/dist/indexeddb-main-thread";
 import EventTarget from "@ungap/event-target";
 import { JobManager } from "./job-manager";
-import { WorkerRequest, WorkerAbortRequest, WorkerResponse, RequestHandler } from "./types";
+import { WorkerRequest, WorkerResponse, RequestHandler } from "./types";
 
 const requestTimeout = 60 * 1000;
 const jobManager = new JobManager(requestTimeout);

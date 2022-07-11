@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import { useState, useContext, useCallback, useMemo } from "react";
 import CloseCircle from "../icons/close-circle.svg";
 import DropdownIcon from "../icons/dropdown.svg";
 import { AppContext } from "../lib";

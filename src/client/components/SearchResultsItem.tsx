@@ -1,4 +1,4 @@
-import { useState, createRef, useEffect, useContext, RefObject } from "react";
+import { useState, useEffect, useContext, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useLocation } from "wouter";
@@ -30,7 +30,7 @@ function getTimeString(date: string): string {
 }
 
 function DetailsDropdown({ session }: { session: SessionResponse }) {
-  const [location, setLocation] = useLocation();
+  const [_1, setLocation] = useLocation();
 
   return (
     <div>
@@ -228,7 +228,7 @@ function SingleAggregatedSearchResultsItem({
     'animate__fadeInRight',
   ];
 
-  const openLink = useExternalLinkOpener();
+  const openLink = useExternalLinkOpener(true);
   const tabId = session.endedAt ? undefined : session.tabId;
 
   return (

@@ -65,7 +65,7 @@ function ImportDbOption({ serverClientFactory }: OptionProps) {
 
     reader.addEventListener('load', async () => {
       try {
-        const resp = await client.importDatabase({
+        await client.importDatabase({
           databaseUrl: reader.result as string,
         });
         setError('');

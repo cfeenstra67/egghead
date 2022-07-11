@@ -1,5 +1,4 @@
 import queue from "queue";
-import EventTarget from '@ungap/event-target';
 import { Aborted } from "./abort";
 
 export class JobManager {
@@ -7,7 +6,7 @@ export class JobManager {
   private readonly queue: queue;
   private readonly aborts: Record<string, AbortController>;
 
-  constructor(private readonly requestTimeout: number, concurrency: number = 1) {
+  constructor(private readonly requestTimeout: number, concurrency = 1) {
     this.queue = queue({
       timeout: requestTimeout,
       concurrency,

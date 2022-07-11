@@ -57,7 +57,11 @@ export default function History() {
             setError(true);
             setLoading(false);
           })
-          .finally(() => callback && callback());
+          .finally(() => {
+            if (!request.abort?.aborted) {
+              callback && callback();
+            }
+          });
       },
       debounceDelay
     );
@@ -140,9 +144,7 @@ export default function History() {
       ...request,
       abort: abortController.signal
     }, () => {
-      if (!abortController.signal.aborted) {
-        setResultsLoaded(true);
-      }
+      setResultsLoaded(true);
     });
 
     return () => abortController.abort();

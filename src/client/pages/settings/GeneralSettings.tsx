@@ -4,7 +4,7 @@ import Layout from "../../components/Layout";
 import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar';
 import { useSettingsContext } from '../../lib/SettingsContext';
 import { Theme } from "../../../server/types";
-import styles from "../../styles/Settings.module.css";
+import styles from "../../styles/utils.module.css";
 
 export default function Settings() {
   const settings = useSettingsContext();

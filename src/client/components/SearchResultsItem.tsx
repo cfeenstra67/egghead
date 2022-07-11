@@ -113,6 +113,9 @@ function processChildTransitions(
     [ChildType.Typed]: 0,
   };
   [aggSession.session, ...aggSession.duplicateSessions].forEach((session) => {
+    if (!session.childTransitions) {
+      return;
+    }
     Object.entries(session.childTransitions).forEach((tup) => {
       const transition = tup[1];
       switch (transition) {

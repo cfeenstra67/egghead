@@ -26,7 +26,6 @@
 
 .content {
     margin-top: calc(var(--navbar-height) + var(--padding));
-    margin-left: var(--sidebar-width);
     margin-right: var(--padding);
     margin-bottom: var(--padding);
     padding: var(--padding-2);
@@ -36,8 +35,17 @@
     max-width: 800px;
 }
 
+.contentWithSidebar {
+    margin-left: var(--sidebar-width);
+}
+
+.contentFull {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 @media only screen and (min-width: 1232px) {
-    .content {
+    .contentWithSidebar {
         margin-left: auto;
         margin-right: auto;
     }

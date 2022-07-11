@@ -6,7 +6,8 @@ import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar'
 import SettingsOptionStatus, { LoadingState } from '../../components/SettingsOptionStatus';
 import { AppContext } from "../../lib/context";
 import type { ServerInterface } from "../../../server";
-import styles from "../../styles/Settings.module.css";
+import styles from "../../styles/utils.module.css";
+import settingsStyles from "../../styles/Settings.module.css";
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
@@ -50,7 +51,7 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
         />
         <SettingsOptionStatus state={state} />
         {state === LoadingState.Failed && (
-          <span className={styles.errorText}>{error}</span>
+          <span className={settingsStyles.errorText}>{error}</span>
         )}
       </div>
     </>

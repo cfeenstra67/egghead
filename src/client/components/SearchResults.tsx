@@ -1,3 +1,4 @@
+import Card from "./Card";
 import SearchResultsDay from "./SearchResultsDay";
 import type { SessionResponse } from "../../server";
 import { dateFromSqliteString } from "../../server/utils";
@@ -48,7 +49,11 @@ export default function SearchResults({
         />
       ))}
       {sessions.length === 0 &&
-        (isLoading ? <p>Loading...</p> : <p>No Results.</p>)}
+        (isLoading ? (
+          <Card>Loading...</Card> 
+        ) : (
+          <Card>No Results.</Card>
+        ))}
     </div>
   );
 }

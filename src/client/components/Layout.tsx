@@ -3,25 +3,34 @@ import { useTheme } from "../lib/theme";
 import styles from "../styles/Layout.module.css";
 import themes from '../styles/themes.module.css';
 import NavBar from "./NavBar";
-import SideBar from "./SideBar";
 
 export interface LayoutProps {
+  full?: boolean;
   children: React.ReactNode | React.ReactNode[];
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, full }: LayoutProps) {
   const theme = useTheme();
 
-  const className = useMemo(() => {
+  const layoutClassNames = useMemo(() => {
     const result = themes[theme];
-    return result ?? themes.dark;
+    return [
+      styles.layout,
+      result ?? themes.dark,
+    ];
   }, [theme]);
 
+  const contentClassNames = [
+    styles.content,
+    full ? styles.contentFull : styles.contentWithSidebar,
+  ];
+
   return (
-    <div className={`${styles.layout} ${className}`}>
+    <div className={layoutClassNames.join(' ')}>
       <NavBar />
-      <SideBar />
-      <div className={styles.content}>{children}</div>
+      <div className={contentClassNames.join(' ')}>
+        {children}
+      </div>
     </div>
   );
 }

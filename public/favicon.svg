@@ -1,12 +1,12 @@
 <svg viewBox="0 0 152 192" xmlns="http://www.w3.org/2000/svg" id="favicon">
     <style>
         .favicon {
-            fill: white;
+            fill: black;
         }
 
         @media (prefers-color-scheme: dark) {
             .favicon {
-                fill: black;
+                fill: white;
             }
         }
     </style>

@@ -1,11 +1,11 @@
-import debounce from "lodash/debounce";
-import { useState, useContext, useEffect, useMemo, useCallback } from "react";
+import { useState, useContext, useCallback } from "react";
 import Card from "../components/Card";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SessionCard from "../components/SessionCard";
 import Timeline from "../components/Timeline";
 import { AppContext } from "../lib";
+import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import type { Session } from "../../models";
 import type { SessionResponse, QuerySessionsRequest } from "../../server";
 import { Aborted } from "../../server/abort";
@@ -14,7 +14,7 @@ import {
   AggregateOperator,
   BinaryOperator,
 } from "../../server/clause";
-import { requestsEqual, dateToSqliteString } from "../../server/utils";
+import { dateToSqliteString } from "../../server/utils";
 import utilStyles from "../styles/utils.module.css";
 
 export interface SessionDetailProps {
@@ -24,101 +24,33 @@ export interface SessionDetailProps {
 export default function SessionDetail({ sessionId }: SessionDetailProps) {
   const { serverClientFactory } = useContext(AppContext);
 
-  const [session, setSession] = useState<SessionResponse | null>(null);
-  const [sessionError, setSessionError] = useState<string | null>(null);
+  const getSessionRequest = useCallback(async () => {
+    return {
+      filter: {
+        operator: BinaryOperator.Equals,
+        fieldName: 'id',
+        value: sessionId,
+      }
+    };
+  }, [sessionId]);
 
-  const [resultsLoaded, setResultsLoaded] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<boolean>(false);
-  const [results, setResults] = useState<SessionResponse[]>([]);
-  const [count, setCount] = useState<number>(0);
-  const [request, setRequest] = useState<QuerySessionsRequest>({});
+  const { 
+    results: sessionResults,
+    state: sessionQueryState,
+    error: sessionQueryError
+  } = useSessionQuery({
+    getRequest: getSessionRequest
+  });
+  const session = sessionResults[0];
+
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
 
-  const debounceDelay = 150;
-  const pageSize = 200;
-
-  const querySessions = useMemo(() => {
-    return debounce(
-      (
-        request: QuerySessionsRequest,
-        callback?: () => void,
-        existingResults?: SessionResponse[],
-      ) => {
-        setLoading(true);
-        serverClientFactory()
-          .then(async (client) => {
-            const response = await client.querySessions(request);
-            setResults((existingResults || []).concat(response.results));
-            setCount(response.totalCount);
-            if (!request.abort?.aborted) {
-              setError(false);
-              setLoading(false);
-            }
-          })
-          .catch((err) => {
-            if (err instanceof Aborted) {
-              return;
-            }
-            console.trace(`Error querying "${sessionId}"`, err);
-            setError(true);
-            setLoading(false);
-          })
-          .finally(() => {
-            if (!request.abort?.aborted) {
-              callback && callback();
-            }
-          });
-      },
-      debounceDelay
-    );
-  }, [setError, setResults, setLoading, setCount]);
-
-  useEffect(() => {
-    if (session && sessionId !== session.id) {
-      setSession(null);
-      setSessionError(null);
-      setDateRange(null);
-      return;
-    }
-    if (session || sessionError) {
-      return;
-    }
-
-    const abortController = new AbortController();
-
-    async function load() {
-      const client = await serverClientFactory();
-      try {
-        const response = await client.querySessions({
-          filter: {
-            operator: BinaryOperator.Equals,
-            fieldName: 'id',
-            value: sessionId,
-          },
-          abort: abortController.signal,
-        });
-        if (response.results.length > 0) {
-          setSession(response.results[0]);
-        } else {
-          setSessionError('Session not found');
-        }
-      } catch (error: any) {
-        setSessionError(error.toString());
-      }
-    }
-
-    load();
-    return () => abortController.abort();
-  }, [sessionId, session, sessionError]);
-
-  useEffect(() => {
+  const getOtherSessionsRequest = useCallback(async () => {
     if (!session) {
-      return;
+      throw new Aborted();
     }
 
     const newRequest: QuerySessionsRequest = {
-      limit: pageSize,
       isSearch: true,
     };
 
@@ -155,44 +87,18 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
       };
     }
 
-    if (!requestsEqual(newRequest, request)) {
-      setResultsLoaded(false);
-      setRequest(newRequest);
-    }
-  }, [
-    session,
-    request,
-    setRequest,
-    dateRange,
-  ]);
+    return newRequest;
+  }, [session, dateRange]);
 
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    window.scroll(0, 0);
-    querySessions({
-      ...request,
-      abort: abortController.signal
-    }, () => {
-      setResultsLoaded(true);
-    });
-
-    return () => abortController.abort();
-  }, [querySessions, request]);
-
-  const onEndReached = useCallback(() => {
-    if (results.length >= count) {
-      return;
-    }
-    const abortController = new AbortController();
-    querySessions({
-      ...request,
-      skip: results.length,
-      abort: abortController.signal
-    }, undefined, results);
-
-    return () => abortController.abort();
-  }, [results, count, request, querySessions]);
+  const {
+    results: otherSessionsResults,
+    state: otherSessionsState,
+    loadNextPage: otherSessionsLoadNextPage,
+    initialLoadComplete: otherSessionsInitialLoadComplete,
+    request: otherSessionsRequest,
+  } = useSessionQuery({
+    getRequest: getOtherSessionsRequest
+  });
 
   return (
     <Layout full>
@@ -207,33 +113,37 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
           Session Detail
         </h1>
       </div>
-      {session !== null ? (
+      {session ? (
         <SessionCard session={session} />
-      ) : sessionError !== null ? (
+      ) : sessionQueryState === SessionQueryState.Loading ? (
         <Card>
-          Error loading session: {sessionError}.
+          Loading session...
+        </Card>
+      ) : sessionQueryError ? (
+        <Card>
+          Error loading session: {sessionQueryError}.
         </Card>
       ) : (
         <Card>
-          Loading session...
+          Session not found.
         </Card>
       )}
       <div className={utilStyles.marginTop2}>
         <Timeline
-          loading={!resultsLoaded}
-          request={request}
+          loading={!otherSessionsInitialLoadComplete}
+          request={otherSessionsRequest}
           dateRange={dateRange}
           setDateRange={setDateRange}
         />
       </div>
       <div className={utilStyles.marginTop2}>
-        {error ? (
+        {otherSessionsState === SessionQueryState.Error ? (
           <p>An error occurred while loading other sessions.</p>
         ) : (
           <SearchResults
-            sessions={results}
-            isLoading={loading}
-            onEndReached={onEndReached}
+            sessions={otherSessionsResults}
+            isLoading={otherSessionsState === SessionQueryState.Loading}
+            onEndReached={otherSessionsLoadNextPage}
           />
         )}
       </div>

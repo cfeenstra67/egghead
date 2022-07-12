@@ -1,76 +1,29 @@
-import debounce from "lodash/debounce";
-import { useState, useContext, useEffect, useMemo, useCallback } from "react";
+import { useCallback, useState, useContext } from "react";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SearchResultsSideBar from "../components/SearchResultsSideBar";
 import Timeline from "../components/Timeline";
+import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import { AppContext } from "../lib";
 import type { Session } from "../../models";
-import type { SessionResponse, QuerySessionsRequest } from "../../server";
-import { Aborted } from "../../server/abort";
+import type { QuerySessionsRequest } from "../../server";
 import {
   Clause,
   AggregateOperator,
   BinaryOperator,
   IndexToken,
 } from "../../server/clause";
-import { requestsEqual, dateToSqliteString } from "../../server/utils";
+import { dateToSqliteString } from "../../server/utils";
 
 export default function History() {
-  const { serverClientFactory, query } = useContext(AppContext);
-  const [resultsLoaded, setResultsLoaded] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<boolean>(false);
-  const [results, setResults] = useState<SessionResponse[]>([]);
-  const [count, setCount] = useState<number>(0);
-  const [request, setRequest] = useState<QuerySessionsRequest>({});
+  const { query } = useContext(AppContext);
   const [selectedTerms, setSelectedTerms] = useState<string[]>([]);
   const [selectedHosts, setSelectedHosts] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
 
-  const debounceDelay = 150;
-  const pageSize = 200;
-
-  const querySessions = useMemo(() => {
-    return debounce(
-      (
-        request: QuerySessionsRequest,
-        callback?: () => void,
-        existingResults?: SessionResponse[],
-      ) => {
-        setLoading(true);
-        serverClientFactory()
-          .then(async (client) => {
-            const response = await client.querySessions(request);
-            setResults((existingResults || []).concat(response.results));
-            setCount(response.totalCount);
-            if (!request.abort?.aborted) {
-              setError(false);
-              setLoading(false);
-            }
-          })
-          .catch((err) => {
-            if (err instanceof Aborted) {
-              return;
-            }
-            console.trace(`Error querying "${query}"`, err);
-            setError(true);
-            setLoading(false);
-          })
-          .finally(() => {
-            if (!request.abort?.aborted) {
-              callback && callback();
-            }
-          });
-      },
-      debounceDelay
-    );
-  }, [setError, setResults, setLoading, setCount]);
-
-  useEffect(() => {
+  const getRequest = useCallback(async () => {
     const newRequest: QuerySessionsRequest = {
       query,
-      limit: pageSize,
       isSearch: true,
     };
     const clauses: Clause<Session>[] = [];
@@ -122,53 +75,24 @@ export default function History() {
       };
     }
 
-    if (!requestsEqual(newRequest, request)) {
-      setResultsLoaded(false);
-      setRequest(newRequest);
-    }
+    return newRequest;
   }, [
     query,
     selectedTerms,
     selectedHosts,
-    request,
-    setRequest,
     dateRange,
-    setDateRange,
   ]);
 
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    window.scroll(0, 0);
-    querySessions({
-      ...request,
-      abort: abortController.signal
-    }, () => {
-      setResultsLoaded(true);
-    });
-
-    return () => abortController.abort();
-  }, [querySessions, request]);
-
-  const onEndReached = useCallback(() => {
-    if (results.length >= count) {
-      return;
-    }
-    const abortController = new AbortController();
-    querySessions({
-      ...request,
-      skip: results.length,
-      abort: abortController.signal
-    }, undefined, results);
-
-    return () => abortController.abort();
-  }, [results, count, request, querySessions]);
+  const { request, results, state, initialLoadComplete, loadNextPage } = useSessionQuery({
+    onChange: () => window.scroll(0, 0),
+    getRequest,
+  });
 
   return (
     <Layout>
       <h1>History</h1>
       <SearchResultsSideBar
-        loading={!resultsLoaded}
+        loading={!initialLoadComplete}
         request={request}
         selectedHosts={selectedHosts}
         setSelectedHosts={setSelectedHosts}
@@ -176,18 +100,18 @@ export default function History() {
         setSelectedTerms={setSelectedTerms}
       />
       <Timeline
-        loading={!resultsLoaded}
+        loading={!initialLoadComplete}
         request={request}
         dateRange={dateRange}
         setDateRange={setDateRange}
       />
-      {error ? (
+      {state === SessionQueryState.Error ? (
         <p>An error occurred while loading search results.</p>
       ) : (
         <SearchResults
           sessions={results}
-          isLoading={loading}
-          onEndReached={onEndReached}
+          isLoading={state === SessionQueryState.Loading}
+          onEndReached={loadNextPage}
         />
       )}
     </Layout>

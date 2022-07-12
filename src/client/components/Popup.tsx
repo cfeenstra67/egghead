@@ -1,146 +1,69 @@
-import debounce from "lodash/debounce";
-import { useContext, useState, useMemo, useEffect, useCallback } from "react";
+import { useContext, useState, useCallback } from "react";
 import Bubble from "./Bubble";
 import Card from "./Card";
 import { AppContext } from "../lib/context";
+import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import type { Session } from "../../models";
 import PopupLayout from "./PopupLayout";
 import PopupSearchBar from "./PopupSearchBar";
 import SearchResults from "./SearchResults";
-import type { SessionResponse, QuerySessionsRequest } from "../../server";
+import type { QuerySessionsRequest } from "../../server";
 import { Clause, BinaryOperator, AggregateOperator } from "../../server/clause";
 import { Aborted } from "../../server/abort";
-import { requestsEqual } from "../../server/utils";
 import styles from "../styles/Popup.module.css";
 import utilStyles from "../styles/utils.module.css";
 
 export default function Popup() {
-  const { serverClientFactory, query, openHistory, getCurrentUrl } = useContext(AppContext);
-  const [resultsLoaded, setResultsLoaded] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<boolean>(false);
-  const [results, setResults] = useState<SessionResponse[]>([]);
-  const [count, setCount] = useState<number>(0);
-  const [request, setRequest] = useState<QuerySessionsRequest>({});
+  const { query, openHistory, getCurrentUrl } = useContext(AppContext);
   const [activeSessionsOnly, setActiveSessionsOnly] = useState(false);
   const [currentDomainOnly, setCurrentDomainOnly] = useState(false);
 
-  const debounceDelay = 150;
-  const pageSize = 200;
+  const getRequest = useCallback(async (abort: AbortSignal) => {
+    const newRequest: QuerySessionsRequest = {
+      query,
+      isSearch: true,
+    };
 
-  const querySessions = useMemo(() => {
-    return debounce(
-      (
-        request: QuerySessionsRequest,
-        callback?: () => void,
-        existingResults?: SessionResponse[],
-      ) => {
-        setLoading(true);
-        serverClientFactory()
-          .then(async (client) => {
-            const response = await client.querySessions(request);
-            setResults((existingResults || []).concat(response.results));
-            setCount(response.totalCount);
-            if (!request.abort?.aborted) {
-              setError(false);
-              setLoading(false);
-            }
-          })
-          .catch((err) => {
-            if (err instanceof Aborted) {
-              return;
-            }
-            console.trace(`Error querying "${query}"`, err);
-            setError(true);
-            setLoading(false);
-          })
-          .finally(() => {
-            if (!request.abort?.aborted && callback) {
-              callback();
-            }
-          });
-      },
-      debounceDelay
-    );
-  }, [setError, setResults, setLoading, setCount]);
+    const clauses: Clause<Session>[] = [];
 
-  useEffect(() => {
-    let active = true;
+    if (currentDomainOnly) {
+      const currentUrl = await getCurrentUrl();
+      if (abort.aborted) {
+        throw new Aborted();
+      }
+      clauses.push({
+        operator: BinaryOperator.Equals,
+        fieldName: 'host',
+        value: new URL(currentUrl).hostname,
+      });
+    }
+    if (activeSessionsOnly) {
+      clauses.push({
+        operator: BinaryOperator.Equals,
+        fieldName: 'endedAt',
+        value: null
+      });
+    }
 
-    async function load() {
-      const newRequest: QuerySessionsRequest = {
-        query,
-        limit: pageSize,
-        isSearch: true,
+    if (clauses.length === 1) {
+      newRequest.filter = clauses[0]
+    } else if (clauses.length > 1) {
+      newRequest.filter = {
+        operator: AggregateOperator.And,
+        clauses,
       };
-
-      const clauses: Clause<Session>[] = [];
-
-      if (currentDomainOnly) {
-        const currentUrl = await getCurrentUrl();
-        if (!active) {
-          return;
-        }
-        clauses.push({
-          operator: BinaryOperator.Equals,
-          fieldName: 'host',
-          value: new URL(currentUrl).hostname,
-        });
-      }
-      if (activeSessionsOnly) {
-        clauses.push({
-          operator: BinaryOperator.Equals,
-          fieldName: 'endedAt',
-          value: null
-        });
-      }
-
-      if (clauses.length === 1) {
-        newRequest.filter = clauses[0]
-      } else if (clauses.length > 1) {
-        newRequest.filter = {
-          operator: AggregateOperator.And,
-          clauses,
-        };
-      }
-
-      if (!requestsEqual(newRequest, request)) {
-        setResultsLoaded(false);
-        setRequest(newRequest);
-      }
     }
+    return newRequest;
+  }, [
+    query,
+    activeSessionsOnly,
+    currentDomainOnly,
+  ]);
 
-    load();
-    return () => { active = false; };
-  }, [query, request, activeSessionsOnly, currentDomainOnly]);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    window.scroll(0, 0);
-    querySessions({
-      ...request,
-      abort: abortController.signal
-    }, () => {
-      setResultsLoaded(true);
-    });
-
-    return () => abortController.abort();
-  }, [querySessions, request]);
-
-  const onEndReached = useCallback(() => {
-    if (results.length >= count) {
-      return;
-    }
-    const abortController = new AbortController();
-    querySessions({
-      ...request,
-      skip: results.length,
-      abort: abortController.signal
-    }, undefined, results);
-
-    return () => abortController.abort();
-  }, [results, count, request, querySessions]);
+  const { results, state, loadNextPage } = useSessionQuery({
+    getRequest,
+    onChange: () => window.scroll(0, 0),
+  });
 
   return (
     <PopupLayout>
@@ -161,13 +84,13 @@ export default function Popup() {
         </Bubble>
       </div>
       <div className={utilStyles.marginTop}>
-        {error ? (
+        {state === SessionQueryState.Error ? (
           <p>An error occurred while loading search results.</p>
         ) : (
           <SearchResults
             sessions={results}
-            isLoading={loading}
-            onEndReached={onEndReached}
+            isLoading={state === SessionQueryState.Loading}
+            onEndReached={loadNextPage}
           />
         )}
       </div>

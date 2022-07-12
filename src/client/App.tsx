@@ -4,6 +4,7 @@ import { AppRuntime, AppContext, getRouterHook } from "./lib";
 import { SettingsContextProvider } from './lib/SettingsContext';
 import History from "./pages/History";
 import SessionDetail from "./pages/SessionDetail";
+import ClearBrowsingData from "./pages/settings/ClearBrowsingData";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import DataSettings from "./pages/settings/DataSettings";
 import DevSettings from "./pages/settings/DevSettings";
@@ -56,6 +57,9 @@ function Routes({ runtime, serverClientFactory, openTabId, openHistory, getCurre
           </Route>
           <Route path="/settings">
             <GeneralSettings />
+          </Route>
+          <Route path="/settings/clear-browsing-data">
+            <ClearBrowsingData />
           </Route>
           <Route path="/settings/data">
             <DataSettings />

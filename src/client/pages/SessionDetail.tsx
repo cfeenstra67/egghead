@@ -1,13 +1,12 @@
-import { useState, useContext, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Card from "../components/Card";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SessionCard from "../components/SessionCard";
 import Timeline from "../components/Timeline";
-import { AppContext } from "../lib";
 import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import type { Session } from "../../models";
-import type { SessionResponse, QuerySessionsRequest } from "../../server";
+import type { QuerySessionsRequest } from "../../server";
 import { Aborted } from "../../server/abort";
 import {
   Clause,
@@ -22,8 +21,6 @@ export interface SessionDetailProps {
 }
 
 export default function SessionDetail({ sessionId }: SessionDetailProps) {
-  const { serverClientFactory } = useContext(AppContext);
-
   const getSessionRequest = useCallback(async () => {
     return {
       filter: {

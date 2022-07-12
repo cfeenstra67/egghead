@@ -20,6 +20,8 @@
   "devDependencies": {
     "@jlongster/sql.js": "^1.6.7",
     "@ohm-js/cli": "^1.1.0",
+    "@pulumi/aws": "^5.10.0",
+    "@pulumi/pulumi": "^3.35.3",
     "@svgr/webpack": "^6.2.1",
     "@types/chrome": "^0.0.183",
     "@types/lodash": "^4.14.182",

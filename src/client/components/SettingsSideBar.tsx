@@ -5,6 +5,7 @@ import styles from '../styles/SettingsSideBar.module.css';
 
 export enum SettingsPage {
   General = 'General',
+  ClearBrowsingData = 'ClearBrowsingData',
   Data = 'Data',
   Dev = 'Dev',
 }
@@ -38,6 +39,11 @@ export default function SettingsSideBar({ page }: SettingsSideBarProps) {
         url="/settings"
         title="General"
         selected={page === SettingsPage.General}
+      />
+      <SettingsSideBarItem
+        url="/settings/clear-browsing-data"
+        title="Clear Browsing Data"
+        selected={page === SettingsPage.ClearBrowsingData}
       />
       <SettingsSideBarItem 
         url="/settings/data"

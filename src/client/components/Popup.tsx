@@ -1,6 +1,5 @@
 import { useContext, useState, useCallback } from "react";
 import Bubble from "./Bubble";
-import Card from "./Card";
 import { AppContext } from "../lib/context";
 import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import type { Session } from "../../models";

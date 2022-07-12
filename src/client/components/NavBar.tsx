@@ -1,6 +1,4 @@
-import { useContext } from "react";
 import { Link } from "wouter";
-import { AppContext } from "../lib";
 import styles from "../styles/NavBar.module.css";
 import EggheadIcon from '../icons/egghead.svg';
 import SettingsIcon from "../icons/settings.svg";

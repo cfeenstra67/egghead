@@ -10,7 +10,6 @@ export async function webGetCurrentUrl(): Promise<string> {
 export function chromeOpenHistory(): void {
   const url = 'chrome://history';
   chrome.tabs.query({ url }, (tab) => {
-    let newTab = false;
     if (tab?.[0]) {
       chrome.tabs.update(tab[0].id as number, { active: true }, () => {
         if (chrome.runtime.lastError) {

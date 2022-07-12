@@ -74,7 +74,23 @@ function createModule(name, entry) {
       }),
       new CopyPlugin({
         patterns: [
-          { from: 'public', to: '.' },
+          {
+            from: 'public',
+            to: '.',
+            filter: (resourcePath) => {
+              const isDemo = name === 'demo';
+              const demoIgnore = ['popup.html', 'manifest.json'];
+              const nonDemoIgnore = ['history.db'];
+              const baseName = path.basename(resourcePath);
+              if (isDemo && demoIgnore.includes(baseName)) {
+                return false;
+              }
+              if (!isDemo && nonDemoIgnore.includes(baseName)) {
+                return false;
+              }
+              return true;
+            }
+          },
         ]
       }),
       new MiniCssExtractPlugin(),
@@ -92,7 +108,7 @@ function createModule(name, entry) {
     },
     output: {
       filename: '[name].js',
-      path: path.resolve(__dirname, 'dist'),
+      path: path.resolve(__dirname, 'dist', name),
     },
     optimization: {
       minimize: false,
@@ -108,8 +124,11 @@ module.exports = [
     client: './src/client/extension.tsx',
     popup: './src/client/extension-popup.tsx',
   }),
+  createModule('demo', {
+    client: './src/client/demo.tsx',
+  }),
   createModule('dev', {
-    'web-client': './src/client/web.tsx',
-    'web-popup': './src/client/web-popup.tsx',
-  })
+    client: './src/client/web.tsx',
+    popup: './src/client/web-popup.tsx',
+  }),
 ];

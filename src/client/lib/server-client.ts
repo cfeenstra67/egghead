@@ -8,7 +8,7 @@ import { Server } from "../../server/service";
 import { migrations } from "../../migrations";
 import { entities } from "../../models";
 
-function convertDataURIToBinary(dataURI: string): Uint8Array {
+export function convertDataURIToBinary(dataURI: string): Uint8Array {
   return Uint8Array.from(atob(dataURI), (char) => char.charCodeAt(0));
 }
 
@@ -24,7 +24,7 @@ function serializationMiddleware(handler: RequestHandler): RequestHandler {
 }
 
 export function serverFactory(
-  existingDb: string
+  existingDb: Uint8Array
 ): () => Promise<ServerInterface> {
   let dataSource: DataSource | undefined = undefined;
   const target = new EventTarget();
@@ -36,12 +36,11 @@ export function serverFactory(
       const SQL = await initSqlJs({ locateFile: (file: any) => file });
 
       let database: Uint8Array | undefined = undefined;
-      database = convertDataURIToBinary(existingDb);
 
       dataSource = new DataSource({
         type: "sqljs",
         driver: SQL,
-        database: override ?? database,
+        database: override ?? existingDb,
         entities,
         migrations,
         migrationsRun: true,

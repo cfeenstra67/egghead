@@ -1,0 +1,4 @@
+config:
+  aws:region: us-east-2
+  egghead:dns-name: egghead.camfeenstra.com
+  egghead:logs-bucket: camfeenstra.com-logs-81782b7

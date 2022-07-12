@@ -1,0 +1,4 @@
+name: egghead
+runtime: nodejs
+main: infra/index.ts
+description: Browser history replacement that doesn't suck eggs

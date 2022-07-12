@@ -3,7 +3,8 @@
         "local-db.ts",
         "custom.d.ts",
         "src/**/*.ts",
-        "src/**/*.tsx"
+        "src/**/*.tsx",
+        "infra/**/*.ts",
     ],
     "compilerOptions": {
         "lib": ["es6", "dom"],

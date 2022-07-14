@@ -8,17 +8,14 @@
     margin: var(--padding) calc(var(--padding) * 3);
     cursor: pointer;
     border-radius: var(--border-radius);
+    color: var(--primary-text-color);
+    text-decoration: none;
 }
 
 .activeItem {
     background-color: var(--secondary-bg-color);
     cursor: default;
 }
-
-/*.item a {
-    color: var(--primary-text-color);
-    text-decoration: none;
-}*/
 
 .item:hover {
     background-color: var(--secondary-bg-color);

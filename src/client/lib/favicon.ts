@@ -1,5 +1,3 @@
-import { AppRuntime } from "./types";
-
 // // Source: https://dev.to/derlin/get-favicons-from-any-website-using-a-hidden-google-api-3p1e
 // export function getFaviconUrlPublicApi(domain: string, size: number): string {
 //   const url = new URL("https://www.google.com/s2/favicons");
@@ -33,16 +31,3 @@ export function getFaviconUrlPublicApi(domain: string, size: number): string {
 //   url.searchParams.append('allow_google_server_fallback', '0');
 //   return url.href;
 // }
-
-export function getFaviconUrl(
-  runtime: AppRuntime,
-  domain: string,
-  size: number
-): string {
-  switch (runtime) {
-    case AppRuntime.Web:
-      return getFaviconUrlPublicApi(domain, size);
-    case AppRuntime.Extension:
-      return getFaviconUrlPublicApi(domain, size);
-  }
-}

@@ -66,7 +66,7 @@
     font-weight: bolder;
 }
 
-.content p, .content span {
+.content p, .content span, .content div {
     font-size: var(--paragraph-font-size);
 }
 

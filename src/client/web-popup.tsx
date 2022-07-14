@@ -1,19 +1,21 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import InitialLoad from "./components/InitialLoad";
 import Popup from "./Popup";
-import { webOpenHistory, webGetCurrentUrl } from "./lib/adapters";
-import { serverFactory, convertDataURIToBinary } from "./lib/server-client";
-import { AppRuntime } from "./lib/types";
-
-import existingDb from "../../history.db";
+import { WebRuntime } from './lib/runtimes';
+import { serverFactory } from "./lib/server-client";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
 root.render(
-  <Popup
-    runtime={AppRuntime.Web}
-    serverClientFactory={serverFactory(convertDataURIToBinary(existingDb))}
-    openHistory={webOpenHistory}
-    getCurrentUrl={webGetCurrentUrl}
+  <InitialLoad
+    isPopup
+    dbUrl="dev.db"
+    getApp={(db) => (
+      <Popup
+        serverClientFactory={serverFactory(db)}
+        runtime={new WebRuntime()}
+      />
+    )}
   />
 );

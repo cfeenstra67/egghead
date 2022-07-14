@@ -52,13 +52,6 @@ function createModule(name, entry) {
           type: 'asset',
         },
         {
-          test: /\.db$/,
-          type: 'asset/inline',
-          generator: {
-            dataUrl: (content) => content.toString('base64')
-          }
-        },
-        {
           test: /\.txt$/i,
           type: 'asset/inline',
           generator: {
@@ -77,19 +70,11 @@ function createModule(name, entry) {
           {
             from: 'public',
             to: '.',
-            filter: (resourcePath) => {
-              const isDemo = name === 'demo';
-              const demoIgnore = ['popup.html', 'manifest.json'];
-              const nonDemoIgnore = ['history.db'];
-              const baseName = path.basename(resourcePath);
-              if (isDemo && demoIgnore.includes(baseName)) {
-                return false;
-              }
-              if (!isDemo && nonDemoIgnore.includes(baseName)) {
-                return false;
-              }
-              return true;
-            }
+          },
+          {
+            from: `data/${name}.db`,
+            to: '.',
+            noErrorOnMissing: name === 'prod'
           },
         ]
       }),
@@ -126,6 +111,7 @@ module.exports = [
   }),
   createModule('demo', {
     client: './src/client/demo.tsx',
+    popup: './src/client/demo-popup.tsx',
   }),
   createModule('dev', {
     client: './src/client/web.tsx',

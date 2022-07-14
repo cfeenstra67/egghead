@@ -11,19 +11,15 @@ export interface ExternalLinkProps {
 }
 
 export function useExternalLinkOpener(newTab?: boolean): (url: string, tabId?: number) => void {
-  const { openTabId } = useContext(AppContext);
+  const { runtime } = useContext(AppContext);
 
   return useCallback((url, tabId) => {
-    if (!newTab) {
-      window.location.href = url;
-      return;
+    if (newTab && tabId && runtime.openTabId) {
+      runtime.openTabId(tabId);
+    } else {
+      runtime.openUrl(url, newTab);
     }
-
-    if (tabId && openTabId) {
-      openTabId(tabId);
-    }
-    window.open(url);
-  }, [openTabId, newTab]);
+  }, [runtime, newTab]);
 }
 
 export default function ExternalLink({
@@ -47,7 +43,6 @@ export default function ExternalLink({
       onClick={onClick}
       className={className}
       rel={rel}
-      {...(newTab ? {target: '_blank'} : {})}
     >
       {children}
     </a>

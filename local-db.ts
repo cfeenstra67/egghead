@@ -5,7 +5,7 @@ import { migrationEntities } from './src/models';
 
 export const sqlDataSource = new DataSource({
   type: 'sqlite',
-  database: './history.db',
+  database: './data/dev.db',
   entities: migrationEntities,
   migrations
 });

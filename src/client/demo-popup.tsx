@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import App from "./App";
 import InitialLoad from "./components/InitialLoad";
+import Popup from "./Popup";
 import { WebRuntime } from './lib/runtimes';
 import { serverFactory } from "./lib/server-client";
 
@@ -9,9 +9,10 @@ const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
 root.render(
   <InitialLoad
-    dbUrl="dev.db"
+    isPopup
+    dbUrl="demo.db"
     getApp={(db) => (
-      <App
+      <Popup
         serverClientFactory={serverFactory(db)}
         runtime={new WebRuntime()}
       />

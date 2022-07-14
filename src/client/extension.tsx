@@ -1,22 +1,17 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import App from "./App";
-import { chromeOpenHistory, chromeGetCurrentUrl } from "./lib/adapters";
-import { AppRuntime } from "./lib/types";
+import { findTabId } from "./lib";
+import { ChromeEmbeddedRuntime } from './lib/runtimes';
 import { ServerClient, processExtensionRequest } from "../server/client";
 
-function openTabId(tabId: number): void {
-  chrome.runtime.sendMessage({ type: 'openTabId', tabId });
-}
-
 const body = document.getElementById("body") as Element;
-const root = ReactDOM.createRoot(body);
-root.render(
-  <App
-    runtime={AppRuntime.Extension}
-    serverClientFactory={async () => new ServerClient(processExtensionRequest)}
-    openTabId={openTabId}
-    openHistory={chromeOpenHistory}
-    getCurrentUrl={chromeGetCurrentUrl}
-  />
-);
+findTabId().then((tabId) => {
+  const root = ReactDOM.createRoot(body);
+  root.render(
+    <App
+      serverClientFactory={async () => new ServerClient(processExtensionRequest)}
+      runtime={new ChromeEmbeddedRuntime(tabId)}
+    />
+  );
+});

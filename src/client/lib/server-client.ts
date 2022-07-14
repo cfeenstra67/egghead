@@ -8,10 +8,6 @@ import { Server } from "../../server/service";
 import { migrations } from "../../migrations";
 import { entities } from "../../models";
 
-export function convertDataURIToBinary(dataURI: string): Uint8Array {
-  return Uint8Array.from(atob(dataURI), (char) => char.charCodeAt(0));
-}
-
 function serializationMiddleware(handler: RequestHandler): RequestHandler {
   const handleRequest: RequestHandler = async (request) => {
     const { abort, ...bareRequest } = request;
@@ -34,8 +30,6 @@ export function serverFactory(
   async function initialize(override?: Uint8Array) {
     try {
       const SQL = await initSqlJs({ locateFile: (file: any) => file });
-
-      let database: Uint8Array | undefined = undefined;
 
       dataSource = new DataSource({
         type: "sqljs",

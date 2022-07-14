@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Router, Route, Switch, useLocation } from "wouter";
-import { AppRuntime, AppContext, getRouterHook } from "./lib";
+import { AppContext } from "./lib";
+import { RuntimeInterface } from './lib/runtimes';
 import { SettingsContextProvider } from './lib/SettingsContext';
 import History from "./pages/History";
 import SessionDetail from "./pages/SessionDetail";
@@ -17,14 +18,11 @@ import 'highlight.js/styles/monokai-sublime.css';
 import "./styles/App.css";
 
 export interface AppProps {
-  runtime: AppRuntime;
   serverClientFactory: () => Promise<ServerInterface>;
-  openTabId?: (tabId: number) => void;
-  openHistory: () => void;
-  getCurrentUrl: () => Promise<string>;
+  runtime: RuntimeInterface;
 }
 
-function Routes({ runtime, serverClientFactory, openTabId, openHistory, getCurrentUrl }: AppProps) {
+function Routes({ runtime, serverClientFactory }: AppProps) {
   const [location, setLocation] = useLocation();
   const [query, setQueryValue] = useState("");
 
@@ -36,13 +34,10 @@ function Routes({ runtime, serverClientFactory, openTabId, openHistory, getCurre
   }
 
   const ctx: AppContext = {
-    runtime,
     serverClientFactory,
     query,
     setQuery,
-    openTabId,
-    openHistory,
-    getCurrentUrl,
+    runtime,
   };
 
   return (
@@ -78,7 +73,7 @@ function Routes({ runtime, serverClientFactory, openTabId, openHistory, getCurre
 
 export default function App(props: AppProps) {
   return (
-    <Router hook={getRouterHook(props.runtime)}>
+    <Router hook={props.runtime.routerHook}>
       <Routes {...props} />
     </Router>
   );

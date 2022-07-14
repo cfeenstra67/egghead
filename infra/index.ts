@@ -13,7 +13,7 @@ export = async () => {
 
   const rootDomain = dnsName.split('.').slice(1).join('.');
 
-  const indexDocument = 'web-history.html';
+  const indexDocument = 'history.html';
 
   const zone = await aws.route53.getZone({
     name: rootDomain
@@ -54,7 +54,7 @@ export = async () => {
     website: { indexDocument }
   });
 
-  const distDirectory = path.normalize(path.join(__dirname, '../dist'));
+  const distDirectory = path.normalize(path.join(__dirname, '../dist/demo'));
   for await (const file of walkDirectory(distDirectory)) {
     const relPath = path.relative(distDirectory, file);
     const contentType = mime.lookup(file) || 'application/octet-stream';

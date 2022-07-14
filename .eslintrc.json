@@ -32,6 +32,7 @@
         }],
         "no-prototype-builtins": "off",
         "react/react-in-jsx-scope": "off",
-        "no-case-declarations": "off"
+        "no-case-declarations": "off",
+        "no-constant-condition": "off"
     }
 }

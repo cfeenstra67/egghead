@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Router } from "wouter";
 import PopupComponent from "./components/Popup";
-import { AppRuntime, AppContext } from "./lib";
+import { AppContext } from "./lib";
+import type { RuntimeInterface } from './lib/runtimes';
 import { SettingsContextProvider } from './lib/SettingsContext';
 import type { ServerInterface } from "../server";
 
@@ -9,19 +11,13 @@ import 'animate.css';
 import "./styles/Popup.css";
 
 export interface PopupProps {
-  runtime: AppRuntime;
   serverClientFactory: () => Promise<ServerInterface>;
-  openTabId?: (tabId: number) => void;
-  openHistory: () => void;
-  getCurrentUrl: () => Promise<string>;
+  runtime: RuntimeInterface;
 }
 
 export default function Popup({
   runtime,
   serverClientFactory,
-  openTabId,
-  openHistory,
-  getCurrentUrl,
 }: PopupProps) {
   const [query, setQuery] = useState("");
 
@@ -30,16 +26,15 @@ export default function Popup({
     serverClientFactory,
     query,
     setQuery,
-    openTabId,
-    openHistory,
-    getCurrentUrl,
   };
 
   return (
-    <AppContext.Provider value={ctx}>
-      <SettingsContextProvider>
-        <PopupComponent />
-      </SettingsContextProvider>
-    </AppContext.Provider>
+    <Router hook={runtime.routerHook}>
+      <AppContext.Provider value={ctx}>
+        <SettingsContextProvider>
+          <PopupComponent />
+        </SettingsContextProvider>
+      </AppContext.Provider>
+    </Router>
   );
 }

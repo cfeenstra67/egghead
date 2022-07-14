@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext } from "react";
 import Card from "../components/Card";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SessionCard from "../components/SessionCard";
 import Timeline from "../components/Timeline";
+import { AppContext } from "../lib";
 import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import type { Session } from "../../models";
 import type { QuerySessionsRequest } from "../../server";
@@ -21,6 +22,8 @@ export interface SessionDetailProps {
 }
 
 export default function SessionDetail({ sessionId }: SessionDetailProps) {
+  const { runtime } = useContext(AppContext);
+
   const getSessionRequest = useCallback(async () => {
     return {
       filter: {
@@ -102,7 +105,7 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
       <div className={utilStyles.row}>
         <button
           className={utilStyles.button}
-          onClick={() => history.back()}
+          onClick={() => runtime.goBack()}
         >
           Back
         </button>

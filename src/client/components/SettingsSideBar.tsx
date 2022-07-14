@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import ExternalLink from './ExternalLink';
 import { useSettingsContext } from '../lib/SettingsContext';
 import SideBar from './SideBar';
 import styles from '../styles/SettingsSideBar.module.css';
@@ -18,11 +19,21 @@ interface SettingsSideBarItemProps {
 
 function SettingsSideBarItem({ url, title, selected }: SettingsSideBarItemProps) {
   return (
-    <Link href={url}>
-      <div className={`${styles.item} ${selected ? styles.activeItem : ''}`}>
-        {title}
-      </div>
+    <Link href={url} className={`${styles.item} ${selected ? styles.activeItem : ''}`}>
+      {title}
     </Link> 
+  );
+}
+
+function ExternalSettingsSideBarItem({ url, title, selected }: SettingsSideBarItemProps) {
+  return (
+    <ExternalLink
+      href={url}
+      newTab
+      className={`${styles.item} ${selected ? styles.activeItem : ''}`}
+    >
+      {title}
+    </ExternalLink> 
   );
 }
 
@@ -40,8 +51,8 @@ export default function SettingsSideBar({ page }: SettingsSideBarProps) {
         title="General"
         selected={page === SettingsPage.General}
       />
-      <SettingsSideBarItem
-        url="/settings/clear-browsing-data"
+      <ExternalSettingsSideBarItem
+        url="chrome://settings/clearBrowserData"
         title="Clear Browsing Data"
         selected={page === SettingsPage.ClearBrowsingData}
       />

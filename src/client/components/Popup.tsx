@@ -13,7 +13,7 @@ import styles from "../styles/Popup.module.css";
 import utilStyles from "../styles/utils.module.css";
 
 export default function Popup() {
-  const { query, openHistory, getCurrentUrl } = useContext(AppContext);
+  const { query, runtime } = useContext(AppContext);
   const [activeSessionsOnly, setActiveSessionsOnly] = useState(false);
   const [currentDomainOnly, setCurrentDomainOnly] = useState(false);
 
@@ -26,7 +26,7 @@ export default function Popup() {
     const clauses: Clause<Session>[] = [];
 
     if (currentDomainOnly) {
-      const currentUrl = await getCurrentUrl();
+      const currentUrl = await runtime.getCurrentUrl();
       if (abort.aborted) {
         throw new Aborted();
       }
@@ -68,7 +68,9 @@ export default function Popup() {
     <PopupLayout>
       <PopupSearchBar />
       <div className={styles.popupButtons}>
-        <Bubble onClick={openHistory}>Open History</Bubble>
+        <Bubble onClick={() => runtime.openHistory()}>
+          Open History
+        </Bubble>
         <Bubble
           onClick={() => setActiveSessionsOnly(!activeSessionsOnly)}
           selected={activeSessionsOnly}

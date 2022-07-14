@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { AppRuntime } from "./types";
+import type { RuntimeInterface } from './runtimes';
 
 export type NavigationHook = (
   to: string,
@@ -14,7 +14,7 @@ const undefinedTabId = -1;
 
 const defaultPath = "";
 
-function findTabId(): Promise<number> {
+export function findTabId(): Promise<number> {
   return new Promise((resolve, reject) => {
     chrome.tabs.getCurrent((tab) => {
       if (chrome.runtime.lastError) {
@@ -125,7 +125,7 @@ function hashNavigate(to: string): void {
   window.location.hash = to;
 }
 
-function useHashLocation(): [string, NavigationHook] {
+export function useHashLocation(): [string, NavigationHook] {
   const [loc, setLoc] = useState(currentHashLocation());
 
   useEffect(() => {
@@ -140,11 +140,11 @@ function useHashLocation(): [string, NavigationHook] {
   return [loc, hashNavigate];
 }
 
-export function getRouterHook(runtime: AppRuntime): RouterHook {
-  switch (runtime) {
-    case AppRuntime.Extension:
-      return useExtensionLocation;
-    case AppRuntime.Web:
-      return useHashLocation;
-  }
+export function popupLocationHook(runtime: RuntimeInterface): () => [string, NavigationHook] {
+  return () => {
+    return ['', async (to) => {
+      console.log('TO', to, new URL(to, 'chrome://history').href);
+      await runtime.openUrl(new URL(to, 'chrome://history').href, true);
+    }];
+  };
 }

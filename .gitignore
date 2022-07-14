@@ -3,3 +3,4 @@
 /build
 /history.db
 *.ohm-bundle.*
+/data

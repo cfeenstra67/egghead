@@ -2,7 +2,6 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import * as awsx from "@pulumi/awsx";
 import { walkDirectory } from "./utils";
 
 export = async () => {
@@ -111,7 +110,7 @@ export = async () => {
     },
   });
 
-  const websiteRecord = new aws.route53.Record(dnsName, {
+  new aws.route53.Record(dnsName, {
     name: dnsName.split('.')[0],
     zoneId: zone.zoneId,
     type: 'A',

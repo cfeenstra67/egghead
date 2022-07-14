@@ -13,7 +13,7 @@
     "serve-demo": "webpack serve --config-name demo --no-client-overlay",
     "typeorm": "typeorm-ts-node-commonjs",
     "ohm-generate": "npx ohm generateBundles --esm --withTypes src/**/*.ohm",
-    "fmt": "eslint --fix 'src/**/*.{ts,tsx}'",
+    "fmt": "eslint --fix 'src/**/*.{ts,tsx}' 'infra/**/*.ts'",
     "test": "jest"
   },
   "devDependencies": {

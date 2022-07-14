@@ -120,7 +120,7 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
   }
 
   async goBack() {
-    history.back();
+    await this.openUrl('chrome://history');
   }
 
 }
@@ -203,7 +203,7 @@ export class ChromePopupRuntime implements RuntimeInterface {
   }
 
   async goBack() {
-    history.back();
+    await this.openUrl('chrome://history');
   }
 
-} 
+}

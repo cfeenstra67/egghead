@@ -5,6 +5,7 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "infra/**/*.ts",
+        "test/**/*.ts"
     ],
     "compilerOptions": {
         "lib": ["es6", "dom"],

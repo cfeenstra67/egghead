@@ -1,10 +1,16 @@
 import { DataSource, EntityTarget, SelectQueryBuilder } from "typeorm";
 import { maybeAbort } from "./abort";
 import {
+  Clause,
   renderClause,
   IndexToken,
   parseQueryString,
   BinaryOperator,
+  factorClause,
+  getSearchString,
+  mapClauses,
+  isUnary,
+  isFilter,
 } from "./clause";
 import { Session, SessionIndex } from "../models";
 import { Fts5TableArgs, getColumn } from "../models/fts5";
@@ -56,6 +62,41 @@ export function sessionIndexTableArgs(
   };
 }
 
+export function prepareClauseForSearch(
+  dataSource: DataSource,
+  clause: Clause<Session>
+): Clause<Session> {
+  const factored = factorClause(clause);
+
+  const indexArgs = sessionIndexTableArgs(dataSource, SessionIndex);
+  const indexedMap = Object.fromEntries(indexArgs.columns.map(getColumn));
+
+  const mapped = mapClauses(factored, (clause) => {
+    if (isUnary(clause) && clause.clause.operator === BinaryOperator.Match) {
+      return {
+        operator: BinaryOperator.Match,
+        fieldName: IndexToken,
+        value: `dum:dum NOT ${clause.clause.value}`
+      };
+    }
+    if (
+      clause.operator === BinaryOperator.Equals
+      && indexedMap[clause.fieldName]
+    ) {
+      const stringValue = getSearchString(clause.value as string)
+      return {
+        operator: BinaryOperator.Match,
+        fieldName: IndexToken,
+        value: clause.fieldName === IndexToken ? stringValue : (
+          `${clause.fieldName}:${stringValue}`
+        )
+      };
+    }
+    return clause;
+  });
+  return mapped;
+}
+
 export class SearchService {
   constructor(readonly dataSource: DataSource) {}
 
@@ -100,25 +141,13 @@ export class SearchService {
       const indexArgs = sessionIndexTableArgs(this.dataSource, SessionIndex);
       const indexedMap = Object.fromEntries(indexArgs.columns.map(getColumn));
 
-      const [sql, params, newParamIndex] = renderClause({
+      const preparedClause = prepareClauseForSearch(
+        this.dataSource,
         clause,
+      );
+      const [sql, params, newParamIndex] = renderClause({
+        clause: preparedClause,
         getFieldName,
-        getFilter: (filter) => {
-          if (
-            indexedMap[filter.fieldName] &&
-            filter.operator === BinaryOperator.Equals
-          ) {
-            return {
-              operator: BinaryOperator.Match,
-              fieldName: IndexToken,
-              value:
-                filter.fieldName === IndexToken
-                  ? JSON.stringify(filter.value)
-                  : `${filter.fieldName}:${filter.value}`,
-            };
-          }
-          return filter;
-        },
         paramStartIndex: paramIndex,
       });
       paramIndex = newParamIndex;

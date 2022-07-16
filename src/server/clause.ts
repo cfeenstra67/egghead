@@ -34,6 +34,8 @@ export type FilterValue<
   ? T | null
   : O extends BinaryOperator.NotEquals
   ? T | null
+  : O extends BinaryOperator.Match
+  ? string
   : T;
 
 type Keys<T> = keyof T | typeof IndexToken;
@@ -55,9 +57,9 @@ export interface AggregateClause<T, O extends AggregateOperator> {
 }
 
 export type Clause<T> =
-  | Filter<T, any, any>
-  | Unary<T, any>
-  | AggregateClause<T, any>;
+  | Filter<T, BinaryOperator, Keys<T>>
+  | Unary<T, UnaryOperator>
+  | AggregateClause<T, AggregateOperator>;
 
 export type FiltersClauseDsl<T> = {
   [key in Keys<T>]?:
@@ -82,18 +84,18 @@ export type ClauseDsl<T> =
     }
   | FiltersClauseDsl<T>;
 
-export function isFilter<T>(clause: Clause<T>): clause is Filter<T, any, any> {
-  return Object.values(BinaryOperator).includes(clause.operator);
+export function isFilter<T>(clause: Clause<T>): clause is Filter<T, BinaryOperator, Keys<T>> {
+  return Object.values(BinaryOperator).includes(clause.operator as any);
 }
 
-export function isUnary<T>(clause: Clause<T>): clause is Unary<T, any> {
-  return Object.values(UnaryOperator).includes(clause.operator);
+export function isUnary<T>(clause: Clause<T>): clause is Unary<T, UnaryOperator> {
+  return Object.values(UnaryOperator).includes(clause.operator as any);
 }
 
 export function isAggregate<T>(
   clause: Clause<T>
-): clause is AggregateClause<T, any> {
-  return Object.values(AggregateOperator).includes(clause.operator);
+): clause is AggregateClause<T, AggregateOperator> {
+  return Object.values(AggregateOperator).includes(clause.operator as any);
 }
 
 export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
@@ -142,88 +144,15 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   };
 }
 
-// export function invertClause<T>(clause: Clause<T>): Clause<T> {
-//   switch (clause.operator) {
-//     case UnaryOperator.Not:
-//       return clause.clause;
-//     case BinaryOperator.Equals:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.NotEquals,
-//         value: clause.value,
-//       };
-//     case BinaryOperator.NotEquals:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.Equals,
-//         value: clause.value
-//       };
-//     case BinaryOperator.GreaterThan:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.LessthanOrEqualTo,
-//         value: clause.value
-//       };
-//     case BinaryOperator.GreaterThanOrEqualTo:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.LessThan,
-//         value: clause.value
-//       };
-//     case BinaryOperator.LessThan:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.GreaterThanOrEqualTo,
-//         value: clause.value
-//       };
-//     case BinaryOperator.LessthanOrEqualTo:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.GreaterThan,
-//         value: clause.value
-//       };
-//     case BinaryOperator.In:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.NotIn,
-//         value: clause.value
-//       };
-//     case BinaryOperator.NotIn:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.In,
-//         value: clause.value
-//       };
-//     case BinaryOperator.Match:
-//       return {
-//         fieldName: clause.fieldName,
-//         operator: BinaryOperator.Match,
-//         value: `dum:dum NOT ${clause.value}`,
-//       };
-//     case AggregateOperator.And:
-//       return {
-//         operator: AggregateOperator.Or,
-//         clauses: clause.clauses.map(invertClause),
-//       };
-//     case AggregateOperator.Or:
-//       return {
-//         operator: AggregateOperator.And,
-//         clauses: clause.clauses.map(invertClause),
-//       };
-//   }
-// }
-
 export interface RenderClauseArgs<T> {
   clause: Clause<T>;
   getFieldName?: (fieldName: Keys<T>) => string;
-  getFilter?: (filter: Filter<any, any, any>) => Filter<any, any, any>;
   paramStartIndex?: number;
 }
 
 export function renderClause<T>({
   clause,
   getFieldName = (fieldName) => `"${fieldName}"`,
-  getFilter = (filter) => filter,
   paramStartIndex = 0,
 }: RenderClauseArgs<T>): [string, Record<string, any>, number] {
   let paramIndex = paramStartIndex;
@@ -233,7 +162,6 @@ export function renderClause<T>({
   }
 
   if (isFilter(clause)) {
-    clause = getFilter(clause);
     if (clause.operator === BinaryOperator.Equals && clause.value === null) {
       return [`${getFieldName(clause.fieldName)} IS NULL`, {}, paramIndex];
     }
@@ -241,7 +169,7 @@ export function renderClause<T>({
       return [`${getFieldName(clause.fieldName)} IS NOT NULL`, {}, paramIndex];
     }
 
-    const paramName = getParamName(clause.fieldName);
+    const paramName = getParamName(clause.fieldName as string);
     if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
       return [
         `${getFieldName(clause.fieldName)} ${
@@ -260,15 +188,11 @@ export function renderClause<T>({
   }
   if (isUnary(clause)) {
     let innerClause = clause.clause;
-    if (isFilter(innerClause)) {
-      innerClause = getFilter(innerClause);
-    }
 
     const [sql, params, newParamIndex] = renderClause({
       clause: clause.clause,
       paramStartIndex: paramIndex,
       getFieldName,
-      getFilter,
     });
     return [`NOT (${sql})`, params, newParamIndex];
   }
@@ -280,7 +204,6 @@ export function renderClause<T>({
       clause: subClause,
       paramStartIndex: paramIndex,
       getFieldName,
-      getFilter,
     });
     paramIndex = newParamIndex;
     parts.push(isFilter(subClause) ? sql : `(${sql})`);
@@ -317,6 +240,7 @@ export function clausesEqual<T>(
       compareValues(clause1.value, clause2.value)
     );
   }
+
   if (isUnary(clause1) && isUnary(clause2)) {
     return clausesEqual(clause1.clause, clause2.clause);
   }
@@ -330,23 +254,26 @@ export function clausesEqual<T>(
   });
 }
 
+export function getSearchString(inputString: string): string {
+  return JSON.stringify(inputString).replace(/\\"/g, '""');
+}
+
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
+
   semantics.addOperation<Clause<T>>("clause", {
     Query: (queries) => {
+      if (queries.children.length === 1) {
+        return queries.children[0].clause();
+      }
       return {
         operator: AggregateOperator.And,
         clauses: queries.children.map((child) => child.clause()),
       };
     },
-    // TODO: this is not really complete, everything in NOT gets passed
-    // directly into the full text search engine
     NotQuery_not: (_, notQuery) => {
       return {
-        operator: BinaryOperator.Match,
-        fieldName: IndexToken,
-        value: ["dum:dum", "NOT", JSON.stringify(notQuery.sourceString)].join(
-          " "
-        ) as any,
+        operator: UnaryOperator.Not,
+        clause: notQuery.clause(),
       };
     },
     QueryComp_parentheses: (_1, query, _2) => {
@@ -369,7 +296,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       if (value === "null") {
         value = null;
       } else {
-        value = JSON.stringify(value.replace(/"/g, '""'));
+        value = getSearchString(value);
       }
       return {
         operator: BinaryOperator.Match,
@@ -381,7 +308,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       return {
         operator: BinaryOperator.Match,
         fieldName: IndexToken,
-        value: JSON.stringify(value.sourceString.replace(/\\"/g, '""')) as any,
+        value: getSearchString(value.sourceString),
       };
     },
     columnQuery: (col, _1, operator, _2, value) => {
@@ -409,7 +336,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
 
       return {
         operator: outOp,
-        fieldName: col.sourceString,
+        fieldName: col.sourceString as Keys<T>,
         value: term,
       };
     },
@@ -426,4 +353,142 @@ export function parseQueryString<T>(queryString: string): Clause<T> {
     throw new Error(`Unable to construct query for input: ${queryString}.`);
   }
   return queryStringSemantics(match).clause();
+}
+
+function factorUnaryClause<T>(clause: Unary<T, UnaryOperator>): Clause<T> {
+  const factoredInner = factorClause(clause.clause);
+  if (isUnary(factoredInner)) {
+    return factoredInner.clause;
+  }
+  if (isFilter(factoredInner)) {
+    return {
+      operator: UnaryOperator.Not,
+      clause: factoredInner,
+    };
+  }
+  if (factoredInner.operator === AggregateOperator.And) {
+    return {
+      operator: AggregateOperator.Or,
+      clauses: factoredInner.clauses.map((clause) => ({
+        operator: UnaryOperator.Not,
+        clause,
+      })),
+    }
+  }
+  return {
+    operator: AggregateOperator.And,
+    clauses: factoredInner.clauses.map((clause) => ({
+      operator: UnaryOperator.Not,
+      clause,
+    })),
+  }
+}
+
+// Source: https://stackoverflow.com/questions/12303989/cartesian-product-of-multiple-arrays-in-javascript
+function* cartesianProduct<T>(head: T[], ...tail: T[][]): Generator<T[]> {
+  const remainder = tail.length > 0 ? (
+    cartesianProduct(tail[0], ...tail.slice(1)) 
+  ) : [[]];
+  for (const r of remainder) {
+    for (const h of head) {
+      yield [h, ...r];
+    }
+  }
+}
+
+function factorAggregateClause<T>(clause: AggregateClause<T, AggregateOperator>): Clause<T> {
+  const factoredClauses = clause.clauses.map(factorClause);
+
+  if (clause.operator === AggregateOperator.Or) {
+    const subClauses: Clause<T>[] = [];
+    for (const factoredClause of factoredClauses) {
+      if (factoredClause.operator === AggregateOperator.Or) {
+        for (const subClause of factoredClause.clauses) {
+          subClauses.push(subClause);
+        }
+      } else {
+        subClauses.push(factoredClause);
+      }
+    }
+    return {
+      operator: AggregateOperator.Or,
+      clauses: subClauses,
+    };
+  }
+
+  const orClauses: AggregateClause<T, AggregateOperator.Or>[] = [];
+  const otherClauses: Clause<T>[] = [];
+
+  for (const subClause of factoredClauses) {
+    if (subClause.operator === AggregateOperator.Or) {
+      orClauses.push(subClause as AggregateClause<T, AggregateOperator.Or>);
+    } else if (subClause.operator === AggregateOperator.And) {
+      for (const subSubClause of subClause.clauses) {
+        otherClauses.push(subSubClause);
+      }
+    } else {
+      otherClauses.push(subClause);
+    }
+  }
+
+  if (orClauses.length === 0) {
+    return {
+      operator: AggregateOperator.And,
+      clauses: otherClauses,
+    };
+  }
+
+  const orClauseClauses = orClauses.map((clause) => clause.clauses);
+  const results: Clause<T>[] = [];
+  const combosGenerator = cartesianProduct(
+    orClauseClauses[0],
+    ...orClauseClauses.slice(1)
+  );
+  for (const combo of combosGenerator) {
+    if (otherClauses.length === 0 && combo.length === 1) {
+      results.push(combo[0]);
+    } else {
+      results.push({
+        operator: AggregateOperator.And,
+        clauses: otherClauses.concat(combo),
+      });
+    }
+  }
+
+  if (results.length === 1) {
+    return results[0];
+  }
+  return {
+    operator: AggregateOperator.Or,
+    clauses: results,
+  };
+}
+
+export function factorClause<T>(clause: Clause<T>): Clause<T> {
+  if (isUnary(clause)) {
+    return factorUnaryClause(clause);
+  }
+  if (isFilter(clause)) {
+    return clause;
+  }
+  return factorAggregateClause(clause);
+}
+
+export function mapClauses<T>(
+  clause: Clause<T>,
+  func: (clause: Clause<T>) => Clause<T>
+): Clause<T> {
+  if (isUnary(clause)) {
+    return func({
+      operator: clause.operator,
+      clause: mapClauses(clause.clause, func),
+    });
+  }
+  if (isFilter(clause)) {
+    return func(clause);
+  }
+  return func({
+    operator: clause.operator,
+    clauses: clause.clauses.map((c) => mapClauses(c, func))
+  });
 }

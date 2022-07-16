@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "egghead"
+version = "0.1.0"
+description = "Browser history replacement that doesn't suck eggs."
+authors = ["cfeenstra67 <cameron.l.feenstra@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+Sphinx = "^5.0.2"
+sphinx-material = {git = "https://github.com/bashtage/sphinx-material.git", rev = "main"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -66,6 +66,7 @@
     "react-simple-code-editor": "^0.11.2",
     "react-transition-group": "^4.4.2",
     "reflect-metadata": "^0.1.13",
+    "sphinx-material": "git+https://github.com/bashtage/sphinx-material.git",
     "sqlite3": "^5.0.6",
     "style-loader": "^3.3.1",
     "ts-jest": "^28.0.6",

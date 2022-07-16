@@ -383,6 +383,80 @@ describe(parseQueryString, () => {
         testSession({ id: 'test3', title: 'Blue shirts are fun!' }),
       ],
       resultIds: ['test1']
+    },
+    {
+      id: 'field-query-with-or',
+      query: 'url:blue OR title:green',
+      clause: {
+        operator: AggregateOperator.Or,
+        clauses: [
+          {
+            operator: BinaryOperator.Equals,
+            fieldName: 'url',
+            value: 'blue',
+          },
+          {
+            operator: BinaryOperator.Equals,
+            fieldName: 'title',
+            value: 'green',
+          }
+        ]
+      },
+      data: [
+        testSession({ id: 'test1', url: 'https://blue.com' }),
+        testSession({ id: 'test2', url: 'https://bluprint.com', title: 'Red and green' }),
+        testSession({ id: 'test3', title: 'Blue shirts are fun!' }),
+      ],
+      resultIds: ['test1', 'test2']
+    },
+    {
+      id: 'complex-query-1',
+      query: 'NOT (url:blue OR title:green) OR (google and search)',
+      clause: {
+        operator: AggregateOperator.Or,
+        clauses: [
+          {
+            operator: UnaryOperator.Not,
+            clause: {
+              operator: AggregateOperator.Or,
+              clauses: [
+                {
+                  operator: BinaryOperator.Equals,
+                  fieldName: 'url',
+                  value: 'blue',
+                },
+                {
+                  operator: BinaryOperator.Equals,
+                  fieldName: 'title',
+                  value: 'green',
+                }
+              ]
+            },
+          },
+          {
+            operator: AggregateOperator.And,
+            clauses: [
+              {
+                operator: BinaryOperator.Match,
+                fieldName: IndexToken,
+                value: '"google"'
+              },
+              {
+                operator: BinaryOperator.Match,
+                fieldName: IndexToken,
+                value: '"search"'
+              }
+            ]
+          },
+        ]
+      },
+      data: [
+        testSession({ id: 'test1', url: 'https://google.com/blue', title: 'Search' }),
+        testSession({ id: 'test2', url: 'https://bluprint.com', title: 'Red' }),
+        testSession({ id: 'test3', title: 'Blue shirts are fun!', url: 'https://blue.com' }),
+        testSession({ id: 'test4', title: 'Green 123' })
+      ],
+      resultIds: ['test1', 'test2']
     }
   ];
 

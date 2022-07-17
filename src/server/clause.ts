@@ -158,7 +158,7 @@ export function renderClause<T>({
   let paramIndex = paramStartIndex;
   function getParamName(fieldName: string): string {
     paramIndex += 1;
-    return `param_${fieldName}_${paramIndex}`;
+    return `param${fieldName}${paramIndex}`;
   }
 
   if (isFilter(clause)) {
@@ -187,8 +187,6 @@ export function renderClause<T>({
     ];
   }
   if (isUnary(clause)) {
-    let innerClause = clause.clause;
-
     const [sql, params, newParamIndex] = renderClause({
       clause: clause.clause,
       paramStartIndex: paramIndex,
@@ -206,10 +204,10 @@ export function renderClause<T>({
       getFieldName,
     });
     paramIndex = newParamIndex;
-    parts.push(isFilter(subClause) ? sql : `(${sql})`);
+    parts.push(sql);
     Object.assign(allParams, params);
   });
-  const outSql = parts.join(` ${clause.operator} `);
+  const outSql = `(${parts.join(` ${clause.operator} `)})`;
   return [outSql, allParams, paramIndex];
 }
 
@@ -261,15 +259,6 @@ export function getSearchString(inputString: string): string {
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
 
   semantics.addOperation<Clause<T>>("clause", {
-    Query: (queries) => {
-      if (queries.children.length === 1) {
-        return queries.children[0].clause();
-      }
-      return {
-        operator: AggregateOperator.And,
-        clauses: queries.children.map((child) => child.clause()),
-      };
-    },
     NotQuery_not: (_, notQuery) => {
       return {
         operator: UnaryOperator.Not,
@@ -291,8 +280,8 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
         clauses: [orQuery.clause(), comp.clause()],
       };
     },
-    rawTerm: (term1, term2) => {
-      let value: any = [term1.sourceString, term2.sourceString].join("");
+    rawTerm: (node) => {
+      let value: any = node.sourceString;
       if (value === "null") {
         value = null;
       } else {
@@ -308,7 +297,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       return {
         operator: BinaryOperator.Match,
         fieldName: IndexToken,
-        value: getSearchString(value.sourceString),
+        value: getSearchString(value.sourceString.replace(/\\"/g, '"')),
       };
     },
     columnQuery: (col, _1, operator, _2, value) => {
@@ -324,8 +313,8 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
         outOp = {
           gt: BinaryOperator.GreaterThan,
           lt: BinaryOperator.LessThan,
-          gte: BinaryOperator.GreaterThanOrEqualTo,
-          lte: BinaryOperator.LessthanOrEqualTo,
+          ge: BinaryOperator.GreaterThanOrEqualTo,
+          le: BinaryOperator.LessthanOrEqualTo,
           eq: BinaryOperator.Equals,
           ne: BinaryOperator.NotEquals,
         }[op];
@@ -338,6 +327,15 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
         operator: outOp,
         fieldName: col.sourceString as Keys<T>,
         value: term,
+      };
+    },
+    _iter: (...children) => {
+      if (children.length === 1) {
+        return children[0].clause();
+      }
+      return {
+        operator: AggregateOperator.And,
+        clauses: children.map((child) => child.clause()),
       };
     },
   });

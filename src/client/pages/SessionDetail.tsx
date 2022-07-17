@@ -28,7 +28,7 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
     return {
       filter: {
         operator: BinaryOperator.Equals,
-        fieldName: 'id',
+        fieldName: 'id' as const,
         value: sessionId,
       }
     };

@@ -18,7 +18,7 @@ QueryString {
       | QueryComp
 
     QueryComp = 
-      | "(" OrQuery ")" -- parentheses
+      | "(" OrQuery+ ")" -- parentheses
       | queryTerm
 
     queryTerm =
@@ -27,7 +27,7 @@ QueryString {
 
     columnIdent = (letter | "_") (letter | digit | "_")*
 
-    operator = "gt" | "lt" | "gte" | "lte" | "eq" | "ne"
+    operator = "gt" | "lt" | "ge" | "le" | "eq" | "ne"
 
     columnQuery = columnIdent ":" (operator ":")? term
 
@@ -36,9 +36,7 @@ QueryString {
       | rawTerm
 
     rawTerm = 
-      | ("!".."'" | "*".."~") ("!".."'" | "*".."~")*
-      | "(" ("!".."'" | "*".."~")*
-      | ("!".."'" | "*".."~")* ")"
+      | ("!".."'" | "*".."~")+
 
     stringLiteral =
       "\"" doubleStringCharacter* "\""

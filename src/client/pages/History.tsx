@@ -30,7 +30,7 @@ export default function History() {
 
     if (selectedTerms.length > 0) {
       const subClauses = selectedTerms.map((term) => ({
-        fieldName: IndexToken,
+        fieldName: IndexToken as typeof IndexToken,
         operator: BinaryOperator.Match,
         value: term,
       }));
@@ -42,7 +42,7 @@ export default function History() {
     if (selectedHosts.length > 0) {
       const subClauses = selectedHosts.map((host) => ({
         operator: BinaryOperator.Equals,
-        fieldName: "host",
+        fieldName: "host" as const,
         value: host,
       }));
       clauses.push({

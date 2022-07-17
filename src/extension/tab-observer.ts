@@ -19,7 +19,7 @@ function tabChangedRequestFromTab({
   tab,
   sourceTabId,
   transitionType,
-}: TabChangedRequestFromTabArgs): Omit<TabChangedRequest, "type"> {
+}: TabChangedRequestFromTabArgs): TabChangedRequest {
   return {
     tabId: tab.id as number,
     url: tab.url as string,

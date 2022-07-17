@@ -1,4 +1,4 @@
-import { DataSource, EntityTarget, SelectQueryBuilder } from "typeorm";
+import { DataSource, EntityTarget, SelectQueryBuilder, EntityManager } from "typeorm";
 import { maybeAbort } from "./abort";
 import {
   Clause,
@@ -6,6 +6,7 @@ import {
   IndexToken,
   parseQueryString,
   BinaryOperator,
+  AggregateOperator,
   factorClause,
   getSearchString,
   mapClauses,
@@ -23,20 +24,23 @@ import {
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
 } from "./types";
+import { dateToSqliteString } from "./utils";
 import stophostsTxt from "./stophosts.txt";
 import stopwordsTxt from "./stopwords.txt";
 
 function sessionToSessionResponse(
-  session: Record<string, any>
+  session: Session & {
+    childCount: number,
+    childTransitions: Record<string, string>,
+    highlightedTitle: string,
+    highlightedHost: string,
+  }
 ): SessionResponse {
-  const childTransitions =
-    session.childTransitions && JSON.parse(session.childTransitions);
   return {
     ...session,
     startedAt: session.startedAt.toString(),
     endedAt: session.endedAt?.toString(),
-    childTransitions,
-  } as any;
+  };
 }
 
 export function sessionIndexTableArgs(
@@ -60,6 +64,54 @@ export function sessionIndexTableArgs(
     }),
     tokenize: tokenize ?? "unicode61",
   };
+}
+
+function cleanDateInput(dateString: string): Date {
+  // First check for timestamp--detect if second or millisecond
+  if (/^\d+$/.test(dateString)) {
+    let number = Number(dateString);
+    const maxSecondTimestamp = new Date('3000').getTime() / 1000;
+    if (number < maxSecondTimestamp) {
+      number *= 1000;
+    }
+    return new Date(number);
+  }
+
+  const dateRegexes = [
+    `(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})`,
+    `(?<year>\\d{4})/(?<month>\\d{1,2})/(?<day>\\d{1,2})`,
+    `(?<month>\\d{1,2})-(?<day>\\d{1,2})-(?<year>\\d{4})`,
+    `(?<month>\\d{1,2})/(?<day>\\d{1,2})/(?<year>\\d{4})`,
+    `(?<month>\\d{1,2})-(?<day>\\d{1,2})`,
+    `(?<month>\\d{1,2})/(?<day>\\d{1,2})`,
+  ];
+
+  const timeRegexes = [
+    `(?:[T ](?<hour>\\d{1,2})(?::(?<minute>\\d{1,2})(?::(?<second>\\d{1,2}))?)?)?`
+  ];
+
+  const now = new Date();
+
+  for (const dateRegex of dateRegexes.concat(['']))  {
+    for (const timeRegex of timeRegexes.concat([''])) {
+      const fullRegex = new RegExp(`^${dateRegex}${timeRegex}$`);
+      const match = fullRegex.exec(dateString);
+      if (match) {
+        const groups = match.groups ?? {};
+        return new Date(
+          groups.year ? Number(groups.year) : now.getFullYear(),
+          groups.month ? Number(groups.month) - 1 : now.getMonth(),
+          groups.day ? Number(groups.day) : now.getDate(),
+          groups.hour ? Number(groups.hour) : 0,
+          groups.minute ? Number(groups.minute) : 0,
+          groups.second ? Number(groups.second) : 0,
+        );
+      }
+    }
+  }
+
+  // If all else fails, just try to use the date constructor
+  return new Date(dateString);
 }
 
 export function prepareClauseForSearch(
@@ -92,30 +144,68 @@ export function prepareClauseForSearch(
         )
       };
     }
+    if (isFilter(clause) && clause.fieldName.endsWith("At")) {
+      clause.value = dateToSqliteString(cleanDateInput(clause.value as string));
+    }
     return clause;
   });
   return mapped;
 }
 
-export class SearchService {
-  constructor(readonly dataSource: DataSource) {}
+interface ChildStats {
+  childCount: number;
+  childTransitions: Record<string, string>;
+}
 
-  private async searchQueryBuilder(
+export class SearchService {
+
+  readonly manager: EntityManager;
+
+  constructor(
+    readonly dataSource: DataSource,
+    manager?: EntityManager,
+  ) {
+    this.manager = manager ?? dataSource.manager;
+  }
+
+  private searchQueryBuilder(
     request: QuerySessionsRequest,
     isSearch?: boolean,
-    includeChildren?: boolean,
-  ): Promise<SelectQueryBuilder<SessionIndex | Session>> {
-    const repo = this.dataSource.getRepository(isSearch ? SessionIndex : Session);
+  ): SelectQueryBuilder<SessionIndex | Session> {
+    const repo = this.manager.getRepository(isSearch ? SessionIndex : Session);
 
     const stophosts = stophostsTxt.split("\n").filter((x) => x);
 
-    let builder = await repo
+    const clauses: Clause<Session>[] = [
+      {
+        operator: BinaryOperator.NotIn,
+        fieldName: 'host',
+        value: stophosts,
+      }
+    ];
+
+    let builder = repo
       .createQueryBuilder("s")
       .select("*")
-      .where("s.host NOT IN (:...stophosts)", { stophosts })
       .orderBy("s.startedAt", "DESC");
 
+    if (request.query) {
+      if (!isSearch) {
+        throw new Error('query strings only supported for search queries');
+      }
+      clauses.push(parseQueryString<Session>(request.query));
+    }
+
+    if (request.filter !== undefined) {
+      clauses.push(request.filter);
+    }
+
+    let fullClause: Clause<Session> = {
+      operator: AggregateOperator.And,
+      clauses,
+    };
     if (isSearch) {
+      fullClause = prepareClauseForSearch(this.dataSource, fullClause);
       builder = builder
         .addSelect(
           `highlight("session_index", 4, '{~{~{', '}~}~}')`,
@@ -124,7 +214,7 @@ export class SearchService {
         .addSelect(
           `highlight("session_index", 2, '{~{~{', '}~}~}')`,
           "highlightedHost"
-        );
+        )
     }
 
     const getFieldName = (fieldName: string) => {
@@ -134,73 +224,62 @@ export class SearchService {
       return `s.${fieldName}`;
     };
 
-    let paramIndex = 0;
+    const [sql, params] = renderClause({
+      clause: fullClause,
+      getFieldName,
+    });
 
-    if (isSearch && request.query) {
-      const clause = parseQueryString<Session>(request.query);
-      const indexArgs = sessionIndexTableArgs(this.dataSource, SessionIndex);
-      const indexedMap = Object.fromEntries(indexArgs.columns.map(getColumn));
-
-      const preparedClause = prepareClauseForSearch(
-        this.dataSource,
-        clause,
-      );
-      const [sql, params, newParamIndex] = renderClause({
-        clause: preparedClause,
-        getFieldName,
-        paramStartIndex: paramIndex,
-      });
-      paramIndex = newParamIndex;
-
-      builder = builder.andWhere(sql, params);
-    }
-
-    if (request.filter !== undefined) {
-      const [sql, params, newParamIndex] = renderClause({
-        clause: request.filter,
-        getFieldName,
-        paramStartIndex: paramIndex,
-      });
-      paramIndex = newParamIndex;
-      builder = builder.andWhere(sql, params);
-    }
-
-    if (isSearch && includeChildren) {
-      const childCountsSql = `
-        SELECT
-          s.parentSessionId as joinId,
-          COUNT(1) as joinChildCount,
-          json_group_object(s.id, s.transitionType) as joinChildTransitions
-        FROM
-          session s
-        WHERE s.host NOT IN (:...stophosts)
-        GROUP BY s.parentSessionId
-      `;
-
-      builder = builder
-        .leftJoin(`(${childCountsSql})`, "s2", "s.id = s2.joinId")
-        .addSelect("COALESCE(s2.joinChildCount, 0)", "childCount")
-        .addSelect(
-          `COALESCE(s2.joinChildTransitions, '{}')`,
-          "childTransitions"
-        );
-    }
+    builder = builder.where(sql, params);
 
     return builder;
+  }
+
+  private async getChildCounts(parentIds: string[]): Promise<Record<string, ChildStats>> {
+    const stophosts = stophostsTxt.split("\n").filter((x) => x);
+
+    const childCountsSql = `
+      SELECT
+        s.parentSessionId as id,
+        COUNT(1) as childCount,
+        json_group_object(s.id, s.transitionType) as childTransitions
+      FROM
+        session s
+      WHERE
+        s.parentSessionId IN (:...parentIds)
+        AND s.host NOT IN (:...stophosts)
+      GROUP BY s.parentSessionId
+    `;
+
+    const builder = this.manager
+      .createQueryBuilder()
+      .from(`(${childCountsSql})`, 's')
+      .setParameters({ stophosts, parentIds });
+
+    const results = await builder.getRawMany();
+
+    return Object.fromEntries(results.map((row) => {
+      return [
+        row.id,
+        {
+          childCount: row.childCount,
+          childTransitions: JSON.parse(row.childTransitions),
+        }
+      ];
+    }));
   }
 
   private async getHostStats(
     rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     count: number
   ): Promise<any[]> {
-    const sessionRepo = this.dataSource.getRepository(Session);
+    const sessionRepo = this.manager.getRepository(Session);
     const sessionQueryBuilder = sessionRepo
       .createQueryBuilder()
       .select("*")
       .where(`rowid IN (${rowIdBuilder.getQuery()})`)
       .setParameters(rowIdBuilder.getParameters());
 
-    return await this.dataSource
+    return await this.manager
       .createQueryBuilder()
       .select("t.host", "value")
       .addSelect("COUNT(1)", "count")
@@ -293,7 +372,7 @@ export class SearchService {
 
     const stopwords = stopwordsTxt.split("\n").filter((x) => x);
 
-    const builder = this.dataSource
+    const builder = this.manager
       .createQueryBuilder()
       .from(`(${sql})`, "t")
       .setParameters(rowIdBuilder.getParameters())
@@ -308,7 +387,7 @@ export class SearchService {
     rowIdBuilder: SelectQueryBuilder<SessionIndex | Session>,
     maxBuckets: number
   ): Promise<QuerySessionTimelineRequest["granularity"] & string> {
-    const minMaxQueryBuilder = this.dataSource
+    const minMaxQueryBuilder = this.manager
       .createQueryBuilder()
       .from(Session, "t")
       .where(
@@ -378,7 +457,7 @@ export class SearchService {
       WHERE s.rowid IN (${rowIdBuilder.getQuery()})
     `;
 
-    const timeline = await this.dataSource
+    const timeline = await this.manager
       .createQueryBuilder()
       .select("t.dateString")
       .addSelect("COUNT(1)", "count")
@@ -397,10 +476,9 @@ export class SearchService {
   async querySessions(
     request: QuerySessionsRequest
   ): Promise<QuerySessionsResponse> {
-    const builder = await this.searchQueryBuilder(request, request.isSearch, true);
-    maybeAbort(request.abort);
+    const builder = this.searchQueryBuilder(request, request.isSearch);
 
-    let builderWithCount = this.dataSource
+    let builderWithCount = this.manager
       .createQueryBuilder()
       .select('*')
       .addSelect('COUNT(1) OVER ()', 'totalCount')
@@ -408,16 +486,29 @@ export class SearchService {
       .setParameters(builder.getParameters());
 
     if (request.skip) {
-      builderWithCount = builder.offset(request.skip);
+      builderWithCount = builderWithCount.offset(request.skip);
     }
     if (request.limit) {
-      builderWithCount = builder.limit(request.limit);
+      builderWithCount = builderWithCount.limit(request.limit);
     }
 
     const rawResults = await builderWithCount.getRawMany();
     maybeAbort(request.abort);
 
     const totalCount = rawResults.length === 0 ? 0 : rawResults[0].totalCount;
+
+    if (request.isSearch) {
+      const ids = rawResults.map((row) => row.id);
+      const childCounts = request.isSearch ? await this.getChildCounts(ids) : {};
+      maybeAbort(request.abort);
+      rawResults.forEach((row) => {
+        if (childCounts[row.id]) {
+          Object.assign(row, childCounts[row.id]);
+        } else {
+          Object.assign(row, { childCount: 0, childTransitions: {} })
+        }
+      });
+    }
 
     const results = rawResults.map(sessionToSessionResponse);
 
@@ -430,8 +521,7 @@ export class SearchService {
   async querySessionFacets(
     request: QuerySessionFacetsRequest
   ): Promise<QuerySessionFacetsResponse> {
-    const builder = await this.searchQueryBuilder(request, true);
-    maybeAbort(request.abort);
+    const builder = this.searchQueryBuilder(request, true);
 
     const rowIdBuilder = builder.clone().select("s.rowid");
 
@@ -452,8 +542,7 @@ export class SearchService {
   async querySessionTimeline(
     request: QuerySessionTimelineRequest
   ): Promise<QuerySessionTimelineResponse> {
-    const builder = await this.searchQueryBuilder(request, true);
-    maybeAbort(request.abort);
+    const builder = this.searchQueryBuilder(request, true);
 
     const rowIdBuilder = builder.clone().select("s.rowid");
 

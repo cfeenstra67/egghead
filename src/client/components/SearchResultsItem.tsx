@@ -275,7 +275,7 @@ function SingleAggregatedSearchResultsItem({
                 </ExternalLink>
               </div>
               <div className={styles.searchResultsItemHost}>
-                <span title={session.url}>
+                <span title={session.rawUrl}>
                   <Highlighted title={session.highlightedHost ?? url.hostname} />
                 </span>
               </div>

@@ -726,6 +726,53 @@ const examples: TestCase[] = [
     },
     data: [],
     resultIds: [],
+  },
+  {
+    id: 'unclosed-parentheses-1',
+    query: '(hello',
+    clause: {
+      operator: BinaryOperator.Match,
+      fieldName: IndexToken,
+      value: '"hello"'
+    },
+    data: [],
+    resultIds: [],
+  },
+  {
+    id: 'empty-1',
+    query: '',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [],
+    },
+    data: [
+      testSession({ id: 'test1' })
+    ],
+    resultIds: ['test1']
+  },
+  {
+    id: 'empty-unclosed-parentheses-1',
+    query: '(',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [],
+    },
+    data: [
+      testSession({ id: 'test1' })
+    ],
+    resultIds: ['test1']
+  },
+  {
+    id: 'empty-closed-parentheses-1',
+    query: '()',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [],
+    },
+    data: [
+      testSession({ id: 'test1' })
+    ],
+    resultIds: ['test1']
   }
 ];
 
@@ -754,7 +801,7 @@ describe(SearchService, () => {
 
   it.each(parseExamples)('%s: parse: %s = %s', (id: string, queryString: string, expected: Clause<Session>) => {
     const result = parseQueryString<Session>(queryString);
-    // console.log('RESULT', result, expected);
+    console.log('RESULT', result, expected);
     expect(clausesEqual(result, expected)).toBe(true);
   });
 

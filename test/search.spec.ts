@@ -818,6 +818,17 @@ const examples: TestCase[] = [
       testSession({ id: 'test2' }),
     ],
     resultIds: ['test1'],
+  },
+  {
+    id: 'quote-parentheses-1',
+    query: '"(hello \\" my name is cam)"',
+    clause: {
+      operator: BinaryOperator.Match,
+      fieldName: IndexToken,
+      value: '"(hello "" my name is cam)"'
+    },
+    data: [],
+    resultIds: []
   }
 ];
 

@@ -773,6 +773,51 @@ const examples: TestCase[] = [
       testSession({ id: 'test1' })
     ],
     resultIds: ['test1']
+  },
+  {
+    id: 'non-field-1',
+    query: 'someField:123',
+    clause: {
+      operator: BinaryOperator.Equals,
+      fieldName: 'someField' as any,
+      value: '123'
+    },
+    data: [
+      testSession({ id: 'test1' }),
+      testSession({ id: 'test2', title: 'someField:123' }),
+    ],
+    resultIds: ['test2']
+  },
+  {
+    id: 'not-non-field-1',
+    query: 'NoT someField:123',
+    clause: {
+      operator: UnaryOperator.Not,
+      clause: {
+        operator: BinaryOperator.Equals,
+        fieldName: 'someField' as any,
+        value: '123'
+      },
+    },
+    data: [
+      testSession({ id: 'test1' }),
+      testSession({ id: 'test2', title: 'someField:123' }),
+    ],
+    resultIds: ['test1']
+  },
+  {
+    id: 'number-1',
+    query: 'interactionCount:gt:0',
+    clause: {
+      operator: BinaryOperator.GreaterThan,
+      fieldName: 'interactionCount',
+      value: '0',
+    },
+    data: [
+      testSession({ id: 'test1', interactionCount: 1 }),
+      testSession({ id: 'test2' }),
+    ],
+    resultIds: ['test1'],
   }
 ];
 
@@ -801,7 +846,7 @@ describe(SearchService, () => {
 
   it.each(parseExamples)('%s: parse: %s = %s', (id: string, queryString: string, expected: Clause<Session>) => {
     const result = parseQueryString<Session>(queryString);
-    console.log('RESULT', result, expected);
+    // console.log('RESULT', result, expected);
     expect(clausesEqual(result, expected)).toBe(true);
   });
 

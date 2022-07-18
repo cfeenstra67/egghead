@@ -195,6 +195,15 @@ export function renderClause<T>({
     return [`NOT (${sql})`, params, newParamIndex];
   }
 
+  if (clause.clauses.length === 0) {
+    switch (clause.operator) {
+      case AggregateOperator.And:
+        return ['TRUE', {}, paramIndex];
+      case AggregateOperator.Or:
+        return ['FALSE', {}, paramIndex];
+    }
+  }
+
   const parts: string[] = [];
   const allParams: Record<string, any> = {};
   clause.clauses.forEach((subClause) => {

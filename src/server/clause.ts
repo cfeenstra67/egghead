@@ -152,7 +152,7 @@ export interface RenderClauseArgs<T> {
 
 export function renderClause<T>({
   clause,
-  getFieldName = (fieldName) => `"${fieldName}"`,
+  getFieldName = (fieldName) => `"${String(fieldName)}"`,
   paramStartIndex = 0,
 }: RenderClauseArgs<T>): [string, Record<string, any>, number] {
   let paramIndex = paramStartIndex;

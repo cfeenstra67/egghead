@@ -4,7 +4,7 @@ Egghead
 
 `Read documentation here <https://docs.egghead.camfeenstra.com>`_
 
-*Check back soon for links to download this extension from browser app stores, currently the only way to use it is by building it. Check `here <https://developer.chrome.com/docs/extensions/mv3/getstarted/>`_ for instructions on how to use a self-built extension ini your browser. See* **Building the Extension** *for details*.
+*Check back soon for links to download this extension from browser app stores, currently the only way to use it is by building it. Check* `here <https://developer.chrome.com/docs/extensions/mv3/getstarted/>`_ *for instructions on how to use a self-built extension ini your browser. See* **Building the Extension** *for details*.
 
 Introduction
 #################

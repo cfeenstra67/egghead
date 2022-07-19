@@ -12,12 +12,5 @@ Welcome to Egghead's documentation!
 .. toctree::
    :maxdepth: 2
 
-   introduction
-
-
-.. Indices and tables
-.. ==================
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+   query-syntax
+   development

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "egghead"
-version = "0.1.0"
+version = "1.0.0"
 description = "Browser history replacement that doesn't suck eggs."
 authors = ["cfeenstra67 <cameron.l.feenstra@gmail.com>"]
 

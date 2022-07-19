@@ -9,7 +9,7 @@ python = "^3.8"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^5.0.2"
-sphinx-material = {git = "https://github.com/bashtage/sphinx-material.git", rev = "main"}
+sphinx-material = "^0.0.35"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

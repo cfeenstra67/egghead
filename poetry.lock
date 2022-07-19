@@ -269,7 +269,6 @@ description = "Material sphinx theme"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
-develop = false
 
 [package.dependencies]
 beautifulsoup4 = "*"
@@ -280,12 +279,6 @@ sphinx = ">=2.0"
 
 [package.extras]
 dev = ["black (==19.10b0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/bashtage/sphinx-material.git"
-reference = "main"
-resolved_reference = "6e0ef822e58df57d6a9de5a58dc40c17fc34f557"
 
 [[package]]
 name = "sphinxcontrib-applehelp"
@@ -402,7 +395,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "221d1ef433334f406079285bd1d16bdea778b03da1a9e19f12fafe16067e002f"
+content-hash = "c33d568e558f7011b295643f6d8c69d571dfebba4b40ef79c7fa223d692fec50"
 
 [metadata.files]
 alabaster = []

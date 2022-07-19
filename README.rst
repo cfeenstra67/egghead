@@ -9,7 +9,9 @@ Introduction
 
 .. raw:: html
     
-   <img src="https://docs.egghead.camfeenstra.com/_static/screenshot.png" align="center" width="600px" alt="Egghead Screenshot" >
+   <p align="center">
+     <img src="https://docs.egghead.camfeenstra.com/_static/screenshot.png" width="600px" alt="Egghead Screenshot" >
+   </p>
 
 Egghead is a browser history replacement that aims to let you actually make use of your browser history. The default history app in Chrome is woefully underdeveloped, and it doesn't allow you to answer basic questions about what you actually did in the past. For example--very commonly I found myself searching for something on Google, finding the answer, then wanting to go find that answer again to refresh my memory later. Chrome's search may allow you to find the google search itself, but it offers no way of actually figuring out what where you went from there. Also, it doesn't allow you to perform any sort of advanced searching other than a simple text query.
 

@@ -6,6 +6,8 @@
 Welcome to Egghead's documentation!
 ===================================
 
+`Live Demo <https://egghead.camfeenstra.com>`_
+
 .. include:: ../README.rst
    :start-after: Introduction
 

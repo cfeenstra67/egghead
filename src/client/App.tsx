@@ -5,6 +5,7 @@ import { RuntimeInterface } from './lib/runtimes';
 import { SettingsContextProvider } from './lib/SettingsContext';
 import History from "./pages/History";
 import SessionDetail from "./pages/SessionDetail";
+import About from "./pages/settings/About";
 import ClearBrowsingData from "./pages/settings/ClearBrowsingData";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import DataSettings from "./pages/settings/DataSettings";
@@ -61,6 +62,9 @@ function Routes({ runtime, serverClientFactory }: AppProps) {
           </Route>
           <Route path="/settings/dev">
             <DevSettings />
+          </Route>
+          <Route path="/about">
+            <About />
           </Route>
           <Route>
             <NotFound />

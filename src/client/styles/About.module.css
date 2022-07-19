@@ -1,0 +1,4 @@
+
+.aboutCard {
+    line-height: calc(var(--paragraph-font-size) + var(--padding));
+}

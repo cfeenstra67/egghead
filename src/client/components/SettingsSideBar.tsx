@@ -9,6 +9,8 @@ export enum SettingsPage {
   ClearBrowsingData = 'ClearBrowsingData',
   Data = 'Data',
   Dev = 'Dev',
+  Docs = 'Docs',
+  About = 'About',
 }
 
 interface SettingsSideBarItemProps {
@@ -60,6 +62,16 @@ export default function SettingsSideBar({ page }: SettingsSideBarProps) {
         url="/settings/data"
         title="Data"
         selected={page === SettingsPage.Data}
+      />
+      <ExternalSettingsSideBarItem
+        url="https://docs.egghead.camfeenstra.com"
+        title="Docs"
+        selected={page === SettingsPage.Docs}
+      />
+      <SettingsSideBarItem
+        url="/about"
+        title="About"
+        selected={page === SettingsPage.About}
       />
       {settings.items.devModeEnabled && (
         <SettingsSideBarItem

@@ -1,0 +1,52 @@
+
+.codeBlock {
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    position: relative;
+    cursor: pointer;
+    background-color: var(--secondary-bg-color);
+}
+
+.copyIcon {
+    position: absolute;
+    right: var(--padding);
+    top: var(--padding);
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding: calc(var(--padding) / 1.5);
+}
+
+.copyIcon > div {
+    mask-size: cover;
+    mask-image: url('../icons/copy.svg');
+    -webkit-mask-size: cover;
+    -webkit-mask-image: url('../icons/copy.svg');
+    background-color: var(--primary-text-color);
+    width: 20px;
+    height: 20px;
+}
+
+.copyIconActive > div {
+    animation-name: success-fade;
+    animation-duration: 1.5s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+}
+
+@keyframes success-fade {
+    25% {
+        background-color: var(--bg-color);
+    }
+    50% {
+        background-color: var(--primary-text-color);
+        mask-image: url('../icons/success.svg');
+        -webkit-mask-image:  url('../icons/success.svg');
+    }
+    75% {
+        background-color: var(--bg-color);
+    }
+}
+
+.codeBlock pre {
+    margin: 0;
+}

@@ -1,15 +1,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import App from "./App";
-import InitialLoad from "./components/InitialLoad";
+import DemoWrapper from "./components/DemoWrapper";
 import { WebRuntime } from './lib/runtimes';
 import { serverFactory } from "./lib/server-client";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
 root.render(
-  <InitialLoad
-    dbUrl="demo.db"
+  <DemoWrapper
     getApp={(db) => (
       <App
         serverClientFactory={serverFactory(db)}

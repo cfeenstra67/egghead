@@ -829,7 +829,10 @@ const examples: TestCase[] = [
     },
     data: [],
     resultIds: []
-  }
+  },
+  // {
+  //   id: 'parentheses'
+  // }
 ];
 
 describe(SearchService, () => {

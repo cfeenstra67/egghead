@@ -9,16 +9,20 @@ export interface LayoutProps {
   children: React.ReactNode | React.ReactNode[];
 }
 
-export default function Layout({ children, full }: LayoutProps) {
+export function useLayoutClassNames(): string[] {
   const theme = useTheme();
 
-  const layoutClassNames = useMemo(() => {
+  return useMemo(() => {
     const result = themes[theme];
     return [
       styles.layout,
       result ?? themes.dark,
     ];
   }, [theme]);
+}
+
+export default function Layout({ children, full }: LayoutProps) {
+  const layoutClassNames = useLayoutClassNames()
 
   const contentClassNames = [
     styles.content,

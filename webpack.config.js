@@ -72,7 +72,7 @@ function createModule(name, entry) {
             to: '.',
           },
           {
-            from: `data/${name}.db`,
+            from: `data/${name}`,
             to: '.',
             noErrorOnMissing: name === 'prod'
           },

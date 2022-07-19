@@ -1,0 +1,23 @@
+
+.content {
+    padding-top: var(--padding-2);
+    max-width: 600px;
+    margin: auto;
+}
+
+.content input {
+    margin: 4px;
+}
+
+.content h1 {
+    text-align: center;
+}
+
+.content p, .content label {
+    line-height: calc(var(--paragraph-font-size) + var(--padding));
+}
+
+.content code {
+    font-size: var(--paragraph-font-size);
+    font-weight: bolder;
+}

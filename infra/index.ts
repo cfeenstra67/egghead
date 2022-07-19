@@ -4,33 +4,41 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { walkDirectory } from "./utils";
 
-export = async () => {
-  const config = new pulumi.Config();
+interface StaticWebsiteArgs {
+  idPrefix: string;
+  sourcePath: string;
+  dnsName: string;
+  indexDocument: string;
+  logsBucket: aws.s3.GetBucketResult;
+}
 
-  const dnsName = config.require('dns-name');
-  const logsBucketName = config.require('logs-bucket');
+async function staticWebsite({
+  idPrefix,
+  sourcePath,
+  dnsName,
+  indexDocument,
+  logsBucket,
+}: StaticWebsiteArgs) {
 
-  const rootDomain = dnsName.split('.').slice(1).join('.');
-
-  const indexDocument = 'history.html';
+  const rootDomain = dnsName.split('.').slice(-2).join('.');
 
   const zone = await aws.route53.getZone({
     name: rootDomain
   });
 
-  const eastProvider = new aws.Provider('east', {
+  const eastProvider = new aws.Provider(`${idPrefix}east`, {
     profile: aws.config.profile,
     region: 'us-east-1'
   });
 
-  const certificate = new aws.acm.Certificate('certificate', {
+  const certificate = new aws.acm.Certificate(`${idPrefix}certificate`, {
     domainName: dnsName,
     validationMethod: 'DNS',
   }, {
     provider: eastProvider
   });
 
-  const certificateValidationDomain = new aws.route53.Record(`${dnsName}-validation`, {
+  const certificateValidationDomain = new aws.route53.Record(`${idPrefix}${dnsName}-validation`, {
     name: certificate.domainValidationOptions[0].resourceRecordName,
     zoneId: zone.zoneId,
     type: certificate.domainValidationOptions[0].resourceRecordType,
@@ -38,7 +46,7 @@ export = async () => {
     ttl: 600
   });
 
-  const certiciateValidation = new aws.acm.CertificateValidation('certificate-validation', {
+  const certiciateValidation = new aws.acm.CertificateValidation(`${idPrefix}certificate-validation`, {
     certificateArn: certificate.arn,
     validationRecordFqdns: [certificateValidationDomain.fqdn],
   }, {
@@ -47,29 +55,25 @@ export = async () => {
 
   const certificateArn = certiciateValidation.certificateArn;
 
-  const siteBucket = new aws.s3.Bucket(`${dnsName}-site-bucket`, {
+  const siteBucket = new aws.s3.Bucket(`${idPrefix}${dnsName}-site-bucket`, {
     bucket: dnsName,
     acl: 'public-read',
     website: { indexDocument }
   });
 
-  const distDirectory = path.normalize(path.join(__dirname, '../dist/demo'));
-  for await (const file of walkDirectory(distDirectory)) {
-    const relPath = path.relative(distDirectory, file);
+  for await (const file of walkDirectory(sourcePath)) {
+    const relPath = path.relative(sourcePath, file);
     const contentType = mime.lookup(file) || 'application/octet-stream';
-    new aws.s3.BucketObject(relPath, {
+    new aws.s3.BucketObject(`${idPrefix}${relPath}`, {
       bucket: siteBucket,
+      key: relPath,
       source: new pulumi.asset.FileAsset(file),
       acl: 'public-read',
       contentType,
     });
   }
 
-  const logsBucket = await aws.s3.getBucket({
-    bucket: logsBucketName
-  });
-
-  const distribution = new aws.cloudfront.Distribution('distribution', {
+  const distribution = new aws.cloudfront.Distribution(`${idPrefix}distribution`, {
     enabled: true,
     isIpv6Enabled: false,
     aliases: [dnsName],
@@ -110,8 +114,8 @@ export = async () => {
     },
   });
 
-  new aws.route53.Record(dnsName, {
-    name: dnsName.split('.')[0],
+  new aws.route53.Record(`${idPrefix}${dnsName}`, {
+    name: dnsName.split('.').slice(0, -2).join('.'),
     zoneId: zone.zoneId,
     type: 'A',
     aliases: [
@@ -122,10 +126,44 @@ export = async () => {
       }
     ],
   });
-
   return {
     websiteEndpoint: siteBucket.websiteEndpoint,
     cloudfrontDomain: distribution.domainName,
     endpoint: `https://${dnsName}`,
+  };
+}
+
+export = async () => {
+  const config = new pulumi.Config();
+
+  const dnsName = config.require('dns-name');
+  const docsDnsName = config.require('docs-dns-name');
+  const logsBucketName = config.require('logs-bucket');
+
+  const logsBucket = await aws.s3.getBucket({
+    bucket: logsBucketName
+  });
+
+  const mainSite = await staticWebsite({
+    idPrefix: '',
+    sourcePath: path.normalize(path.resolve(__dirname, '../dist/demo')),
+    dnsName,
+    indexDocument: 'history.html',
+    logsBucket,
+  });
+
+  const docsSite = await staticWebsite({
+    idPrefix: 'docs-',
+    sourcePath: path.normalize(path.resolve(__dirname, '../dist/docs/html')),
+    dnsName: docsDnsName,
+    indexDocument: 'index.html',
+    logsBucket,
+  });
+
+  return {
+    ...mainSite,
+    docsWebsiteEndpoint: docsSite.websiteEndpoint,
+    docsCloudfrontDomain: docsSite.cloudfrontDomain,
+    docsEndpoint: docsSite.endpoint,
   };
 }

@@ -2,6 +2,10 @@
 Egghead
 ################
 
+![Egghead Screenshot](https://docs.egghead.camfeenstra.com/_static/screenshot.png)
+
+[Documentation](https://docs.egghead.camfeenstra.com)
+
 Introduction
 #################
 

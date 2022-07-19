@@ -6,6 +6,8 @@
     --secondary-text-color: #D1D3DC;
     --search-field-text-color: white;
     --search-field-focus-outline: #CBCBCB;
+    --link-color: #87a3ff;
+    --visited-link-color: #bc77fc;
 }
 
 .light {
@@ -15,4 +17,6 @@
     --secondary-text-color: #535453;
     --search-field-text-color: var(--primary-text-color);
     --search-field-focus-outline: var(--secondary-text-color);
+    --link-color: #0000EE;
+    --visited-link-color: #551A8B;
 }

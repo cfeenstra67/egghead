@@ -2,3 +2,13 @@
 .aboutCard {
     line-height: calc(var(--paragraph-font-size) + var(--padding));
 }
+
+
+.aboutCard a {
+    color: var(--link-color);
+}
+
+.aboutCard a:visited {
+    color: var(--visited-link-color);
+}
+

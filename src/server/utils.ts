@@ -1,4 +1,6 @@
+import { v4 as uuidv4 } from "uuid";
 import { clausesEqual } from "./clause";
+import { JobManager } from "./job-manager";
 import type { SettingsItems } from "../models";
 import {
   Theme,
@@ -94,5 +96,19 @@ export function defaultSettings(): SettingsItems {
     dataCollectionEnabled: true,
     devModeEnabled: false,
     theme: Theme.Auto,
+  };
+}
+
+export function jobManagerMiddleware(
+  handler: RequestHandler,
+  jobManager: JobManager,
+): RequestHandler {
+  return async (request) => {
+    const requestId = uuidv4();
+    jobManager.addJob(requestId, async (abort) => {
+      return await handler({ ...request, abort });
+    });
+    request.abort?.addEventListener('abort', () => jobManager.abortJob(requestId));
+    return await jobManager.jobPromise(requestId);
   };
 }

@@ -6,6 +6,8 @@ declare module 'absurd-sql/dist/indexeddb-backend';
 
 declare module 'absurd-sql/dist/indexeddb-main-thread';
 
+declare module 'wa-sqlite/src/examples/IDBBatchAtomicVFS'
+
 declare module '*.css';
 
 declare module '*.svg';

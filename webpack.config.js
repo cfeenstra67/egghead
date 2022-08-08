@@ -4,6 +4,15 @@ const path = require('path');
 const webpack = require('webpack');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
+webpack.web.JsonpChunkLoadingRuntimeModule.prototype._generateBaseUri = (chunk) => {
+  const options = chunk.getEntryOptions();
+  if (options && options.baseUri) {
+    return `${webpack.RuntimeGlobals.baseURI} = ${JSON.stringify(options.baseUri)};`;
+  } else {
+    return `${webpack.RuntimeGlobals.baseURI} = typeof document === "undefined" ? self.location.href : document.baseURI || self.location.href;`;
+  }
+}
+
 function createModule(name, entry) {
   return {
     mode: 'production',
@@ -63,7 +72,7 @@ function createModule(name, entry) {
     plugins: [
       new webpack.EnvironmentPlugin({
         NODE_ENV: 'production',
-        PERF_BUILD: ''
+        PERF_BUILD: '',
       }),
       new CopyPlugin({
         patterns: [
@@ -104,7 +113,6 @@ function createModule(name, entry) {
 module.exports = [
   createModule('prod', {
     background: './src/background.ts',
-    'server-worker': './src/server/worker.ts',
     'content-script': './src/content-script.ts',
     client: './src/client/extension.tsx',
     popup: './src/client/extension-popup.tsx',

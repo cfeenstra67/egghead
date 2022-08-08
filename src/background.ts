@@ -1,17 +1,19 @@
 import { ServerResponseCode } from "./server";
 import { Aborted } from "./server/abort";
-import { createBackgroundServerRequestProcessor } from "./server/background-client";
+import { createBackgroundClient } from "./server/background-client";
 import { ServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
+import { jobManagerMiddleware } from "./server/utils";
 import { setupObservers } from "./extension/utils";
 
-const serverConnection = createBackgroundServerRequestProcessor();
-const serverClient = new ServerClient(serverConnection);
-
-const requestTimeout = 60 * 1000;
+const { handle: serverConnection, close: closeServer } = createBackgroundClient();
+const requestTimeout = 10 * 1000;
 const jobManager = new JobManager(requestTimeout);
 
-setupObservers(serverClient);
+const managedConnection = jobManagerMiddleware(serverConnection, jobManager);
+const serverClient = new ServerClient(managedConnection);
+
+const resetObservers = setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'me') {
@@ -51,4 +53,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     })
   return true;
+});
+
+chrome.runtime.onSuspend.addListener(async () => {
+  console.log('closing');
+  await closeServer();
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  // TODO: probably need to remove this
+  resetObservers();
+  chrome.tabs.query({}, (tabs) => {
+    if (chrome.runtime.lastError) {
+      throw chrome.runtime.lastError;
+    }
+    tabs.forEach((tab) => {
+      if (tab.id !== undefined && !tab.url?.startsWith('chrome://')) {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content-script.js'],
+        });
+      }
+    });
+  });
 });

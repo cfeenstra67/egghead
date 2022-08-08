@@ -1,12 +1,10 @@
-import initSqlJs from "../../../lib/sql-wasm.js";
-import { DataSource } from "typeorm";
-import EventTarget from "@ungap/event-target";
+import { v4 as uuidv4 } from "uuid";
 import { ServerInterface, RequestHandler } from "../../server";
-import { requestHandler } from "../../server/utils";
+import { requestHandler, jobManagerMiddleware } from "../../server/utils";
 import { ServerClient } from "../../server/client";
+import { SqlJsDBController } from "./sql-js-db-controller";
+import { JobManager } from "../../server/job-manager";
 import { Server } from "../../server/service";
-import { migrations } from "../../migrations";
-import { entities } from "../../models";
 
 function serializationMiddleware(handler: RequestHandler): RequestHandler {
   const handleRequest: RequestHandler = async (request) => {
@@ -22,72 +20,14 @@ function serializationMiddleware(handler: RequestHandler): RequestHandler {
 export function serverFactory(
   existingDb: Uint8Array
 ): () => Promise<ServerInterface> {
-  let dataSource: DataSource | undefined = undefined;
-  const target = new EventTarget();
-  let initialized = false;
-  let initCalled = false;
+  const dbController = new SqlJsDBController(existingDb);
+  const jobManager = new JobManager(10 * 1000);
 
-  async function initialize(override?: Uint8Array) {
-    try {
-      const SQL = await initSqlJs({ locateFile: (file: any) => file });
-
-      dataSource = new DataSource({
-        type: "sqljs",
-        driver: SQL,
-        database: override ?? existingDb,
-        entities,
-        migrations,
-        migrationsRun: true,
-      });
-      await dataSource.initialize();
-
-      initialized = true;
-      target.dispatchEvent(new CustomEvent("init"));
-    } catch (error) {
-      initCalled = false;
-      target.dispatchEvent(new CustomEvent("error", { detail: error }));
-    }
-  }
-
-  async function importDb(database: Uint8Array): Promise<void> {
-    await dataSource?.close();
-    dataSource = undefined;
-    initialized = false;
-    await initialize(database);
-  }
-
-  function getServer() {
-    const server = new Server(
-      dataSource as DataSource,
-      importDb,
-    );
-    const middleware = serializationMiddleware(requestHandler(server));
-    return new ServerClient(middleware);
-  }
-
-  return () =>
-    new Promise((resolve, reject) => {
-      if (initialized) {
-        resolve(getServer());
-        return;
-      }
-      target.addEventListener(
-        "init",
-        () => {
-          resolve(getServer());
-        },
-        { once: true }
-      );
-      target.addEventListener(
-        "error",
-        (event) => {
-          reject((event as CustomEvent).detail);
-        },
-        { once: true }
-      );
-
-      if (!initCalled) {
-        initialize();
-      }
-    });
+  return async () => {
+    const dataSource = await dbController.useDataSource();
+    const server = new Server(dataSource, dbController.importDb.bind(dbController));
+    let handler = jobManagerMiddleware(requestHandler(server), jobManager);
+    handler = serializationMiddleware(handler);
+    return new ServerClient(handler);
+  };
 }

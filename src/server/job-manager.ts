@@ -6,10 +6,10 @@ export class JobManager {
   private readonly queue: queue;
   private readonly aborts: Record<string, AbortController>;
 
-  constructor(private readonly requestTimeout: number, concurrency = 1) {
+  constructor(private readonly requestTimeout: number, concurrency?: number) {
     this.queue = queue({
       timeout: requestTimeout,
-      concurrency,
+      concurrency: concurrency ?? 1,
     });
     this.queue.setMaxListeners(10 * 1000);
     this.aborts = {};

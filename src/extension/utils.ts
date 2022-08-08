@@ -3,7 +3,7 @@ import { NavigationObserver } from "./navigation-observer";
 import { ServerInterface } from "../server";
 import { TabObserver } from "./tab-observer";
 
-export function setupObservers(server: ServerInterface): void {
+export function setupObservers(server: ServerInterface): () => Promise<void> {
   const navigationObserver = new NavigationObserver("nav");
   const tabObserver = new TabObserver(server);
   const historyCrawler = new HistoryCrawler(
@@ -16,4 +16,8 @@ export function setupObservers(server: ServerInterface): void {
   navigationObserver.observeNavigation();
   navigationObserver.cleanUpStorage();
   historyCrawler.registerCrawler("HistoryCrawler_crawl");
+
+  return async () => {
+    await historyCrawler.resetState();
+  };
 }

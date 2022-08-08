@@ -91,6 +91,17 @@ export class HistoryCrawler {
     });
   }
 
+  resetState(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.remove([this.ns], () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
 
   async handleItems(items: Visit[]): Promise<HistoryCrawlStats> {
     const timestamps = items.flatMap((item) => {
@@ -308,6 +319,7 @@ export class HistoryCrawler {
     startTimestamp = new Date(
       Math.max(startTimestamp.getTime() - this.interval, 0)
     );
+    console.log('crawling from', startTimestamp, 'to', stop);
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
 

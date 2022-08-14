@@ -362,6 +362,7 @@ export class Server implements ServerInterface {
         return {};
       }
       existingSession.chromeVisitId = request.visitId;
+      existingSession.chromeReferringVisitId = request.referringVisitId;
       await manager.save(existingSession);
       maybeAbort(request.abort);
       // Delete any associated ghost session(s) when we correlate a visit
@@ -442,6 +443,7 @@ export class Server implements ServerInterface {
           interactionCount: 0,
           lastInteractionAt: visitDate,
           chromeVisitId: session.visitId,
+          chromeReferringVisitId: session.referringVisitId,
         });
         return [newSession];
       });

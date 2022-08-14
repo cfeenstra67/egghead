@@ -3,6 +3,11 @@
   "manifest_version": 3,
   "version": "1.0.0",
   "description": "Browser history replacement that doesn't suck eggs",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
   "background": {
     "service_worker": "background.js"
   },
@@ -19,7 +24,6 @@
     "tabs",
     "alarms",
     "history",
-    "browsingData",
     "scripting"
   ],
   "chrome_url_overrides": {
@@ -31,9 +35,9 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+H",
-        "mac": "MacCtrl+Shift+H"
-      }
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Open popup"
     }
   }
 }

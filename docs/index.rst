@@ -14,5 +14,6 @@ Welcome to Egghead's documentation!
 .. toctree::
    :maxdepth: 2
 
+   keyboard-shortcuts
    query-syntax
    development

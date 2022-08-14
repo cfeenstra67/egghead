@@ -69,6 +69,7 @@ export interface TabInteractionResponse {}
 export interface CorrelateChromeVisitRequest extends BaseRequest {
   sessionId: string;
   visitId: string;
+  referringVisitId?: string;
 }
 
 export interface CorrelateChromeVisitResponse {}

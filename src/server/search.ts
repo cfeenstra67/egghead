@@ -156,7 +156,9 @@ export function prepareClauseForSearch(
       };
     }
     if (isFilter(clause) && clause.fieldName.endsWith("At")) {
-      clause.value = dateToSqliteString(cleanDateInput(clause.value as string));
+      if (clause.value !== null && clause.value !== undefined) {
+        clause.value = dateToSqliteString(cleanDateInput(clause.value as string));
+      }
     } else if (isFilter(clause) && ['interactionCount', 'tabId', 'rowid'].includes(clause.fieldName)) {
       if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
         clause.value = (clause.value as string[]).map(Number);

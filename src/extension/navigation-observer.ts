@@ -34,7 +34,7 @@ export class NavigationObserver {
         const saveTime = new Date(stored.saveTime);
         // The stored data is not up to date
         if (saveTime < this.saveTime) {
-          logger.warn("Ignoring old data from %s", saveTime);
+          logger.debug("Ignoring old data from %s", saveTime);
           return;
         }
       }

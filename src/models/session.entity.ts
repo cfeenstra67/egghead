@@ -66,6 +66,9 @@ export class Session {
   @Column({ nullable: true })
   chromeVisitId?: string;
 
+  @Column({ nullable: true })
+  chromeReferringVisitId?: string;
+
   // Always null column used in search index as dummy
   @Column({ nullable: true })
   dum?: string;

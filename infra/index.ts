@@ -148,7 +148,7 @@ export = async () => {
     idPrefix: '',
     sourcePath: path.normalize(path.resolve(__dirname, '../dist/demo')),
     dnsName,
-    indexDocument: 'history.html',
+    indexDocument: 'demo-history.html',
     logsBucket,
   });
 

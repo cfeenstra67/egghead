@@ -2,7 +2,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 // Hack to avoid issues in a service worker
 // See https://github.com/webpack/webpack/blob/main/lib/web/JsonpChunkLoadingRuntimeModule.js
@@ -92,7 +92,7 @@ function createModule({
             from: 'public',
             to: '.',
             globOptions: {
-              ignore: ignoreAssets,
+              ignore: ignoreAssets ?? [],
             }
           },
           {
@@ -129,9 +129,7 @@ module.exports = [
   createModule({
     name: 'prod',
     logLevel: 'error',
-    // TODO: remove
-    devMode: true,
-    ignoreAssets: ['**/sql-wasm.wasm'],
+    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
@@ -142,6 +140,7 @@ module.exports = [
   createModule({
     name: 'demo',
     logLevel: 'error',
+    ignoreAssets: ['**/*.png', '**/history.html'],
     entry: {
       client: './src/client/demo.tsx',
       popup: './src/client/demo-popup.tsx',
@@ -151,6 +150,7 @@ module.exports = [
     name: 'dev',
     logLevel: 'debug',
     devMode: true,
+    ignoreAssets: ['**/demo-history.html'],
     entry: {
       client: './src/client/web.tsx',
       popup: './src/client/web-popup.tsx',

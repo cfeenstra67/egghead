@@ -31,13 +31,25 @@ This is all of the setup needed to be able to develop the app. The app is built 
 
   * development command - ``npx webpack serve --config-name dev --no-client-overlay``. You can access the app at ``http://localhost:8080/history.html``
 
-  * build command - ``npx webpack --config-name dev``
+  * build command - ``npx webpack --config-name dev``. You can then access the app by opening the ``dist/dev/history.html`` file in your browser.
+
+  * **Important**: you need a database file to load into the dev version of the app; it should be located at ``./data/dev/dev.db``. You can use the following one-liner to download the demo database used on `the demo site`_:
+
+.. code-block:: bash
+
+   $ mkdir -p data/dev && curl https://egghead.camfeenstra.com/demo.db -o data/dev/dev.db
 
 * ``demo`` - a slightly modified version of the ``dev`` app that includes a wrapper for choosing which demo database to download before loading the actual app. This is what's hosted at `egghead.camfeenstra.com <https://egghead.camfeenstra.com>`_.
-  
+
   * development command - ``npx webpack server --config-name demo --no-client-overlay``. You can access the app at ``http://localhost:8080/history.html``.
   
-  * build command - ``npx webpack --config-name demo``.
+  * build command - ``npx webpack --config-name demo``. You can then access the app by opening the ``dist/demo/history.html`` file in your browser.
+
+  * **Important**: you need a full sized and smaller database file to load into the demo version of the app; they should be located at ``./data/demo/{demo,demo-small}.db``. You can use the following one-liner to download the demo databases used on `the demo site`_:
+
+.. code-block:: bash
+
+   $ mkdir -p data/demo && curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db && curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
 
 For local development, generally running the ``dev`` configuration makes the most sense.
 
@@ -63,3 +75,5 @@ The documentation site can be found in ``dist/docs/html``. On a Mac, you can ope
 .. code-block:: bash
 
    $ open dist/docs/html/index.html
+
+.. _the demo site: https://egghead.camfeenstra.com

@@ -170,18 +170,23 @@ export class HistoryCrawler {
       return [[item.historyItem.url, item]];
     }));
 
-    const correlations: Record<string, string> = {};
+    const correlations: Record<string, [string, string | undefined]> = {};
 
     results.forEach((session) => {
       if (session.chromeVisitId) {
         return;
       }
       if (itemsByUrl[session.url]) {
-        correlations[session.id] = itemsByUrl[session.url].visitItem.visitId;
+        correlations[session.id] = [
+          itemsByUrl[session.url].visitItem.visitId,
+          itemsByUrl[session.url].visitItem.referringVisitId,
+        ];
       }
     });
 
-    const correlatedIds = new Set(Object.values(correlations));
+    const correlatedIds = new Set(
+      Object.values(correlations).map(([visitId, _1]) => visitId)
+    );
     const nonCorrelated = new Set(
       items
         .map((item) => item.visitItem.visitId)
@@ -189,8 +194,12 @@ export class HistoryCrawler {
         .filter((itemId) => !correlatedIds.has(itemId))
     );
 
-    for (const [sessionId, visitId] of Object.entries(correlations)) {
-      await this.server.correlateChromeVisit({ sessionId, visitId });
+    for (const [sessionId, [visitId, referringVisitId]] of Object.entries(correlations)) {
+      await this.server.correlateChromeVisit({
+        sessionId,
+        visitId,
+        referringVisitId,
+      });
     }
 
     const uncorrelatedVisits = items.filter(
@@ -342,7 +351,7 @@ export class HistoryCrawler {
 
     const elapsed = new Date().getTime() - now.getTime();
 
-    logger.info('elapsed %s, crawl stats %s', elapsed / 1000, aggStats);
+    logger.info('elapsed %s, crawl stats %o', elapsed / 1000, aggStats);
 
     return {
       startTimestamp: stop,
@@ -366,8 +375,8 @@ export class HistoryCrawler {
       } else if (alarm.name === resetAlarm) {
         const state = await this.getState();
         await this.setState({
-          startTimestamp: new Date(state.startTimestamp.getTime() - 24 * 60 * 1000),
-          upToDate: false,
+          startTimestamp: new Date(state.startTimestamp.getTime() - 24 * 60 * 60 * 1000),
+          upToDate: true,
         });
       }
     });

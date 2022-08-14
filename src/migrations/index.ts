@@ -13,6 +13,7 @@ import { addChromeVisitId1656829928767 } from './1656829928767-add-chrome-visit-
 import { hostIndex1656900179493 } from './1656900179493-host-index';
 import { moreIndexes1656901146387 } from "./1656901146387-more-indexes";
 import { addThemeSetting1657488998118 } from './1657488998118-add-theme-setting';
+import { addChromeReferringVisitColumn1660499472193 } from './1660499472193-add-chrome-referring-visit-column';
 
 export const migrations = [
   createUser1651729792149,
@@ -30,4 +31,5 @@ export const migrations = [
   hostIndex1656900179493,
   moreIndexes1656901146387,
   addThemeSetting1657488998118,
+  addChromeReferringVisitColumn1660499472193,
 ];

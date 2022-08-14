@@ -35,7 +35,7 @@ You can also include queries for specific fields. The "session" fields that are 
 
 * ``startedAt`` - timestamp when the session initially started, meaning when the page was first loaded.
 
-* ``endedAt`` - timestamp when the session ended, meaningi when the tab and/or window was closed.
+* ``endedAt`` - timestamp when the session ended, meaningi when the tab and/or window was closed. **Tip:** ``endedAt:null`` or ``endedAt:ne:null`` will allow you to filter down the results to only active sessions or vice versa.
 
 * ``title`` - The last seen title on the web page.
 

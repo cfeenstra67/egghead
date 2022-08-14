@@ -493,26 +493,28 @@ export class SearchService {
   async querySessions(
     request: QuerySessionsRequest
   ): Promise<QuerySessionsResponse> {
-    const builder = this.searchQueryBuilder(request, request.isSearch);
+    let builder = this.searchQueryBuilder(request, request.isSearch);
 
-    let builderWithCount = this.manager
-      .createQueryBuilder()
-      .select('*')
-      .addSelect('COUNT(1) OVER ()', 'totalCount')
-      .from(`(${builder.getQuery()})`, 't')
-      .setParameters(builder.getParameters());
+    // let builderWithCount = this.manager
+    //   .createQueryBuilder()
+    //   .select('*')
+    //   .addSelect('COUNT(1) OVER ()', 'totalCount')
+    //   .from(`(${builder.getQuery()})`, 't')
+    //   .setParameters(builder.getParameters());
 
     if (request.skip) {
-      builderWithCount = builderWithCount.offset(request.skip);
+      builder = builder.offset(request.skip);
     }
     if (request.limit) {
-      builderWithCount = builderWithCount.limit(request.limit);
+      builder = builder.limit(request.limit);
     }
 
-    const rawResults = await builderWithCount.getRawMany();
+    const rawResults = await builder.getRawMany();
     maybeAbort(request.abort);
 
-    const totalCount = rawResults.length === 0 ? 0 : rawResults[0].totalCount;
+    // const totalCount = rawResults.length === 0 ? 0 : rawResults[0].totalCount;
+    const totalCount = await builder.getCount();
+    maybeAbort(request.abort);
 
     if (request.isSearch) {
       const ids = rawResults.map((row) => row.id);

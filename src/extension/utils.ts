@@ -19,5 +19,6 @@ export function setupObservers(server: ServerInterface): () => Promise<void> {
 
   return async () => {
     await historyCrawler.resetState();
+    await historyCrawler.runCrawler();
   };
 }

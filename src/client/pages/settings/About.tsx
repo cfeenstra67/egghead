@@ -23,7 +23,7 @@ export default function About() {
         </p>
         <p>
           Egghead is completely open source, and you can find the code in the
-          {' '}<a href="https://github.com/cfeenstra67/egghead" target="_blank">Github repo</a>.
+          {' '}<a href="https://github.com/cfeenstra67/egghead" target="_blank" rel="noreferrer">Github repo</a>.
         </p>
         <p>
           If you have problems using the app, please open an issue on the Github repo

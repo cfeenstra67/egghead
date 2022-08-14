@@ -8,12 +8,15 @@ import ItemStatus from "./ItemStatus";
 import EllipsisIcon from "../icons/ellipsis.svg";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
+import parentLogger from '../../logger';
 import type { Session } from "../../models";
 import type { SessionResponse } from "../../server";
 import { dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
 import styles from "../styles/SearchResults.module.css";
 import Word from "./Word";
+
+const logger = parentLogger.child({ context: 'SearchResultsItem' });
 
 function cleanRawUrl(url: string): string {
   const urlObj = new URL(url);
@@ -130,7 +133,7 @@ function processChildTransitions(
           out[ChildType.Typed] += 1;
           break;
         default:
-          console.debug(`Unhandled transition type: ${transition}`);
+          logger.debug(`Unhandled transition type: ${transition}`);
           break;
       }
     });
@@ -455,7 +458,7 @@ export default function SearchResultsItem({
             ].push(session);
             break;
           default:
-            console.debug(`Unhandled child type: ${session.transitionType}`);
+            logger.debug(`Unhandled child type: ${session.transitionType}`);
             break;
         }
       });

@@ -20,6 +20,8 @@ export default function History() {
   const [selectedTerms, setSelectedTerms] = useState<string[]>([]);
   const [selectedHosts, setSelectedHosts] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
+  const [sidebarLoading, setSidebarLoading] = useState(false);
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   const getRequest = useCallback(async () => {
     const newRequest: QuerySessionsRequest = {
@@ -84,7 +86,11 @@ export default function History() {
   ]);
 
   const { request, results, state, initialLoadComplete, loadNextPage } = useSessionQuery({
-    onChange: () => window.scroll(0, 0),
+    onChange: () => {
+      window.scroll(0, 0);
+      setTimelineLoading(true);
+      setSidebarLoading(true);
+    },
     getRequest,
   });
 
@@ -92,7 +98,9 @@ export default function History() {
     <Layout>
       <h1>History</h1>
       <SearchResultsSideBar
-        loading={!initialLoadComplete}
+        ready={initialLoadComplete && !timelineLoading}
+        loading={sidebarLoading}
+        onLoadComplete={() => setSidebarLoading(false)}
         request={request}
         selectedHosts={selectedHosts}
         setSelectedHosts={setSelectedHosts}
@@ -100,7 +108,8 @@ export default function History() {
         setSelectedTerms={setSelectedTerms}
       />
       <Timeline
-        loading={!initialLoadComplete}
+        ready={initialLoadComplete}
+        onLoadComplete={() => setTimelineLoading(false)}
         request={request}
         dateRange={dateRange}
         setDateRange={setDateRange}

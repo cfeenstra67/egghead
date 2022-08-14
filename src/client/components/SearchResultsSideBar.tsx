@@ -8,10 +8,11 @@ import type {
 } from "../../server";
 import styles from "../styles/SideBar.module.css";
 import SideBar, { SideBarComponent } from "./SideBar";
+import Spinner from "./Spinner";
 import Word from "./Word";
 
 interface CollapsibleComponentProps {
-  title: string;
+  title: React.ReactNode;
   clearable?: boolean;
   onClear?: () => void;
   children?: React.ReactNode;
@@ -52,6 +53,7 @@ function CollapsibleComponent({
 }
 
 interface HostsComponentProps {
+  loading?: boolean;
   hosts: QuerySessionFacetsFacetValue[];
   partialCount?: number;
   selectedHosts: string[];
@@ -59,6 +61,7 @@ interface HostsComponentProps {
 }
 
 function HostsComponent({
+  loading,
   hosts,
   selectedHosts,
   setSelectedHosts,
@@ -84,7 +87,7 @@ function HostsComponent({
 
   return (
     <CollapsibleComponent
-      title="Websites"
+      title={<>Websites {loading && <Spinner />}</>}
       clearable={selectedHosts.length > 0}
       onClear={() => setSelectedHosts([])}
     >
@@ -110,6 +113,7 @@ function HostsComponent({
 }
 
 interface TermsComponentProps {
+  loading?: boolean;
   terms: QuerySessionFacetsFacetValue[];
   selectedTerms: string[];
   setSelectedTerms: (terms: string[]) => void;
@@ -117,6 +121,7 @@ interface TermsComponentProps {
 }
 
 function TermsComponent({
+  loading,
   terms,
   selectedTerms,
   setSelectedTerms,
@@ -143,7 +148,7 @@ function TermsComponent({
 
   return (
     <CollapsibleComponent
-      title="Words"
+      title={<>Words {loading && <Spinner />}</>}
       clearable={selectedTerms.length > 0}
       onClear={() => setSelectedTerms([])}
     >
@@ -170,7 +175,9 @@ function TermsComponent({
 interface SearchSideBarProps {
   request: QuerySessionsRequest;
   selectedHosts: string[];
+  ready?: boolean;
   loading?: boolean;
+  onLoadComplete?: () => void;
   setSelectedHosts: (hosts: string[]) => void;
   selectedTerms: string[];
   setSelectedTerms: (terms: string[]) => void;
@@ -182,7 +189,9 @@ export default function SearchSideBar({
   setSelectedHosts,
   selectedTerms,
   setSelectedTerms,
+  ready,
   loading,
+  onLoadComplete,
 }: SearchSideBarProps) {
   const [hosts, setHosts] = useState<QuerySessionFacetsFacetValue[]>([]);
   const [terms, setTerms] = useState<QuerySessionFacetsFacetValue[]>([]);
@@ -190,48 +199,54 @@ export default function SearchSideBar({
   const { serverClientFactory } = useContext(AppContext);
 
   useMemo(() => {
-    if (loading) {
+    if (!ready) {
       return;
     }
 
     const abortController = new AbortController();
 
     async function load() {
-      const client = await serverClientFactory();
-      const facets = await client.querySessionFacets({
-        ...request,
-        abort: abortController.signal
-      });
-      const hostValues = new Set(facets.host.map((host) => host.value));
-      selectedHosts.forEach((host) => {
-        if (!hostValues.has(host)) {
-          facets.host.splice(0, 0, { value: host, count: 0 });
-        }
-      });
-      const termValues = new Set(facets.term.map((term) => term.value));
-      selectedTerms.forEach((term) => {
-        if (!termValues.has(term)) {
-          facets.term.splice(0, 0, { value: term, count: 0 });
-        }
-      });
+      try {
+        const client = await serverClientFactory();
+        const facets = await client.querySessionFacets({
+          ...request,
+          abort: abortController.signal
+        });
+        const hostValues = new Set(facets.host.map((host) => host.value));
+        selectedHosts.forEach((host) => {
+          if (!hostValues.has(host)) {
+            facets.host.splice(0, 0, { value: host, count: 0 });
+          }
+        });
+        const termValues = new Set(facets.term.map((term) => term.value));
+        selectedTerms.forEach((term) => {
+          if (!termValues.has(term)) {
+            facets.term.splice(0, 0, { value: term, count: 0 });
+          }
+        });
 
-      setHosts(facets.host);
-      setTerms(facets.term);
+        setHosts(facets.host);
+        setTerms(facets.term);
+      } finally {
+        onLoadComplete?.();
+      }
     }
 
     load();
     return () => abortController.abort();
-  }, [loading, request]);
+  }, [ready, request]);
 
   return (
     <SideBar>
       <HostsComponent
+        loading={loading}
         hosts={hosts}
         selectedHosts={selectedHosts}
         setSelectedHosts={setSelectedHosts}
       />
 
       <TermsComponent
+        loading={loading}
         terms={terms}
         selectedTerms={selectedTerms}
         setSelectedTerms={setSelectedTerms}

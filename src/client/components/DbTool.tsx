@@ -4,12 +4,15 @@ import { useContext, useState, useCallback, createRef } from "react";
 import Editor from 'react-simple-code-editor';
 import Card from './Card';
 import { AppContext, downloadUrl, cleanupUrl } from "../lib";
+import parentLogger from '../../logger';
 import type { ServerInterface, ErrorResponse } from "../../server";
 import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
 import styles from "../styles/DbTool.module.css";
 import settingsStyles from "../styles/Settings.module.css";
 
 hljs.registerLanguage('sql', sqlLang);
+
+const logger = parentLogger.child({ context: 'DbTool' });
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
@@ -32,7 +35,7 @@ function ExportDbOption({ serverClientFactory }: OptionProps) {
       cleanupUrl(databaseUrl);
       setState(LoadingState.Success);
     } catch (err: any) {
-      console.trace(err);
+      logger.trace(err);
       setState(LoadingState.Failed);
       setError(err.toString());
     }
@@ -109,7 +112,7 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
       await client.regenerateIndex({});
       setState(LoadingState.Success);
     } catch (err: any) {
-      console.trace(err);
+      logger.trace(err);
       setState(LoadingState.Failed);
       setError(err.toString());
     }
@@ -177,6 +180,7 @@ function QueryToolResult({ results }: QueryToolResultProps) {
 function QueryToolOption({ serverClientFactory }: OptionProps) {
   const [code, setCode] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  const [loadTime, setLoadTime] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -184,13 +188,17 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
     setLoading(true);
     try {
       const client = await serverClientFactory();
+      const before = new Date();
       const result = await client.runQuery({ query: code });
+      const after = new Date();
+      setLoadTime(after.getTime() - before.getTime());
       setResults(result.result);
       setError(null);
     } catch (error: any) {
       const errorResp = error as ErrorResponse;
       setResults([]);
       setError(errorResp.message);
+      setLoadTime(null);
     } finally {
       setLoading(false);
     }
@@ -223,9 +231,11 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
         Run query
       </button>
 
-      {error && (
+      {error ? (
         <span>Error: {error}</span>
-      )}
+      ) : loadTime !== null ? (
+        <span>Execution time: {loadTime}ms</span>
+      ) : <></>}
 
       <QueryToolResult results={results} />
     </div>

@@ -1,6 +1,5 @@
 import hljs from 'highlight.js/lib/core';
 import { useMemo, useCallback, useState, useEffect } from 'react';
-import CopyIcon from '../icons/copy.svg';
 import styles from '../styles/CodeBlock.module.css';
 
 export interface CodeBlockProps {

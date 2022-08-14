@@ -1,8 +1,11 @@
 import { getTabById } from "./chrome-utils";
+import parentLogger from '../logger';
 import { Session } from "../models";
 import { NavigationObserver } from "./navigation-observer";
 import { ServerInterface, TabChangedRequest } from "../server";
 import { dslToClause } from "../server/clause";
+
+const logger = parentLogger.child({ context: 'tab-observer' });
 
 interface TabStateDiff {
   updates: Omit<TabChangedRequest, "type">[];
@@ -64,7 +67,7 @@ export class TabObserver {
           transitionType: event.detail.transitionType,
         })
       );
-      console.log("Tab changed", response);
+      logger.info("Tab changed %s", response);
     });
   }
 
@@ -73,12 +76,12 @@ export class TabObserver {
     removeInfo: chrome.tabs.TabRemoveInfo
   ): Promise<void> {
     const response = await this.server.tabClosed({ tabId });
-    console.log("Tab closed", response);
+    logger.info("Tab closed %s", response);
   }
 
   async cleanupSessions(): Promise<void> {
     const diff = await this.diffCurrentState();
-    console.log(
+    logger.info(
       `Cleaning up ${diff.deletes.length} tab(s): ${diff.deletes}; ` +
         `${diff.updates.length} tab(s) open.`
     );
@@ -111,7 +114,7 @@ export class TabObserver {
 
         tabs.forEach((tab) => {
           if (tab.id === undefined) {
-            console.error(`Tab has no ID: ${tab}`);
+            logger.error(`Tab has no ID: ${tab}`);
             return;
           }
           currentActiveSessionTabIds.delete(tab.id);

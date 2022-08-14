@@ -1,4 +1,7 @@
 import EventTarget from "@ungap/event-target";
+import parentLogger from '../logger';
+
+const logger = parentLogger.child({ context: 'navigation-observer' });
 
 // Modified from here:
 // https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/mv2-archive/api/webNavigation/basic/navigation_collector.js
@@ -31,7 +34,7 @@ export class NavigationObserver {
         const saveTime = new Date(stored.saveTime);
         // The stored data is not up to date
         if (saveTime < this.saveTime) {
-          console.warn("Ignoring old data from", saveTime);
+          logger.warn("Ignoring old data from %s", saveTime);
           return;
         }
       }
@@ -176,7 +179,7 @@ export class NavigationObserver {
   onCommittedListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.debug("errorCommittedWithoutPending", data.url, data);
+      logger.debug("errorCommittedWithoutPending %s %s", data.url, data);
     } else {
       this.prepareDataStorage(id);
       this.pending[id].transitionType = data.transitionType;
@@ -247,7 +250,7 @@ export class NavigationObserver {
   onCompletedListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.debug("errorCompletedWithoutPending", data.url, data);
+      logger.debug("errorCompletedWithoutPending %s %s", data.url, data);
     } else {
       const detail: NavigationObserver.Request = {
         duration: data.timeStamp - this.pending[id].start,
@@ -274,7 +277,7 @@ export class NavigationObserver {
   onErrorOccurredListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      console.error("errorErrorOccurredWithoutPending", data.url, data);
+      logger.error("errorErrorOccurredWithoutPending %s %s", data.url, data);
     } else {
       this.prepareDataStorage(id);
 

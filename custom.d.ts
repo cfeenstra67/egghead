@@ -6,7 +6,7 @@ declare module 'absurd-sql/dist/indexeddb-backend';
 
 declare module 'absurd-sql/dist/indexeddb-main-thread';
 
-declare module 'wa-sqlite/src/examples/IDBBatchAtomicVFS'
+declare module 'wa-sqlite/src/examples/IDBVersionedVFS';
 
 declare module '*.css';
 
@@ -20,4 +20,12 @@ declare module '*.db' {
 declare module '*.txt' {
   const content: string;
   export default content;
+}
+
+declare const LOG_LEVEL: string;
+
+declare const DEV_MODE: boolean;
+
+declare interface Navigator {
+  locks: LockManager;
 }

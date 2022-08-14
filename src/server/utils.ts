@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { clausesEqual } from "./clause";
-import { JobManager } from "./job-manager";
+import { JobManager, JobManagerMiddleware } from "./job-manager";
+import parentLogger from '../logger';
 import type { SettingsItems } from "../models";
 import {
   Theme,
@@ -14,6 +15,8 @@ import type {
   RequestHandler,
   QuerySessionsRequest,
 } from "./types";
+
+const logger = parentLogger.child({ context: 'server-utils' });
 
 export function cleanURL(uri: string): string {
   const urlObj = new URL(uri);
@@ -94,7 +97,7 @@ export function dateToSqliteString(date: Date): string {
 export function defaultSettings(): SettingsItems {
   return {
     dataCollectionEnabled: true,
-    devModeEnabled: false,
+    devModeEnabled: DEV_MODE,
     theme: Theme.Auto,
   };
 }
@@ -105,10 +108,56 @@ export function jobManagerMiddleware(
 ): RequestHandler {
   return async (request) => {
     const requestId = uuidv4();
-    jobManager.addJob(requestId, async (abort) => {
-      return await handler({ ...request, abort });
+    jobManager.addJob(requestId, (abort) => {
+      return handler({ ...request, abort });
     });
     request.abort?.addEventListener('abort', () => jobManager.abortJob(requestId));
     return await jobManager.jobPromise(requestId);
+  };
+}
+
+export const logJobMiddleware: JobManagerMiddleware = (job, ctx) => {
+  return async (abort) => {
+    const before = new Date();
+    try {
+      return await job(abort);
+    } finally {
+      const after = new Date();
+      logger.debug(
+        '%s job completed after %sms (waited for %sms)',
+        ctx.jobId,
+        after.getTime() - before.getTime(),
+        before.getTime() - ctx.addTime.getTime(),
+      );
+    }
+  };
+};
+
+export function jobLockingMiddleware(lockName: string): JobManagerMiddleware {
+  return (job, ctx) => (abort) => {
+    const before = new Date();
+    return navigator.locks.request(lockName, () => {
+      const after = new Date();
+      logger.debug(
+        '%s lock (%s) acquired after %s',
+        ctx.jobId, lockName, after.getTime() - before.getTime()
+      );
+      return job(abort);
+    });
+  };
+}
+
+export function logRequestMiddleware(handler: RequestHandler): RequestHandler {
+  return async (request) => {
+    const before = new Date();
+    try {
+      return await handler(request);
+    } finally {
+      const after = new Date();
+      logger.debug(
+        '%s request completed after %sms',
+        request.type, after.getTime() - before.getTime(),
+      );
+    }
   };
 }

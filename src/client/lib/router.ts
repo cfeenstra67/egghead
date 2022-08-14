@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
+import parentLogger from '../../logger';
 import type { RuntimeInterface } from './runtimes';
+
+const logger = parentLogger.child({ context: 'router' });
 
 export type NavigationHook = (
   to: string,
@@ -143,7 +146,7 @@ export function useHashLocation(): [string, NavigationHook] {
 export function popupLocationHook(runtime: RuntimeInterface): () => [string, NavigationHook] {
   return () => {
     return ['', async (to) => {
-      console.log('TO', to, new URL(to, 'chrome://history').href);
+      logger.debug('TO %s', to, new URL(to, 'chrome://history').href);
       await runtime.openUrl(new URL(to, 'chrome://history').href, true);
     }];
   };

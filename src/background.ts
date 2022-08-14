@@ -1,16 +1,25 @@
+import { setupObservers } from "./extension/utils";
+import parentLogger from './logger';
 import { ServerResponseCode } from "./server";
 import { Aborted } from "./server/abort";
 import { createBackgroundClient } from "./server/background-client";
 import { ServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
-import { jobManagerMiddleware } from "./server/utils";
-import { setupObservers } from "./extension/utils";
+import {
+  jobManagerMiddleware,
+  logRequestMiddleware,
+  logJobMiddleware,
+  jobLockingMiddleware,
+} from "./server/utils";
+
+const logger = parentLogger.child({ context: 'background' });
 
 const { handle: serverConnection, close: closeServer } = createBackgroundClient();
-const requestTimeout = 10 * 1000;
-const jobManager = new JobManager(requestTimeout);
-
-const managedConnection = jobManagerMiddleware(serverConnection, jobManager);
+const loggingServerConnection = logRequestMiddleware(serverConnection);
+const jobManager = new JobManager({
+  middlewares: [logJobMiddleware, jobLockingMiddleware('background-jobs')]
+});
+const managedConnection = jobManagerMiddleware(loggingServerConnection, jobManager)
 const serverClient = new ServerClient(managedConnection);
 
 const resetObservers = setupObservers(serverClient);
@@ -33,7 +42,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   const { request: innerRequest, requestId } = request;
   jobManager.addJob(requestId, (abortSignal) => {
-    return serverConnection({ ...innerRequest, abort: abortSignal });
+    return loggingServerConnection({ ...innerRequest, abort: abortSignal });
   });
 
   jobManager.jobPromise(requestId)
@@ -46,7 +55,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
         return;
       }
-      console.trace("Error handling extension request.", error);
+      logger.trace("Error handling extension request.", error);
       sendResponse({
         code: ServerResponseCode.Error,
         message: error.toString(),
@@ -56,13 +65,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.runtime.onSuspend.addListener(async () => {
-  console.log('closing');
+  logger.debug('closing');
   await closeServer();
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  // TODO: probably need to remove this
-  resetObservers();
+  if (DEV_MODE) {
+    resetObservers();
+  }
   chrome.tabs.query({}, (tabs) => {
     if (chrome.runtime.lastError) {
       throw chrome.runtime.lastError;

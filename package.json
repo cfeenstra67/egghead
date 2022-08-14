@@ -85,5 +85,7 @@
     "webpack-dev-server": "^4.9.0",
     "wouter": "^2.8.0-alpha.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "pino": "^8.4.1"
+  }
 }

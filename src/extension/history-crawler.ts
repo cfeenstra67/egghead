@@ -1,8 +1,11 @@
+import parentLogger from '../logger';
 import { ServerInterface } from "../server";
 import { AggregateOperator, BinaryOperator } from "../server/clause";
 import { cleanURL, dateToSqliteString } from "../server/utils";
 
 const initialDate = new Date("2020-01-01");
+
+const logger = parentLogger.child({ context: 'history-crawler' });
 
 interface Visit {
   visitItem: chrome.history.VisitItem;
@@ -319,7 +322,7 @@ export class HistoryCrawler {
     startTimestamp = new Date(
       Math.max(startTimestamp.getTime() - this.interval, 0)
     );
-    console.log('crawling from', startTimestamp, 'to', stop);
+    logger.info('crawling from %s to %s', startTimestamp, stop);
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
 
@@ -339,7 +342,7 @@ export class HistoryCrawler {
 
     const elapsed = new Date().getTime() - now.getTime();
 
-    console.log('elapsed', elapsed / 1000, 'crawl stats', aggStats);
+    logger.info('elapsed %s, crawl stats %s', elapsed / 1000, aggStats);
 
     return {
       startTimestamp: stop,

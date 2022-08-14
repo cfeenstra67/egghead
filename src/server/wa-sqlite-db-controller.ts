@@ -1,6 +1,6 @@
 import * as SQLite from 'wa-sqlite';
 import { DataSource } from "typeorm";
-import { IDBBatchAtomicVFS } from 'wa-sqlite/src/examples/IDBBatchAtomicVFS';
+import { IDBVersionedVFS } from 'wa-sqlite/src/examples/IDBVersionedVFS';
 import { AbstractDBController } from './abstract-db-controller';
 import { migrations } from "../migrations";
 import { entities } from "../models";
@@ -12,9 +12,9 @@ export class WaSqliteDBController extends AbstractDBController {
     const module = await moduleFactory();
 
     const sqlite3 = SQLite.Factory(module);
-    const vfsName = 'idb-batch-atomic';
+    const vfsName = 'idb-versioned';
     const dbName = 'history';
-    const vfs = new IDBBatchAtomicVFS(vfsName);
+    const vfs = new IDBVersionedVFS(vfsName);
 
     sqlite3.vfs_register(vfs);
 

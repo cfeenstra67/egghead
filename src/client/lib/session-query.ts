@@ -1,9 +1,12 @@
 import debounce from "lodash/debounce";
 import { useState, useEffect, useMemo, useContext, useCallback } from 'react';
 import { AppContext } from './context';
+import parentLogger from '../../logger';
 import { Aborted } from "../../server/abort";
 import type { QuerySessionsRequest, SessionResponse } from "../../server";
 import { requestsEqual } from "../../server/utils";
+
+const logger = parentLogger.child({ context: 'session-query' });
 
 export enum SessionQueryState {
   Loading = 'loading',
@@ -100,7 +103,7 @@ export function useSessionQuery({
             if (err instanceof Aborted) {
               return;
             }
-            console.trace(`Error running request ${JSON.stringify(request)}`, err);
+            logger.trace(`Error running request ${JSON.stringify(request)}`, err);
             setCurrentState(SessionQueryState.Error);
             setError(err.toString());
           })

@@ -5,9 +5,12 @@ import Layout from "../../components/Layout";
 import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar';
 import SettingsOptionStatus, { LoadingState } from '../../components/SettingsOptionStatus';
 import { AppContext } from "../../lib/context";
+import parentLogger from '../../../logger';
 import type { ServerInterface } from "../../../server";
 import styles from "../../styles/utils.module.css";
 import settingsStyles from "../../styles/Settings.module.css";
+
+const logger = parentLogger.child({ context: 'DataSettings' });
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
@@ -28,7 +31,7 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
       await client.regenerateIndex({});
       setState(LoadingState.Success);
     } catch (err: any) {
-      console.trace(err);
+      logger.trace(err);
       setState(LoadingState.Failed);
       setError(err.toString());
     }
@@ -74,5 +77,4 @@ export default function Settings() {
       </Card>
     </Layout>
   );
-
 }

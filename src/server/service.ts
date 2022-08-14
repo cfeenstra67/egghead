@@ -1,4 +1,5 @@
 import { maybeAbort } from './abort';
+import parentLogger from '../logger';
 import { Session, SessionIndex, SessionTermIndex, Settings } from "../models";
 import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
@@ -37,6 +38,8 @@ import { cleanURL, getHost, defaultSettings } from "./utils";
 import { DataSource, Repository, IsNull, In } from "typeorm";
 import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
 import { v4 as uuidv4 } from "uuid";
+
+const logger = parentLogger.child({ context: 'service' });
 
 // Source: https://www.codegrepper.com/code-examples/javascript/how+to+convert+data+uri+in+array+buffer
 function dataURItoBlob(dataURI: string): Blob {
@@ -101,7 +104,7 @@ export class Server implements ServerInterface {
     // End any other active session(s) for the tab; data cleanup
     if (existingSessions.length > 1) {
       const urls = existingSessions.map((session) => session.url).join(", ");
-      console.warn(
+      logger.warn(
         `More than one session found for tab ${tabId}; urls: ${urls}.`
       );
       for (const session of existingSessions.slice(1)) {
@@ -191,7 +194,7 @@ export class Server implements ServerInterface {
       );
       maybeAbort(request.abort);
       if (existingSession === undefined) {
-        console.warn(`No active session exists for tab ${request.tabId}`);
+        logger.warn(`No active session exists for tab ${request.tabId}`);
         return {};
       }
       existingSession.endedAt = now;
@@ -213,11 +216,11 @@ export class Server implements ServerInterface {
       );
       maybeAbort(request.abort);
       if (existingSession === undefined) {
-        console.warn(`No active session exists for tab ${request.tabId}`);
+        logger.warn(`No active session exists for tab ${request.tabId}`);
         return {};
       }
       if (!request.url || cleanURL(request.url) !== existingSession.url) {
-        console.warn(`Invalid URL for tab ${request.tabId}.`);
+        logger.warn(`Invalid URL for tab ${request.tabId}.`);
         return {};
       }
 
@@ -293,7 +296,7 @@ export class Server implements ServerInterface {
   private async getOrCreateSettings(repo: Repository<Settings>): Promise<Settings> {
     const allItems = await repo.find();
     if (allItems.length > 1) {
-      console.warn(`Found ${allItems.length} settings items, expecting one. Deleting other.`);
+      logger.warn(`Found ${allItems.length} settings items, expecting one. Deleting other.`);
       for (const item of allItems.slice(1)) {
         await repo.delete(item);
       }
@@ -349,12 +352,12 @@ export class Server implements ServerInterface {
       });
       maybeAbort(request.abort);
       if (existingSession === null) {
-        console.warn(`No session found: ${request.sessionId}`);
+        logger.warn(`No session found: ${request.sessionId}`);
         return {};
       }
       if (existingSession.chromeVisitId) {
         if (existingSession.chromeVisitId !== request.visitId) {
-          console.warn(`Session already had a visit id: ${request.sessionId}`);
+          logger.warn(`Session already had a visit id: ${request.sessionId}`);
         }
         return {};
       }
@@ -405,7 +408,7 @@ export class Server implements ServerInterface {
         const existingSession = existingSessionMap[session.visitId];
         if (existingSession) {
           const isGhostSession = existingSession.tabId === GhostSessionTabId;
-          console.warn(
+          logger.debug(
             `Session already exists for ${session.visitId}: ` +
             `${existingSession.id}. Ghost: ${isGhostSession}`
           );
@@ -420,7 +423,7 @@ export class Server implements ServerInterface {
             referringSessionId = referringSession.id;
             referringSessionTransition = session.transition;
           } else {
-            console.warn(`No session found for visit: ${session.referringVisitId}`);
+            logger.debug(`No session found for visit: ${session.referringVisitId}`);
           }
         }
 

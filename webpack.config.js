@@ -4,6 +4,8 @@ const path = require('path');
 const webpack = require('webpack');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
+// Hack to avoid issues in a service worker
+// See https://github.com/webpack/webpack/blob/main/lib/web/JsonpChunkLoadingRuntimeModule.js
 webpack.web.JsonpChunkLoadingRuntimeModule.prototype._generateBaseUri = (chunk) => {
   const options = chunk.getEntryOptions();
   if (options && options.baseUri) {
@@ -13,7 +15,13 @@ webpack.web.JsonpChunkLoadingRuntimeModule.prototype._generateBaseUri = (chunk) 
   }
 }
 
-function createModule(name, entry) {
+function createModule({
+  name,
+  logLevel,
+  entry,
+  devMode,
+  ignoreAssets,
+}) {
   return {
     mode: 'production',
     name,
@@ -74,18 +82,25 @@ function createModule(name, entry) {
         NODE_ENV: 'production',
         PERF_BUILD: '',
       }),
+      new webpack.DefinePlugin({
+        LOG_LEVEL: JSON.stringify(logLevel),
+        DEV_MODE: JSON.stringify(!!devMode),
+      }),
       new CopyPlugin({
         patterns: [
           {
             from: 'public',
             to: '.',
+            globOptions: {
+              ignore: ignoreAssets,
+            }
           },
           {
             from: `data/${name}`,
             to: '.',
             noErrorOnMissing: name === 'prod'
           },
-        ]
+        ],
       }),
       new MiniCssExtractPlugin(),
       // Enable for analysis when necessary
@@ -111,18 +126,34 @@ function createModule(name, entry) {
 }
 
 module.exports = [
-  createModule('prod', {
-    background: './src/background.ts',
-    'content-script': './src/content-script.ts',
-    client: './src/client/extension.tsx',
-    popup: './src/client/extension-popup.tsx',
+  createModule({
+    name: 'prod',
+    logLevel: 'error',
+    // TODO: remove
+    devMode: true,
+    ignoreAssets: ['**/sql-wasm.wasm'],
+    entry: {
+      background: './src/background.ts',
+      'content-script': './src/content-script.ts',
+      client: './src/client/extension.tsx',
+      popup: './src/client/extension-popup.tsx',
+    }
   }),
-  createModule('demo', {
-    client: './src/client/demo.tsx',
-    popup: './src/client/demo-popup.tsx',
+  createModule({
+    name: 'demo',
+    logLevel: 'error',
+    entry: {
+      client: './src/client/demo.tsx',
+      popup: './src/client/demo-popup.tsx',
+    }
   }),
-  createModule('dev', {
-    client: './src/client/web.tsx',
-    popup: './src/client/web-popup.tsx',
+  createModule({
+    name: 'dev',
+    logLevel: 'debug',
+    devMode: true,
+    entry: {
+      client: './src/client/web.tsx',
+      popup: './src/client/web-popup.tsx',
+    }
   }),
 ];

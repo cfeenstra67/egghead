@@ -1,30 +1,58 @@
 import queue from "queue";
 import { Aborted } from "./abort";
 
+export interface JobContext {
+  jobId: string;
+  addTime: Date;
+}
+
+export type JobManagerMiddleware =
+  <T>(job: (abort: AbortSignal) => Promise<T>, ctx: JobContext) => (abort: AbortSignal) => Promise<T>;
+
+export interface JobManagerOptions {
+  requestTimeout?: number;
+  concurrency?: number,
+  middlewares?: JobManagerMiddleware[];
+}
+
 export class JobManager {
 
   private readonly queue: queue;
   private readonly aborts: Record<string, AbortController>;
+  private readonly middlewares: JobManagerMiddleware[];
 
-  constructor(private readonly requestTimeout: number, concurrency?: number) {
+  constructor(options?: JobManagerOptions) {
     this.queue = queue({
-      timeout: requestTimeout,
-      concurrency: concurrency ?? 1,
+      timeout: options?.requestTimeout ?? 10 * 1000,
+      concurrency: options?.concurrency ?? 1,
     });
     this.queue.setMaxListeners(10 * 1000);
+    this.middlewares = options?.middlewares ?? [];
     this.aborts = {};
   }
 
-  private async runJob<T>(abort: AbortSignal, job: (abort: AbortSignal) => Promise<T>): Promise<T> {
+  private async runJob<T>(
+    ctx: JobContext,
+    abort: AbortSignal,
+    job: (abort: AbortSignal) => Promise<T>
+  ): Promise<T> {
     if (abort.aborted) {
       throw new Aborted();
     }
-    return await job(abort);
+    let finalJob = job;
+    for (const middleware of this.middlewares.slice().reverse()) {
+      finalJob = middleware(finalJob, ctx);
+    }
+    return await finalJob(abort);
   }
 
   addJob(jobId: string, job: (abort: AbortSignal) => Promise<any>): void {
     const abortController = new AbortController();
-    const jobInstance: any = () => this.runJob(abortController.signal, job);
+    const jobInstance = () => this.runJob(
+      { addTime: new Date(), jobId },
+      abortController.signal,
+      job
+    );
     jobInstance.id = jobId;
     this.aborts[jobId] = abortController;
     this.queue.push(jobInstance);

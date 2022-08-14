@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { ServerInterface, RequestHandler } from "../../server";
 import { requestHandler, jobManagerMiddleware } from "../../server/utils";
 import { ServerClient } from "../../server/client";
@@ -21,7 +20,7 @@ export function serverFactory(
   existingDb: Uint8Array
 ): () => Promise<ServerInterface> {
   const dbController = new SqlJsDBController(existingDb);
-  const jobManager = new JobManager(10 * 1000);
+  const jobManager = new JobManager();
 
   return async () => {
     const dataSource = await dbController.useDataSource();

@@ -15,7 +15,8 @@ import styles from "../styles/Timeline.module.css";
 export interface TimelineProps {
   request: QuerySessionsRequest;
   dateRange: [Date, Date] | null;
-  loading?: boolean;
+  ready?: boolean;
+  onLoadComplete?: () => void;
   setDateRange: (range: [Date, Date] | null) => void;
 }
 
@@ -210,7 +211,8 @@ export default function Timeline({
   request,
   dateRange,
   setDateRange,
-  loading,
+  ready,
+  onLoadComplete,
 }: TimelineProps) {
   const { serverClientFactory } = useContext(AppContext);
   const [timeline, setTimeline] = useState<QuerySessionTimelineResponse>({
@@ -238,31 +240,35 @@ export default function Timeline({
   }, [dateRangeStack, setDateRangeStack]);
 
   useEffect(() => {
-    if (loading) {
+    if (!ready) {
       return;
     }
 
     const abortController = new AbortController();
 
     async function load() {
-      const client = await serverClientFactory();
-      const timelineResp = await client.querySessionTimeline({
-        ...request,
-        granularity: 24,
-        abort: abortController.signal,
-      });
-      setTimeline({
-        granularity: timelineResp.granularity,
-        timeline: fillMissingLabels(
-          timelineResp.granularity,
-          timelineResp.timeline
-        ),
-      });
+      try {
+        const client = await serverClientFactory();
+        const timelineResp = await client.querySessionTimeline({
+          ...request,
+          granularity: 24,
+          abort: abortController.signal,
+        });
+        setTimeline({
+          granularity: timelineResp.granularity,
+          timeline: fillMissingLabels(
+            timelineResp.granularity,
+            timelineResp.timeline
+          ),
+        });
+      } finally {
+        onLoadComplete?.();
+      }
     }
 
     load();
     return () => abortController.abort();
-  }, [loading, request, setTimeline]);
+  }, [ready, request, setTimeline]);
 
   const labels = timeline.timeline.map((x) => {
     return dateStringToLabel(timeline.granularity, x.dateString);

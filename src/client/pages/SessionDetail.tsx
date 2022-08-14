@@ -130,7 +130,7 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
       )}
       <div className={utilStyles.marginTop2}>
         <Timeline
-          loading={!otherSessionsInitialLoadComplete}
+          ready={otherSessionsInitialLoadComplete}
           request={otherSessionsRequest}
           dateRange={dateRange}
           setDateRange={setDateRange}

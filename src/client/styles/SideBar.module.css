@@ -37,6 +37,14 @@
     cursor: pointer;
 }
 
+.collapsibleSideBarTitle span {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    column-gap: var(--padding);
+    height: calc(var(--paragraph-font-size) + var(--padding));
+}
+
 .collapsed svg {
     transform: rotate(-90deg) !important;
 }

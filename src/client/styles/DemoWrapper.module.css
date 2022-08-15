@@ -21,3 +21,11 @@
     font-size: var(--paragraph-font-size);
     font-weight: bolder;
 }
+
+.content a {
+    color: var(--link-color);
+}
+
+.content a:visited {
+    color: var(--visited-link-color);
+}

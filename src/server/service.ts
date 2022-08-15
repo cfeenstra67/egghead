@@ -33,6 +33,8 @@ import {
   CorrelateChromeVisitResponse,
   CreateGhostSessionsRequest,
   CreateGhostSessionsResponse,
+  FixChromeParentsRequest,
+  FixChromeParentsResponse,
 } from "./types";
 import { cleanURL, getHost, defaultSettings } from "./utils";
 import { DataSource, Repository, IsNull, In } from "typeorm";
@@ -363,6 +365,9 @@ export class Server implements ServerInterface {
       }
       existingSession.chromeVisitId = request.visitId;
       existingSession.chromeReferringVisitId = request.referringVisitId;
+      if (request.referringVisitId) {
+        existingSession.transitionType = request.transition ?? 'link';
+      }
       await manager.save(existingSession);
       maybeAbort(request.abort);
       // Delete any associated ghost session(s) when we correlate a visit
@@ -419,10 +424,10 @@ export class Server implements ServerInterface {
         let referringSessionId: string | undefined = undefined;
         let referringSessionTransition: string | undefined = undefined;
         if (session.referringVisitId && session.referringVisitId !== '0') {
+          referringSessionTransition = session.transition ?? 'link';
           const referringSession = existingSessionMap[session.referringVisitId];
           if (referringSession) {
             referringSessionId = referringSession.id;
-            referringSessionTransition = session.transition;
           } else {
             logger.debug(`No session found for visit: ${session.referringVisitId}`);
           }
@@ -451,6 +456,48 @@ export class Server implements ServerInterface {
       await manager.save(newSessions);
       return {};
     });
+  }
+
+  async fixChromeParents(
+    request: FixChromeParentsRequest
+  ): Promise<FixChromeParentsResponse> {
+    const query = `
+      update session
+      set parentSessionId = updates.sessionId
+      from (
+        select
+          s.id as sessionId,
+          s2.id as parentSessionId
+        from
+          session s
+          LEFT JOIN session s2 ON s2.chromeVisitId = s.chromeReferringVisitId
+        where
+          s.chromeReferringVisitId is not null
+          and s.parentSessionId is null
+          and s2.id is not null
+          and s2.id is not s.id
+        limit 1000
+      ) updates
+      where id = updates.sessionId
+      returning id
+    `;
+
+    let total = 0;
+    let lastCount = -1;
+    while (lastCount !== 0) {
+      const results = await this.dataSource.query(query);
+      lastCount = results.length;
+      total += results.length;
+      if (results.length > 0) {
+        logger.debug(`Fixed ${results.length} chrome parents`);
+      }
+    }
+
+    if (total > 0) {
+      logger.info(`Fixed ${total} total chrome parents`);
+    }
+
+    return {};
   }
 
 }

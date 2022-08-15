@@ -170,7 +170,7 @@ export class HistoryCrawler {
       return [[item.historyItem.url, item]];
     }));
 
-    const correlations: Record<string, [string, string | undefined]> = {};
+    const correlations: Record<string, [string, string | undefined, string | undefined]> = {};
 
     results.forEach((session) => {
       if (session.chromeVisitId) {
@@ -180,6 +180,7 @@ export class HistoryCrawler {
         correlations[session.id] = [
           itemsByUrl[session.url].visitItem.visitId,
           itemsByUrl[session.url].visitItem.referringVisitId,
+          itemsByUrl[session.url].visitItem.transition,
         ];
       }
     });
@@ -194,11 +195,12 @@ export class HistoryCrawler {
         .filter((itemId) => !correlatedIds.has(itemId))
     );
 
-    for (const [sessionId, [visitId, referringVisitId]] of Object.entries(correlations)) {
+    for (const [sessionId, [visitId, referringVisitId, transition]] of Object.entries(correlations)) {
       await this.server.correlateChromeVisit({
         sessionId,
         visitId,
         referringVisitId,
+        transition,
       });
     }
 
@@ -346,6 +348,8 @@ export class HistoryCrawler {
     }
 
     const stats = await Promise.all(promises);
+
+    await this.server.fixChromeParents({});
 
     const aggStats = aggregateStats(stats);
 

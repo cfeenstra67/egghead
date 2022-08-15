@@ -18,7 +18,8 @@ function LoadingState({ isPopup }: LoadingStateProps) {
       <Card>
         <p>
           Loading your existing chrome history for searching
-          (this only happens once)...
+          (this only happens once). This should only take a minute
+          or two...
         </p>
       </Card>
     </UseLayout>

@@ -23,7 +23,7 @@ export class JobManager {
 
   constructor(options?: JobManagerOptions) {
     this.queue = queue({
-      timeout: options?.requestTimeout ?? 10 * 1000,
+      timeout: options?.requestTimeout ?? 60 * 1000,
       concurrency: options?.concurrency ?? 1,
     });
     this.queue.setMaxListeners(10 * 1000);
@@ -36,10 +36,12 @@ export class JobManager {
     abort: AbortSignal,
     job: (abort: AbortSignal) => Promise<T>
   ): Promise<T> {
-    if (abort.aborted) {
-      throw new Aborted();
-    }
-    let finalJob = job;
+    let finalJob = (abort: AbortSignal) => {
+      if (abort.aborted) {
+        throw new Aborted();
+      }
+      return job(abort);
+    };
     for (const middleware of this.middlewares.slice().reverse()) {
       finalJob = middleware(finalJob, ctx);
     }

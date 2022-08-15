@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { Aborted } from './abort';
 import { clausesEqual } from "./clause";
 import { JobManager, JobManagerMiddleware } from "./job-manager";
 import parentLogger from '../logger';
@@ -136,13 +137,18 @@ export const logJobMiddleware: JobManagerMiddleware = (job, ctx) => {
 export function jobLockingMiddleware(lockName: string): JobManagerMiddleware {
   return (job, ctx) => (abort) => {
     const before = new Date();
-    return navigator.locks.request(lockName, () => {
+    return navigator.locks.request(lockName, { signal: abort }, () => {
       const after = new Date();
       logger.debug(
         '%s lock (%s) acquired after %s',
         ctx.jobId, lockName, after.getTime() - before.getTime()
       );
       return job(abort);
+    }).catch((error: any) => {
+      if (error.toString().includes('The request was aborted')) {
+        throw new Aborted();
+      }
+      throw error;
     });
   };
 }

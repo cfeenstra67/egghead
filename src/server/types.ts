@@ -16,6 +16,7 @@ export enum ServerMessage {
   RegenerateIndex = "regenerateIndex",
   GetSettings = "getSettings",
   UpdateSettings = "updateSettings",
+  FixChromeParents = "fixChromeParents"
 }
 
 export enum ServerResponseCode {
@@ -70,6 +71,7 @@ export interface CorrelateChromeVisitRequest extends BaseRequest {
   sessionId: string;
   visitId: string;
   referringVisitId?: string;
+  transition?: string;
 }
 
 export interface CorrelateChromeVisitResponse {}
@@ -172,6 +174,10 @@ export interface UpdateSettingsResponse {
   settings: SettingsItems;
 }
 
+export interface FixChromeParentsRequest extends BaseRequest {}
+
+export interface FixChromeParentsResponse {}
+
 export type ServerMessageMapping = {
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
   [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
@@ -199,6 +205,7 @@ export type ServerMessageMapping = {
   [ServerMessage.GetSettings]: [GetSettingsRequest, GetSettingsResponse];
   [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
   [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
+  [ServerMessage.FixChromeParents]: [FixChromeParentsRequest, FixChromeParentsResponse];
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage

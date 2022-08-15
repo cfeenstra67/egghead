@@ -37,6 +37,8 @@ import type {
   CorrelateChromeVisitResponse,
   CreateGhostSessionsRequest,
   CreateGhostSessionsResponse,
+  FixChromeParentsRequest,
+  FixChromeParentsResponse,
 } from "./types";
 
 // For use in a web page
@@ -193,6 +195,15 @@ export class ServerClient implements ServerInterface {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.CreateGhostSessions,
       ...request,
+    });
+  }
+
+  async fixChromeParents(
+    request: FixChromeParentsRequest
+  ): Promise<FixChromeParentsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.FixChromeParents,
+      ...request
     });
   }
 

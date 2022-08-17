@@ -11,7 +11,12 @@ export function historyCrawlerFactory(server: ServerInterface): HistoryCrawler {
   );
 }
 
-export function setupObservers(server: ServerInterface): () => Promise<void> {
+export interface ObserversController {
+  resetState: () => Promise<void>;
+  runCrawler: () => Promise<void>;
+}
+
+export function setupObservers(server: ServerInterface): ObserversController {
   const navigationObserver = new NavigationObserver("nav");
   const tabObserver = new TabObserver(server);
   const historyCrawler = historyCrawlerFactory(server);
@@ -21,8 +26,8 @@ export function setupObservers(server: ServerInterface): () => Promise<void> {
   navigationObserver.cleanUpStorage();
   historyCrawler.registerCrawler("HistoryCrawler_crawl");
 
-  return async () => {
-    await historyCrawler.resetState();
-    await historyCrawler.runCrawler();
-  };
+  return {
+    resetState: async () => { await historyCrawler.resetState() },
+    runCrawler: async () => { await historyCrawler.runCrawler() }
+  }
 }

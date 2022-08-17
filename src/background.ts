@@ -22,7 +22,7 @@ const jobManager = new JobManager({
 const managedConnection = jobManagerMiddleware(loggingServerConnection, jobManager)
 const serverClient = new ServerClient(managedConnection);
 
-const resetObservers = setupObservers(serverClient);
+const observersController = setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'me') {
@@ -69,19 +69,31 @@ chrome.runtime.onSuspend.addListener(async () => {
   await closeServer();
 });
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
   if (DEV_MODE) {
-    resetObservers();
+    await observersController.resetState();
   }
+  observersController.runCrawler();
   chrome.tabs.query({}, (tabs) => {
     if (chrome.runtime.lastError) {
       throw chrome.runtime.lastError;
     }
     tabs.forEach((tab) => {
-      if (tab.id !== undefined && !tab.url?.startsWith('chrome://')) {
+      if (
+        tab.id !== undefined &&
+        !tab.url?.startsWith('chrome://')
+      ) {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
           files: ['content-script.js'],
+        }, () => {
+          if (chrome.runtime.lastError) {
+            logger.error(
+              'error executing content script on %s: %s',
+              tab.url,
+              chrome.runtime.lastError
+            );
+          }
         });
       }
     });

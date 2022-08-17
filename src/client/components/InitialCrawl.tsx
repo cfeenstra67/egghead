@@ -7,9 +7,10 @@ import type { ServerInterface } from '../../server';
 
 interface LoadingStateProps {
   isPopup?: boolean;
+  percentDone: number;
 }
 
-function LoadingState({ isPopup }: LoadingStateProps) {
+function LoadingState({ isPopup, percentDone }: LoadingStateProps) {
   const UseLayout = isPopup ? PopupLayout : Layout;
 
   return (
@@ -20,6 +21,9 @@ function LoadingState({ isPopup }: LoadingStateProps) {
           Loading your existing chrome history for searching
           (this only happens once). This should only take a minute
           or two...
+        </p>
+        <p>
+          Percent done: {percentDone.toFixed(0)}%
         </p>
       </Card>
     </UseLayout>
@@ -39,12 +43,14 @@ export default function InitialCrawl({
 }: InitialCrawlProps) {
 
   const [upToDate, setUpToDate] = useState(false);
+  const [percentDone, setPercentDone] = useState(0);
 
   async function checkIfUpToDate() {
     const server = await serverClientFactory();
     const crawler = historyCrawlerFactory(server);
     const currentState = await crawler.getState();
     setUpToDate(currentState.upToDate);
+    setPercentDone(currentState.initialCrawlPercentDone ?? 0);
   }
 
   useEffect(() => {
@@ -60,5 +66,5 @@ export default function InitialCrawl({
 
   const app = useMemo(() => upToDate ? getApp() : <></>, [upToDate, getApp]);
 
-  return upToDate ? app : <LoadingState isPopup={isPopup} />;
+  return upToDate ? app : <LoadingState percentDone={percentDone} isPopup={isPopup} />;
 }

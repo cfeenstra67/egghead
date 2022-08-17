@@ -3,7 +3,12 @@ import { ServerInterface } from "../server";
 import { AggregateOperator, BinaryOperator } from "../server/clause";
 import { cleanURL, dateToSqliteString } from "../server/utils";
 
-const initialDate = new Date("2020-01-01");
+// Chrome appears to only store 3 months' worth of history, so setting
+// this any earlier than that isn't useful and misleads the user on the
+// progress of the initial load.
+const initialDate = new Date(
+  new Date().getTime() - 100 * 24 * 60 * 60 * 1000
+);
 
 const logger = parentLogger.child({ context: 'history-crawler' });
 
@@ -15,6 +20,7 @@ interface Visit {
 export interface HistoryCrawlerState {
   startTimestamp: Date;
   upToDate: boolean;
+  initialCrawlPercentDone?: number;
 }
 
 export interface HistoryCrawlStats {
@@ -56,12 +62,13 @@ export class HistoryCrawler {
     readonly interval: number,
   ) {}
 
-  setState({ startTimestamp, upToDate }: HistoryCrawlerState): Promise<void> {
+  setState({ startTimestamp, upToDate, initialCrawlPercentDone }: HistoryCrawlerState): Promise<void> {
     return new Promise((resolve, reject) => {
       const storage = {
         [this.ns]: {
           startTimestamp: startTimestamp.getTime(),
-          upToDate: upToDate
+          upToDate: upToDate,
+          initialCrawlPercentDone,
         }
       };
       chrome.storage.local.set(storage, () => {
@@ -82,11 +89,13 @@ export class HistoryCrawler {
         } else if (result[this.ns]) {
           resolve({
             startTimestamp: new Date(result[this.ns].startTimestamp),
+            initialCrawlPercentDone: result[this.ns].initialCrawlPercentDone,
             upToDate: result[this.ns].upToDate,
           });
         } else {
           resolve({
             startTimestamp: initialDate,
+            initialCrawlPercentDone: 0,
             upToDate: false,
           });
         }
@@ -328,6 +337,7 @@ export class HistoryCrawler {
       stop = new Date();
     }
     const now = new Date();
+    const initialStartTimestamp = startTimestamp;
 
     // Add interval cushion before the start timestamp
     startTimestamp = new Date(
@@ -341,8 +351,27 @@ export class HistoryCrawler {
 
     const getVisits = this.getVisitsCache();
 
+    let total = 0;
+    let done = 0;
+
     while (endTimestamp.getTime() <= stop.getTime()) {
-      promises.push(this.crawlInterval(startTimestamp, endTimestamp, getVisits));
+      total += 1;
+      promises.push(
+        this.crawlInterval(startTimestamp, endTimestamp, getVisits)
+          .then(async (result) => {
+            if (upToDate) {
+              return result;
+            }
+            done += 1;
+            const percentDone = done / total * .8 * 100;
+            await this.setState({
+              startTimestamp: initialStartTimestamp,
+              upToDate: false,
+              initialCrawlPercentDone: percentDone,
+            })
+            return result;
+          })
+      );
       startTimestamp = new Date(startTimestamp.getTime() + this.interval);
       endTimestamp = new Date(endTimestamp.getTime() + this.interval);
     }

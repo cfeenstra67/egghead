@@ -58,18 +58,18 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
           You can always <b>Reload</b> the page to choose another option.
         </p>
         <p>
-          If you're looking for more information about Egghead, check out the{' '}
-          <a href="https://docs.egghead.camfeenstra.com" target="_blank">
+          If you{"'"}re looking for more information about Egghead, check out the{' '}
+          <a href="https://docs.egghead.camfeenstra.com" target="_blank" rel="noreferrer">
             documentation
           </a> or the{' '}
-          <a href="https://github.com/cfeenstra67/egghead" target="_blank">
+          <a href="https://github.com/cfeenstra67/egghead" target="_blank" rel="noreferrer">
             github repo
           </a>.
         </p>
         <p>
           If you{"'"}d like to see other projects I{"'"}ve worked on or get in
           contact with me, check out{' '}
-          <a href="https://www.camfeenstra.com" target="_blank">
+          <a href="https://www.camfeenstra.com" target="_blank" rel="noreferrer">
             my personal website
           </a>.
         </p>

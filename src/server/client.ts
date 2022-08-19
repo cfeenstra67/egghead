@@ -8,6 +8,8 @@ import type {
   ServerInterface,
   TypedServerRequestForMessage,
   ServerResponseForMessage,
+  PingRequest,
+  PingResponse,
   QueryRequest,
   QueryResponse,
   QuerySessionsRequest,
@@ -76,6 +78,13 @@ export class ServerClient implements ServerInterface {
       throw new Aborted();
     }
     throw new Error(response.message);
+  }
+
+  async ping(request: PingRequest): Promise<PingResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.Ping,
+      ...request
+    });
   }
 
   async runQuery(request: QueryRequest): Promise<QueryResponse> {

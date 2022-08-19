@@ -277,7 +277,7 @@ export class NavigationObserver {
   onErrorOccurredListener(data: any): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
-      logger.error("errorErrorOccurredWithoutPending %s %s", data.url, data);
+      logger.debug("errorErrorOccurredWithoutPending %s %s", data.url, data);
     } else {
       this.prepareDataStorage(id);
 

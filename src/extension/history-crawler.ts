@@ -21,6 +21,7 @@ export interface HistoryCrawlerState {
   startTimestamp: Date;
   upToDate: boolean;
   initialCrawlPercentDone?: number;
+  lastError?: string;
 }
 
 export interface HistoryCrawlStats {
@@ -62,13 +63,14 @@ export class HistoryCrawler {
     readonly interval: number,
   ) {}
 
-  setState({ startTimestamp, upToDate, initialCrawlPercentDone }: HistoryCrawlerState): Promise<void> {
+  setState({ startTimestamp, upToDate, initialCrawlPercentDone, lastError }: HistoryCrawlerState): Promise<void> {
     return new Promise((resolve, reject) => {
       const storage = {
         [this.ns]: {
           startTimestamp: startTimestamp.getTime(),
           upToDate: upToDate,
           initialCrawlPercentDone,
+          lastError,
         }
       };
       chrome.storage.local.set(storage, () => {
@@ -332,12 +334,13 @@ export class HistoryCrawler {
     return getVisits;
   }
 
-  async crawl({ startTimestamp, upToDate }: HistoryCrawlerState, stop?: Date): Promise<HistoryCrawlerState> {
+  async crawl({ startTimestamp, upToDate, initialCrawlPercentDone }: HistoryCrawlerState, stop?: Date): Promise<HistoryCrawlerState> {
     if (stop === undefined) {
       stop = new Date();
     }
     const now = new Date();
     const initialStartTimestamp = startTimestamp;
+    const initialPercent = initialCrawlPercentDone ?? 0;
 
     // Add interval cushion before the start timestamp
     startTimestamp = new Date(
@@ -353,6 +356,8 @@ export class HistoryCrawler {
 
     let total = 0;
     let done = 0;
+    const correlateVisitsPercent = 25;
+    const nonCorrelateVisitsPercent = 100 - correlateVisitsPercent;
 
     while (endTimestamp.getTime() <= stop.getTime()) {
       total += 1;
@@ -363,11 +368,11 @@ export class HistoryCrawler {
               return result;
             }
             done += 1;
-            const percentDone = done / total * .8 * 100;
+            const percentDone = done / total * nonCorrelateVisitsPercent;
             await this.setState({
               startTimestamp: initialStartTimestamp,
               upToDate: false,
-              initialCrawlPercentDone: percentDone,
+              initialCrawlPercentDone: Math.max(percentDone, initialPercent),
             })
             return result;
           })
@@ -378,7 +383,25 @@ export class HistoryCrawler {
 
     const stats = await Promise.all(promises);
 
-    await this.server.fixChromeParents({});
+    let ticks = 0;
+    const ivl = setInterval(async () => {
+      if (upToDate) {
+        return;
+      }
+      ticks += 1;
+      const effectiveTicks = Math.min(ticks, correlateVisitsPercent - 1);
+
+      await this.setState({
+        upToDate: false,
+        startTimestamp: initialStartTimestamp,
+        initialCrawlPercentDone: Math.max(
+          nonCorrelateVisitsPercent + effectiveTicks,
+          initialPercent
+        )
+      })
+    }, 1000);
+
+    await this.server.fixChromeParents({}).finally(() => clearInterval(ivl));
 
     const aggStats = aggregateStats(stats);
 
@@ -392,14 +415,28 @@ export class HistoryCrawler {
     };
   }
 
-  async runCrawler() {
-    const state = await this.getState();
-    const newState = await this.crawl(state);
-    await this.setState(newState);
+  async runCrawler(ifAvailable?: boolean) {
+    await navigator.locks.request(this.ns, { ifAvailable }, async (lock) => {
+      if (lock === null) {
+        logger.debug('Crawler already running');
+        return;
+      }
+      const state = await this.getState();
+      try {
+        const newState = await this.crawl(state);
+        await this.setState(newState);        
+      } catch (error: any) {
+        await this.setState({
+          ...state,
+          lastError: error.toString()
+        });
+        logger.error('Error occurred in crawler: %s', error);
+      }
+    });
   }
 
   registerCrawler(crawlerAlarm: string): void {
-    chrome.alarms.create(crawlerAlarm, { periodInMinutes: 5 });
+    chrome.alarms.create(crawlerAlarm, { periodInMinutes: 5, delayInMinutes: 0 });
     const resetAlarm = crawlerAlarm + '_reset';
     chrome.alarms.create(resetAlarm, { periodInMinutes: 60 * 24 });
     chrome.alarms.onAlarm.addListener(async (alarm) => {

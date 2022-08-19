@@ -40,6 +40,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse('OK');
     return false;
   }
+  if (request.type === 'maybeRestartCrawler') {
+    observersController.maybeRunCrawler();
+    sendResponse('OK');
+    return false;
+  }
   const { request: innerRequest, requestId } = request;
   jobManager.addJob(requestId, (abortSignal) => {
     return loggingServerConnection({ ...innerRequest, abort: abortSignal });
@@ -72,8 +77,8 @@ chrome.runtime.onSuspend.addListener(async () => {
 chrome.runtime.onInstalled.addListener(async () => {
   if (DEV_MODE) {
     await observersController.resetState();
+    observersController.runCrawler();
   }
-  observersController.runCrawler();
   chrome.tabs.query({}, (tabs) => {
     if (chrome.runtime.lastError) {
       throw chrome.runtime.lastError;
@@ -88,7 +93,7 @@ chrome.runtime.onInstalled.addListener(async () => {
           files: ['content-script.js'],
         }, () => {
           if (chrome.runtime.lastError) {
-            logger.error(
+            logger.warn(
               'error executing content script on %s: %s',
               tab.url,
               chrome.runtime.lastError

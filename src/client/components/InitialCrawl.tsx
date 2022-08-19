@@ -8,23 +8,39 @@ import type { ServerInterface } from '../../server';
 interface LoadingStateProps {
   isPopup?: boolean;
   percentDone: number;
+  lastError?: string;
 }
 
-function LoadingState({ isPopup, percentDone }: LoadingStateProps) {
+function LoadingState({ isPopup, percentDone, lastError }: LoadingStateProps) {
   const UseLayout = isPopup ? PopupLayout : Layout;
 
   return (
     <UseLayout>
       {!isPopup && <h1>History</h1>}
       <Card>
-        <p>
-          Loading your existing chrome history for searching
-          (this only happens once). This should only take a minute
-          or two...
-        </p>
-        <p>
-          Percent done: {percentDone.toFixed(0)}%
-        </p>
+        {lastError === undefined ? (
+          <>
+            <p>
+              Loading your existing browsing history for searching
+              (this only happens once). This should only take a minute
+              or two...
+            </p>
+            <p>
+              Percent done: {percentDone.toFixed(0)}%
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              Unfortunately the app encountered an unrecoverable error
+              while ingesting your existing browsing history. You{"'"}ll
+              need to reinstall the extension to fix the issue. If you
+              continue to experience issues, please report the following
+              error to the developer at me@camfeenstra.com:
+            </p>
+            <p>{lastError}</p>
+          </>
+        )}
       </Card>
     </UseLayout>
   );
@@ -44,13 +60,16 @@ export default function InitialCrawl({
 
   const [upToDate, setUpToDate] = useState(false);
   const [percentDone, setPercentDone] = useState(0);
+  const [lastError, setLastError] = useState<string | undefined>(undefined);
 
   async function checkIfUpToDate() {
     const server = await serverClientFactory();
+    chrome.runtime.sendMessage({ type: 'maybeRestartCrawler' });
     const crawler = historyCrawlerFactory(server);
     const currentState = await crawler.getState();
     setUpToDate(currentState.upToDate);
     setPercentDone(currentState.initialCrawlPercentDone ?? 0);
+    setLastError(currentState.lastError);
   }
 
   useEffect(() => {
@@ -66,5 +85,11 @@ export default function InitialCrawl({
 
   const app = useMemo(() => upToDate ? getApp() : <></>, [upToDate, getApp]);
 
-  return upToDate ? app : <LoadingState percentDone={percentDone} isPopup={isPopup} />;
+  return upToDate ? app : (
+    <LoadingState
+      percentDone={percentDone}
+      isPopup={isPopup}
+      lastError={lastError}
+    />
+  );
 }

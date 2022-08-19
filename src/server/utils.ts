@@ -108,6 +108,10 @@ export function jobManagerMiddleware(
   jobManager: JobManager,
 ): RequestHandler {
   return async (request) => {
+    // Let pings through immediately
+    if (request.type === ServerMessage.Ping) {
+      return await handler(request);
+    }
     const requestId = uuidv4();
     jobManager.addJob(requestId, (abort) => {
       return handler({ ...request, abort });

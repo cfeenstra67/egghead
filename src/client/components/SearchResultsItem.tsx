@@ -246,6 +246,7 @@ function SingleAggregatedSearchResultsItem({
         classNames={{ exit: 'animate__fadeOutRight' }}
       >
         <div
+          data-session-id={session.id}
           className={classNames.join(' ')}
           ref={ref}
           style={{ marginLeft: 24 * (indent || 0) + "px" }}

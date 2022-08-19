@@ -2,6 +2,7 @@ import type { Clause } from "./clause";
 import type { Session, SettingsItems } from "../models";
 
 export enum ServerMessage {
+  Ping = "ping",
   Query = "runQuery",
   TabChanged = "tabChanged",
   TabClosed = "tabClosed",
@@ -34,6 +35,10 @@ export enum Theme {
 export interface BaseRequest {
   abort?: AbortSignal;
 }
+
+export interface PingRequest extends BaseRequest {}
+
+export interface PingResponse {}
 
 export interface QueryRequest extends BaseRequest {
   query: string;
@@ -179,6 +184,7 @@ export interface FixChromeParentsRequest extends BaseRequest {}
 export interface FixChromeParentsResponse {}
 
 export type ServerMessageMapping = {
+  [ServerMessage.Ping]: [PingRequest, PingResponse];
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
   [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
   [ServerMessage.QuerySessionFacets]: [

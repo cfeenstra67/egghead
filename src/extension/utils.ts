@@ -14,6 +14,7 @@ export function historyCrawlerFactory(server: ServerInterface): HistoryCrawler {
 export interface ObserversController {
   resetState: () => Promise<void>;
   runCrawler: () => Promise<void>;
+  maybeRunCrawler: () => Promise<void>;
 }
 
 export function setupObservers(server: ServerInterface): ObserversController {
@@ -28,6 +29,7 @@ export function setupObservers(server: ServerInterface): ObserversController {
 
   return {
     resetState: async () => { await historyCrawler.resetState() },
-    runCrawler: async () => { await historyCrawler.runCrawler() }
+    runCrawler: async () => { await historyCrawler.runCrawler() },
+    maybeRunCrawler: async () => { await historyCrawler.runCrawler(true) },
   }
 }

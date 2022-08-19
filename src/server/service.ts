@@ -5,6 +5,8 @@ import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { SearchService, sessionIndexTableArgs } from "./search";
 import {
   ServerInterface,
+  PingRequest,
+  PingResponse,
   QueryRequest,
   QueryResponse,
   QuerySessionsRequest,
@@ -81,7 +83,11 @@ export class Server implements ServerInterface {
     this.searchService = new SearchService(dataSource);
   }
 
-  async runQuery(request: Omit<QueryRequest, "type">): Promise<QueryResponse> {
+  async ping(request: PingRequest): Promise<PingResponse> {
+    return {};
+  }
+
+  async runQuery(request: QueryRequest): Promise<QueryResponse> {
     const result = await this.dataSource.manager.query(request.query);
     return { result };
   }
@@ -476,6 +482,8 @@ export class Server implements ServerInterface {
           and s.parentSessionId is null
           and s2.id is not null
           and s2.id is not s.id
+          and s.tabId = ${GhostSessionTabId}
+          and s2.tabId = ${GhostSessionTabId}
         limit 1000
       ) updates
       where id = updates.sessionId

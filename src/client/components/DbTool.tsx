@@ -209,6 +209,7 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
   ) {
     // Cmd + return for submit
     if (evt.keyCode === 13 && evt.metaKey) {
+      evt.preventDefault();
       runQuery();
     }
   }

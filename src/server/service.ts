@@ -484,25 +484,14 @@ export class Server implements ServerInterface {
           and s2.id is not s.id
           and s.tabId = ${GhostSessionTabId}
           and s2.tabId = ${GhostSessionTabId}
-        limit 1000
       ) updates
       where id = updates.sessionId
       returning id
     `;
 
-    let total = 0;
-    let lastCount = -1;
-    while (lastCount !== 0) {
-      const results = await this.dataSource.query(query);
-      lastCount = results.length;
-      total += results.length;
-      if (results.length > 0) {
-        logger.debug(`Fixed ${results.length} chrome parents`);
-      }
-    }
-
-    if (total > 0) {
-      logger.info(`Fixed ${total} total chrome parents`);
+    const results = await this.dataSource.query(query);
+    if (results.length > 0) {
+      logger.info(`Fixed ${results.length} total chrome parents`);
     }
 
     return {};

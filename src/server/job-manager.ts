@@ -20,10 +20,12 @@ export class JobManager {
   private readonly queue: queue;
   private readonly aborts: Record<string, AbortController>;
   private readonly middlewares: JobManagerMiddleware[];
+  private readonly requestTimeout: number;
 
   constructor(options?: JobManagerOptions) {
+    this.requestTimeout = options?.requestTimeout ?? 60 * 1000;
     this.queue = queue({
-      timeout: options?.requestTimeout ?? 60 * 1000,
+      timeout: this.requestTimeout,
       concurrency: options?.concurrency ?? 1,
     });
     this.queue.setMaxListeners(10 * 1000);
@@ -89,7 +91,7 @@ export class JobManager {
       this.on("error", errorCb);
       const timeoutCb = (_: any, job: any) => {
         if (job.id === jobId) {
-          reject(new Error('`Job timed out after ${this.requestTimeout}ms.`'));
+          reject(new Error(`Job timed out after ${this.requestTimeout}ms.`));
           this.removeListener("timeout", timeoutCb);
         }
       }
@@ -98,7 +100,10 @@ export class JobManager {
   }
 
   private handleEvent(job: any, event: string | symbol): void {
-    if (['success', 'error', 'callback'].includes(event as string)) {
+    if (['timeout'].includes(event as string)) {
+      this.aborts[job.id]?.abort();
+    }
+    if (['success', 'error', 'timeout'].includes(event as string)) {
       this.completeJob(job.id);
     }
   }

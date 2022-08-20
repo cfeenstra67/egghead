@@ -21,6 +21,7 @@ function createModule({
   entry,
   devMode,
   ignoreAssets,
+  hasDb,
 }) {
   return {
     mode: 'production',
@@ -98,7 +99,7 @@ function createModule({
           {
             from: `data/${name}`,
             to: '.',
-            noErrorOnMissing: name === 'prod'
+            noErrorOnMissing: !hasDb
           },
         ],
       }),
@@ -138,13 +139,26 @@ module.exports = [
     }
   }),
   createModule({
+    name: 'dev-ext',
+    logLevel: 'debug',
+    devMode: true,
+    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    entry: {
+      background: './src/background.ts',
+      'content-script': './src/content-script.ts',
+      client: './src/client/extension.tsx',
+      popup: './src/client/extension-popup.tsx',
+    }
+  }),
+  createModule({
     name: 'demo',
     logLevel: 'error',
     ignoreAssets: ['**/*.png', '**/history.html'],
     entry: {
       client: './src/client/demo.tsx',
       popup: './src/client/demo-popup.tsx',
-    }
+    },
+    hasDb: true,
   }),
   createModule({
     name: 'dev',
@@ -154,6 +168,7 @@ module.exports = [
     entry: {
       client: './src/client/web.tsx',
       popup: './src/client/web-popup.tsx',
-    }
+    },
+    hasDb: true,
   }),
 ];

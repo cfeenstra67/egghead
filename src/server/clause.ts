@@ -311,7 +311,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
     },
     columnQuery: (col, _1, operator, _2, value) => {
       let term = value.clause().value;
-      term = term?.slice(1, term.length - 1)?.replace('""', '"');
+      term = term?.slice(1, term.length - 1)?.replace('""', '"') ?? null;
 
       let outOp: BinaryOperator | undefined = undefined;
       const op = operator.sourceString.slice(

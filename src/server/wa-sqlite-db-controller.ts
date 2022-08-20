@@ -24,11 +24,13 @@ export class WaSqliteDBController extends AbstractDBController {
       database: dbName,
       vfs: vfsName,
       migrations,
-      migrationsRun: true,
       entities,
     });
 
     await dataSource.initialize();
+    await dataSource.query('PRAGMA page_size=8192');
+    await dataSource.runMigrations();
+
     return dataSource;
   }
 

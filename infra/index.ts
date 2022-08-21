@@ -6,7 +6,8 @@ import { walkDirectory } from "./utils";
 
 interface StaticWebsiteArgs {
   idPrefix: string;
-  sourcePath: string;
+  directories?: string[];
+  files?: string[];
   dnsName: string;
   indexDocument: string;
   logsBucket: aws.s3.GetBucketResult;
@@ -14,7 +15,8 @@ interface StaticWebsiteArgs {
 
 async function staticWebsite({
   idPrefix,
-  sourcePath,
+  directories,
+  files,
   dnsName,
   indexDocument,
   logsBucket,
@@ -61,8 +63,21 @@ async function staticWebsite({
     website: { indexDocument }
   });
 
-  for await (const file of walkDirectory(sourcePath)) {
-    const relPath = path.relative(sourcePath, file);
+  for (const directory of directories ?? []) {
+    for await (const file of walkDirectory(directory)) {
+      const relPath = path.relative(directory, file);
+      const contentType = mime.lookup(file) || 'application/octet-stream';
+      new aws.s3.BucketObject(`${idPrefix}${relPath}`, {
+        bucket: siteBucket,
+        key: relPath,
+        source: new pulumi.asset.FileAsset(file),
+        acl: 'public-read',
+        contentType,
+      });
+    }
+  }
+  for (const file of files ?? []) {
+    const relPath = path.basename(file);
     const contentType = mime.lookup(file) || 'application/octet-stream';
     new aws.s3.BucketObject(`${idPrefix}${relPath}`, {
       bucket: siteBucket,
@@ -146,7 +161,11 @@ export = async () => {
 
   const mainSite = await staticWebsite({
     idPrefix: '',
-    sourcePath: path.normalize(path.resolve(__dirname, '../dist/demo')),
+    directories: [path.normalize(path.resolve(__dirname, '../dist/demo'))],
+    files: [
+      path.normalize(path.resolve(__dirname, '../dist/firefox.zip')),
+      path.normalize(path.resolve(__dirname, '../dist/chrome.zip')),
+    ],
     dnsName,
     indexDocument: 'demo-history.html',
     logsBucket,
@@ -154,7 +173,7 @@ export = async () => {
 
   const docsSite = await staticWebsite({
     idPrefix: 'docs-',
-    sourcePath: path.normalize(path.resolve(__dirname, '../dist/docs/html')),
+    directories: [path.normalize(path.resolve(__dirname, '../dist/docs/html'))],
     dnsName: docsDnsName,
     indexDocument: 'index.html',
     logsBucket,

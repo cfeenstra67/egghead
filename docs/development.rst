@@ -19,13 +19,25 @@ You also need to compile the ``ohm-js`` grammar definition in order for the rest
 
    $ npm run ohm-generate
 
-This is all of the setup needed to be able to develop the app. The app is built using ``webpack``, and there are three different configurations you can use:
+This is all of the setup needed to be able to develop the app. The app is built using ``webpack``, and there are a number of different configurations you can use:
 
-* ``prod`` - the full extension, ready to be loaded into Chrome.
+* ``chrome`` - the full extension, ready to be loaded into Chrome.
 
-  * development command - ``npx webpack --config-name prod --watch``
+  * development command - ``npx webpack --config-name chrome --watch``
 
-  * build command - ``npx webpack --config-name prod``
+  * build command - ``npx webpack --config-name chrome``
+
+* ``firefox`` - the full extension, ready to be loaded into firefox
+
+  * development command - ``npx webpack --config-name firefox --watch``
+
+  * build command - ``npx webpack --config-name firefox``
+
+* ``chrome-dev`` - the full extension ready to be loaded into chrome w/ development mode enabled. This enabled the "dev mode" option in settings by default and enables debug logging.
+
+  * development command - ``npx webpack --config-name chrome-dev --watch``
+
+  * build command - ``npx webpack --config-name chrome-dev``
 
 * ``dev`` - a web version of the extension history page for local development.
 
@@ -53,10 +65,12 @@ This is all of the setup needed to be able to develop the app. The app is built 
 
 For local development, generally running the ``dev`` configuration makes the most sense.
 
+To build all production assets (the ``chrome``, ``firefox``, and ``demo`` configurations), simply run ``npm run build``.
+
 Documentation
 ##################
 
-The documentation is built using Sphinx. As this comes from the world of Python and uses Python to run, you'll need Python in order to build the documentation. Specifically, you'll need to install Poetry. The documentation & installation instructions for Poetry can be found `here <https://python-poetry.org/docs/>`_. 
+The documentation is built using Sphinx. As this comes from the world of Python and uses Python to run, you'll need Python in order to build the documentation. Also, you'll need to install Poetry. The documentation & installation instructions for Poetry can be found `here <https://python-poetry.org/docs/>`_. 
 
 Once you have poetry installed, you can install the Python dependencies by running:
 

@@ -2,7 +2,7 @@
   "name": "Egghead History",
   "manifest_version": 3,
   "version": "1.0.0",
-  "description": "A delightful browser history replacement",
+  "description": "A delightful browser history extension",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
@@ -10,6 +10,10 @@
   },
   "background": {
     "service_worker": "background.js"
+  },
+  "minimum_chrome_version": "104",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
   },
   "content_scripts": [
     {

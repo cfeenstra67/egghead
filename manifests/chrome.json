@@ -1,0 +1,48 @@
+{
+  "name": "Egghead History",
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "description": "A delightful browser history extension",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "96": "icon-96.png",
+    "128": "icon-128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "minimum_chrome_version": "104",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"]
+    }
+  ],
+  "host_permissions": ["http://*/", "https://*/"],
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs",
+    "alarms",
+    "history",
+    "scripting"
+  ],
+  "chrome_url_overrides": {
+    "history": "history.html"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Open popup"
+    }
+  }
+}

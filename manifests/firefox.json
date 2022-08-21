@@ -6,12 +6,17 @@
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
+    "96": "icon-96.png",
     "128": "icon-128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
-  "minimum_chrome_version": "104",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "egghead@camfeenstra.com"
+    }
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
   },
@@ -30,9 +35,6 @@
     "history",
     "scripting"
   ],
-  "chrome_url_overrides": {
-    "history": "history.html"
-  },
   "action": {
     "default_popup": "popup.html"
   },

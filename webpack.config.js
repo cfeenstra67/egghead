@@ -21,7 +21,7 @@ function createModule({
   entry,
   devMode,
   ignoreAssets,
-  hasDb,
+  platform,
 }) {
   return {
     mode: 'production',
@@ -99,8 +99,13 @@ function createModule({
           {
             from: `data/${name}`,
             to: '.',
-            noErrorOnMissing: !hasDb
+            noErrorOnMissing: platform !== 'web'
           },
+          {
+            from: `manifests/${platform}.json`,
+            to: 'manifest.json',
+            noErrorOnMissing: platform === 'web',
+          }
         ],
       }),
       new MiniCssExtractPlugin(),
@@ -128,27 +133,41 @@ function createModule({
 
 module.exports = [
   createModule({
-    name: 'prod',
+    name: 'chrome',
     logLevel: 'error',
     ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
-      client: './src/client/extension.tsx',
-      popup: './src/client/extension-popup.tsx',
-    }
+      client: './src/client/chrome.tsx',
+      popup: './src/client/chrome-popup.tsx',
+    },
+    platform: 'chrome',
   }),
   createModule({
-    name: 'dev-ext',
+    name: 'firefox',
+    logLevel: 'error',
+    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    entry: {
+      background: './src/background.ts',
+      'content-script': './src/content-script.ts',
+      client: './src/client/firefox.tsx',
+      popup: './src/client/firefox-popup.tsx',
+    },
+    platform: 'firefox',
+  }),
+  createModule({
+    name: 'dev-chrome',
     logLevel: 'debug',
     devMode: true,
     ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
-      client: './src/client/extension.tsx',
-      popup: './src/client/extension-popup.tsx',
-    }
+      client: './src/client/chrome.tsx',
+      popup: './src/client/chrome-popup.tsx',
+    },
+    platform: 'chrome'
   }),
   createModule({
     name: 'demo',
@@ -158,7 +177,7 @@ module.exports = [
       client: './src/client/demo.tsx',
       popup: './src/client/demo-popup.tsx',
     },
-    hasDb: true,
+    platform: 'web',
   }),
   createModule({
     name: 'dev',
@@ -169,6 +188,6 @@ module.exports = [
       client: './src/client/web.tsx',
       popup: './src/client/web-popup.tsx',
     },
-    hasDb: true,
+    platform: 'web',
   }),
 ];

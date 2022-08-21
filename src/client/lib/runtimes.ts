@@ -125,13 +125,15 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
 
 }
 
-export class ChromePopupRuntime implements RuntimeInterface {
+export class PopupRuntime implements RuntimeInterface {
 
   routerHook = popupLocationHook(this);
 
+  constructor(private readonly historyUrl: string) {}
+
   openHistory() {
     return new Promise<void>((resolve, reject) => {
-      chrome.tabs.create({ url: 'chrome://history' }, () => {
+      chrome.tabs.create({ url: this.historyUrl }, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
         } else {
@@ -203,7 +205,7 @@ export class ChromePopupRuntime implements RuntimeInterface {
   }
 
   async goBack() {
-    await this.openUrl('chrome://history');
+    await this.openUrl(this.historyUrl);
   }
 
 }

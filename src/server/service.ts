@@ -1,3 +1,7 @@
+import chunk from 'lodash/chunk';
+import { DataSource, Repository, IsNull, In } from "typeorm";
+import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
+import { v4 as uuidv4 } from "uuid";
 import { maybeAbort } from './abort';
 import parentLogger from '../logger';
 import { Session, SessionIndex, SessionTermIndex, Settings } from "../models";
@@ -39,9 +43,6 @@ import {
   FixChromeParentsResponse,
 } from "./types";
 import { cleanURL, getHost, defaultSettings } from "./utils";
-import { DataSource, Repository, IsNull, In } from "typeorm";
-import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
-import { v4 as uuidv4 } from "uuid";
 
 const logger = parentLogger.child({ context: 'service' });
 
@@ -68,6 +69,24 @@ function dataURItoBlob(dataURI: string): Blob {
   // write the ArrayBuffer to a blob, and you're done
   const blob = new Blob([ab], {type: mimeString});
   return blob;
+}
+
+const stopHosts = new Set([
+  'localhost'
+]);
+const stopProtocols = new Set([
+  'chrome',
+  'chrome-extension',
+  'moz-extension'
+]);
+
+function shouldIndex(url: string): boolean {
+  const urlObj = new URL(url);
+  const cleanedProtocol = urlObj.protocol.slice(0, urlObj.protocol.length - 1);
+  return (
+    !stopProtocols.has(cleanedProtocol) &&
+    !stopHosts.has(urlObj.hostname)
+  );
 }
 
 // Some arbitrary negative value (so it won't overlap w/ real IDs)
@@ -124,6 +143,11 @@ export class Server implements ServerInterface {
   }
 
   async tabChanged(request: TabChangedRequest): Promise<TabChangedResponse> {
+    if (!shouldIndex(request.url)) {
+      logger.debug(`Not indexing url: ${request.url}`);
+      return {};
+    }
+
     return await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Session);
       const now = new Date();
@@ -417,6 +441,11 @@ export class Server implements ServerInterface {
       }));
 
       const newSessions = request.sessions.flatMap((session) => {
+        if (!shouldIndex(session.url)) {
+          logger.debug(`Not indexing url: ${session.url}`);
+          return [];
+        }
+
         const existingSession = existingSessionMap[session.visitId];
         if (existingSession) {
           const isGhostSession = existingSession.tabId === GhostSessionTabId;
@@ -459,7 +488,11 @@ export class Server implements ServerInterface {
         return [newSession];
       });
 
-      await manager.save(newSessions);
+      logger.debug(`Saving ${newSessions.length} sessions`);
+      for (const sessions of chunk(newSessions, 70)) {
+        await manager.save(sessions);
+      }
+
       return {};
     });
   }

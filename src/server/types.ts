@@ -81,15 +81,17 @@ export interface CorrelateChromeVisitRequest extends BaseRequest {
 
 export interface CorrelateChromeVisitResponse {}
 
+export interface GhostSession {
+  visitTime: number;
+  visitId: string;
+  title: string;
+  url: string;
+  referringVisitId?: string;
+  transition?: string;
+}
+
 export interface CreateGhostSessionsRequest extends BaseRequest {
-  sessions: {
-    visitTime: number;
-    visitId: string;
-    title: string;
-    url: string;
-    referringVisitId?: string;
-    transition?: string;
-  }[];
+  sessions: GhostSession[];
 }
 
 export interface CreateGhostSessionsResponse {}

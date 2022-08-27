@@ -1,5 +1,0 @@
-newtab
-localhost
-history
-settings
-extensions

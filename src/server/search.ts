@@ -25,7 +25,6 @@ import {
   QuerySessionTimelineResponse,
 } from "./types";
 import { dateToSqliteString } from "./utils";
-import stophostsTxt from "./stophosts.txt";
 import stopwordsTxt from "./stopwords.txt";
 
 function sessionToSessionResponse(
@@ -193,15 +192,7 @@ export class SearchService {
   ): SelectQueryBuilder<SessionIndex | Session> {
     const repo = this.manager.getRepository(isSearch ? SessionIndex : Session);
 
-    const stophosts = stophostsTxt.split("\n").filter((x) => x);
-
-    const clauses: Clause<Session>[] = [
-      {
-        operator: BinaryOperator.NotIn,
-        fieldName: 'host',
-        value: stophosts,
-      }
-    ];
+    const clauses: Clause<Session>[] = [];
 
     let builder = repo
       .createQueryBuilder("s")
@@ -254,8 +245,6 @@ export class SearchService {
   }
 
   private async getChildCounts(parentIds: string[]): Promise<Record<string, ChildStats>> {
-    const stophosts = stophostsTxt.split("\n").filter((x) => x);
-
     const childCountsSql = `
       SELECT
         s.parentSessionId as id,
@@ -265,14 +254,13 @@ export class SearchService {
         session s
       WHERE
         s.parentSessionId IN (:...parentIds)
-        AND s.host NOT IN (:...stophosts)
       GROUP BY s.parentSessionId
     `;
 
     const builder = this.manager
       .createQueryBuilder()
       .from(`(${childCountsSql})`, 's')
-      .setParameters({ stophosts, parentIds });
+      .setParameters({ parentIds });
 
     const results = await builder.getRawMany();
 

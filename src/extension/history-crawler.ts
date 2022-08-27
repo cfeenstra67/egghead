@@ -1,5 +1,5 @@
 import parentLogger from '../logger';
-import { ServerInterface } from "../server";
+import { ServerInterface, GhostSession } from "../server";
 import { AggregateOperator, BinaryOperator } from "../server/clause";
 import { cleanURL, dateToSqliteString } from "../server/utils";
 
@@ -117,6 +117,33 @@ export class HistoryCrawler {
     });
   }
 
+  private deduplicateSessions(sessions: GhostSession[]): GhostSession[] {
+    const sessionsByUrl: Record<string, GhostSession[]> = {};
+    const cutoff = 5 * 60 * 1000;
+    for (const session of sessions) {
+      const cleanUrl = cleanURL(session.url);
+      if (sessionsByUrl[cleanUrl] === undefined) {
+        sessionsByUrl[cleanUrl] = [session];
+        continue;
+      }
+      const matchingSessions = sessionsByUrl[cleanUrl].filter((otherSession) => {
+        const diff = Math.abs(session.visitTime - otherSession.visitTime);
+        return diff < cutoff;
+      });
+      if (matchingSessions.length > 0) {
+        continue;
+      }
+      sessionsByUrl[cleanUrl].push(session);
+    }
+    const out: GhostSession[] = [];
+    for (const sessions of Object.values(sessionsByUrl)) {
+      for (const session of sessions) {
+        out.push(session);
+      }
+    }
+    return out;
+  }
+
   async handleItems(items: Visit[]): Promise<HistoryCrawlStats> {
     const timestamps = items.flatMap((item) => {
       return item.visitItem.visitTime ? [item.visitItem.visitTime] : [];
@@ -219,7 +246,7 @@ export class HistoryCrawler {
       (item) => nonCorrelated.has(item.visitItem.visitId)
     );
 
-    const sessions = uncorrelatedVisits.map((visit) => ({
+    const sessionsWithDupes = uncorrelatedVisits.map((visit) => ({
       visitTime: visit.visitItem.visitTime ?? 0,
       visitId: visit.visitItem.visitId,
       title: visit.historyItem.title ?? '',
@@ -227,6 +254,7 @@ export class HistoryCrawler {
       referringVisitId: visit.visitItem.referringVisitId,
       transition: visit.visitItem.transition,
     }));
+    const sessions = this.deduplicateSessions(sessionsWithDupes);
     await this.server.createGhostSessions({ sessions });
 
     return {

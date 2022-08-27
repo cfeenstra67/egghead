@@ -157,7 +157,7 @@ module.exports = [
     platform: 'firefox',
   }),
   createModule({
-    name: 'dev-chrome',
+    name: 'chrome-dev',
     logLevel: 'debug',
     devMode: true,
     ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],

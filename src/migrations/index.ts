@@ -15,6 +15,8 @@ import { moreIndexes1656901146387 } from "./1656901146387-more-indexes";
 import { addThemeSetting1657488998118 } from './1657488998118-add-theme-setting';
 import { addChromeReferringVisitColumn1660499472193 } from './1660499472193-add-chrome-referring-visit-column';
 import { addChromeVisitIndex1660888026194 } from './1660888026194-add-chrome-visit-index';
+import { addRetentionPeriod1661633234964 } from './1661633234964-add-retention-period';
+import { sessionRelationsSetNull1661633627280 } from "./1661633627280-session-relations-set-null";
 
 export const migrations = [
   createUser1651729792149,
@@ -34,4 +36,6 @@ export const migrations = [
   addThemeSetting1657488998118,
   addChromeReferringVisitColumn1660499472193,
   addChromeVisitIndex1660888026194,
+  addRetentionPeriod1661633234964,
+  sessionRelationsSetNull1661633627280,
 ];

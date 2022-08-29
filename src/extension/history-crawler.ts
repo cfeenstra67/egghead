@@ -42,15 +42,17 @@ function aggregateStatsBinary(left: HistoryCrawlStats, right: HistoryCrawlStats)
   };
 }
 
+const emptyCrawlStats: HistoryCrawlStats = {
+  initialCorrelated: 0,
+  initialUncorrelated: 0,
+  finalCorrelated: 0,
+  finalUncorrelated: 0,
+  uncorrelatedVisits: [],
+};
+
 function aggregateStats(stats: HistoryCrawlStats[]): HistoryCrawlStats {
   if (stats.length === 0) {
-    return {
-      initialCorrelated: 0,
-      initialUncorrelated: 0,
-      finalCorrelated: 0,
-      finalUncorrelated: 0,
-      uncorrelatedVisits: [],
-    }
+    return emptyCrawlStats;
   }
   return stats.reduce(aggregateStatsBinary);
 }
@@ -115,6 +117,10 @@ export class HistoryCrawler {
         }
       });
     });
+  }
+
+  async patchState(mapper: (state: HistoryCrawlerState) => HistoryCrawlerState): Promise<void> {
+    return await this.setState(mapper(await this.getState()));
   }
 
   private deduplicateSessions(sessions: GhostSession[]): GhostSession[] {
@@ -255,6 +261,8 @@ export class HistoryCrawler {
       transition: visit.visitItem.transition,
     }));
     const sessions = this.deduplicateSessions(sessionsWithDupes);
+    const removedDupes = sessionsWithDupes.length - sessions.length;
+    logger.debug(`Removed ${removedDupes} duplicate sessions`);
     await this.server.createGhostSessions({ sessions });
 
     return {
@@ -300,6 +308,8 @@ export class HistoryCrawler {
 
     const promises: Promise<HistoryCrawlStats>[] = [];
 
+    const visitItems: Visit[] = [];
+
     while (currentStart.getTime() < end.getTime()) {
       const currentEnd = new Date(currentStart.getTime() + interval);
       const results: chrome.history.HistoryItem[] = await new Promise((resolve, reject) => {
@@ -332,15 +342,19 @@ export class HistoryCrawler {
         const visitArrays = await Promise.all(results.map((historyItem) => (
           this.getVisitsForItem(historyItem, currentStart, currentEnd, getVisits)
         )));
-        const visitItems = visitArrays.reduce((a, b) => a.concat(b));
-        promises.push(this.handleItems(visitItems));
+        const newVisitItems = visitArrays.reduce((a, b) => a.concat(b));
+        for (const item of newVisitItems) {
+          visitItems.push(item);
+        }
       }
       currentStart = new Date(currentStart.getTime() + interval);
       interval = Math.min(end.getTime() - currentStart.getTime(), startInterval);
     }
 
-    const stats = await Promise.all(promises);
-    return aggregateStats(stats);
+    if (visitItems.length > 0) {
+      return this.handleItems(visitItems);
+    }
+    return emptyCrawlStats;
   }
 
   private getVisitsCache(): (url: string) => Promise<chrome.history.VisitItem[]> {
@@ -362,7 +376,7 @@ export class HistoryCrawler {
     return getVisits;
   }
 
-  async crawl({ startTimestamp, upToDate, initialCrawlPercentDone }: HistoryCrawlerState, stop?: Date): Promise<HistoryCrawlerState> {
+  async *crawl({ startTimestamp, upToDate, initialCrawlPercentDone }: HistoryCrawlerState, stop?: Date): AsyncGenerator<(state: HistoryCrawlerState) => HistoryCrawlerState> {
     if (stop === undefined) {
       stop = new Date();
     }
@@ -378,7 +392,7 @@ export class HistoryCrawler {
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
 
-    const promises: Promise<HistoryCrawlStats>[] = [];
+    const promises: [Promise<HistoryCrawlStats>, Date][] = [];
 
     const getVisits = this.getVisitsCache();
 
@@ -389,27 +403,37 @@ export class HistoryCrawler {
 
     while (endTimestamp.getTime() <= stop.getTime()) {
       total += 1;
-      promises.push(
-        this.crawlInterval(startTimestamp, endTimestamp, getVisits)
-          .then(async (result) => {
-            if (upToDate) {
-              return result;
-            }
-            done += 1;
-            const percentDone = done / total * nonCorrelateVisitsPercent;
-            await this.setState({
-              startTimestamp: initialStartTimestamp,
-              upToDate: false,
-              initialCrawlPercentDone: Math.max(percentDone, initialPercent),
-            })
+      const crawlPromise = this.crawlInterval(startTimestamp, endTimestamp, getVisits)
+        .then(async (result) => {
+          if (upToDate) {
             return result;
-          })
+          }
+          done += 1;
+          const percentDone = done / total * nonCorrelateVisitsPercent;
+          await this.patchState((state) => ({
+            ...state,
+            initialCrawlPercentDone: Math.max(percentDone, initialPercent)
+          }));
+          return result;
+        });
+
+      promises.push(
+
       );
       startTimestamp = new Date(startTimestamp.getTime() + this.interval);
       endTimestamp = new Date(endTimestamp.getTime() + this.interval);
+      promises.push([crawlPromise, startTimestamp]);
     }
 
-    const stats = await Promise.all(promises);
+    const stats: HistoryCrawlStats[] = [];
+    for (const [promise, newStartTimestamp] of promises) {
+      stats.push(await promise);
+      const percentDone = done / total * nonCorrelateVisitsPercent;
+      yield (state) => ({
+        ...state,
+        startTimestamp: newStartTimestamp,
+      });
+    }
 
     let ticks = 0;
     const ivl = setInterval(async () => {
@@ -419,14 +443,13 @@ export class HistoryCrawler {
       ticks += 1;
       const effectiveTicks = Math.min(ticks, correlateVisitsPercent - 1);
 
-      await this.setState({
-        upToDate: false,
-        startTimestamp: initialStartTimestamp,
+      await this.patchState((state) => ({
+        ...state,
         initialCrawlPercentDone: Math.max(
           nonCorrelateVisitsPercent + effectiveTicks,
           initialPercent
         )
-      })
+      }));
     }, 1000);
 
     await this.server.fixChromeParents({}).finally(() => clearInterval(ivl));
@@ -437,10 +460,11 @@ export class HistoryCrawler {
 
     logger.info('elapsed %s, crawl stats %o', elapsed / 1000, aggStats);
 
-    return {
+    const finalState = {
       startTimestamp: stop,
       upToDate: true,
     };
+    yield () => finalState;
   }
 
   async runCrawler(ifAvailable?: boolean) {
@@ -451,13 +475,14 @@ export class HistoryCrawler {
       }
       const state = await this.getState();
       try {
-        const newState = await this.crawl(state);
-        await this.setState(newState);        
+        for await (const newStateMapper of this.crawl(state)) {
+          await this.patchState(newStateMapper);
+        }
       } catch (error: any) {
-        await this.setState({
+        await this.patchState((state) => ({
           ...state,
           lastError: error.toString()
-        });
+        }));
         logger.error('Error occurred in crawler: %s', error);
       }
     });

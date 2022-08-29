@@ -64,6 +64,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({
         code: ServerResponseCode.Error,
         message: error.toString(),
+        stack: error.stack,
       });
     })
   return true;

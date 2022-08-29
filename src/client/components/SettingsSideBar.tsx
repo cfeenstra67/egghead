@@ -58,11 +58,6 @@ export default function SettingsSideBar({ page }: SettingsSideBarProps) {
         title="Clear Browsing Data"
         selected={page === SettingsPage.ClearBrowsingData}
       />
-      <SettingsSideBarItem 
-        url="/settings/data"
-        title="Data"
-        selected={page === SettingsPage.Data}
-      />
       <ExternalSettingsSideBarItem
         url="https://docs.egghead.camfeenstra.com"
         title="Docs"

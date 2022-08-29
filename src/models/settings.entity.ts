@@ -16,6 +16,9 @@ export class Settings {
   devModeEnabled!: boolean;
 
   @Column()
+  retentionPolicyMonths!: number;
+
+  @Column()
   theme: Theme;
 
   @Column()

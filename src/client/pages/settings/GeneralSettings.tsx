@@ -5,6 +5,7 @@ import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar'
 import { useSettingsContext } from '../../lib/SettingsContext';
 import { Theme } from "../../../server/types";
 import styles from "../../styles/utils.module.css";
+import settingsStyles from "../../styles/Settings.module.css";
 
 export default function Settings() {
   const settings = useSettingsContext();
@@ -20,7 +21,7 @@ export default function Settings() {
           <div className={styles.column}>
             <label htmlFor="theme">Theme</label>
             <small>
-              {'Change the look and feel of Egghead. Choosing "auto" will '}
+              {'Change the look and feel of Egghead. Choosing "Auto" will '}
               {'respect your system-wide theme preference.'}
             </small>
           </div>
@@ -35,6 +36,27 @@ export default function Settings() {
             <option value={Theme.Dark}>Dark</option>
             <option value={Theme.Light}>Light</option>
           </select>
+
+          <div className={styles.column}>
+            <label htmlFor="retention-policy">Retention Period</label>
+            <small>
+              {"Specify how many months you'd like egghead to retain your data "}
+              {"for. Reducing this can help improve search performance. Changing "}
+              {"this setting will take up to one hour to take effect."}
+            </small>
+          </div>
+          <div className={settingsStyles.retentionPeriod}>
+            <input
+              type="number"
+              name="retention-policy"
+              id="retention-policy"
+              value={settings.items.retentionPolicyMonths}
+              onChange={(evt) => {
+                settings.patch({ retentionPolicyMonths: parseInt(evt.target.value) });
+              }}
+            />
+            <span>Month(s)</span>
+          </div>
 
           <div className={styles.column}>
             <label htmlFor="devModeEnabled">Dev Mode Enabled</label>

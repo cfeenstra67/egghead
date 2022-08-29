@@ -12,6 +12,8 @@ import {
 @Index(["host", "startedAt"])
 @Index(["tabId", "startedAt"])
 @Index(["chromeVisitId", "startedAt", "url"])
+@Index("chromeVisitIndex", { synchronize: false })
+@Index("chromeReferringVisitIndex", { synchronize: false })
 export class Session {
   @PrimaryColumn({ unique: true })
   id!: string;
@@ -35,7 +37,7 @@ export class Session {
   @Column({ nullable: true })
   parentSessionId?: string;
 
-  @ManyToOne(() => Session, (session) => session.id)
+  @ManyToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
   parentSession?: Session;
 
   @OneToMany(() => Session, (session) => session.parentSession)
@@ -45,7 +47,7 @@ export class Session {
   @Column({ nullable: true })
   nextSessionId?: string;
 
-  @OneToOne(() => Session, (session) => session.id)
+  @OneToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
   nextSession?: Session;
 
   @Column({ nullable: true })

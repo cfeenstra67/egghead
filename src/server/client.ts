@@ -41,6 +41,8 @@ import type {
   CreateGhostSessionsResponse,
   FixChromeParentsRequest,
   FixChromeParentsResponse,
+  ApplyRetentionPolicyRequest,
+  ApplyRetentionPolicyResponse,
 } from "./types";
 
 // For use in a web page
@@ -77,7 +79,7 @@ export class ServerClient implements ServerInterface {
     if (response.code === ServerResponseCode.Aborted) {
       throw new Aborted();
     }
-    throw new Error(response.message);
+    throw new ServerError(response.message, response.stack);
   }
 
   async ping(request: PingRequest): Promise<PingResponse> {
@@ -216,4 +218,21 @@ export class ServerClient implements ServerInterface {
     });
   }
 
+  async applyRetentionPolicy(request: ApplyRetentionPolicyRequest): Promise<ApplyRetentionPolicyResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.ApplyRetentionPolicy,
+      ...request
+    });
+  }
+
+}
+
+export class ServerError extends Error {
+  constructor(message: string, stack?: string) {
+    super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
+    if (stack !== undefined) {
+      this.stack = stack;
+    }
+  }
 }

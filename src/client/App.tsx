@@ -8,7 +8,6 @@ import SessionDetail from "./pages/SessionDetail";
 import About from "./pages/settings/About";
 import ClearBrowsingData from "./pages/settings/ClearBrowsingData";
 import GeneralSettings from "./pages/settings/GeneralSettings";
-import DataSettings from "./pages/settings/DataSettings";
 import DevSettings from "./pages/settings/DevSettings";
 import NotFound from "./pages/NotFound";
 import type { ServerInterface } from "../server";
@@ -56,9 +55,6 @@ function Routes({ runtime, serverClientFactory }: AppProps) {
           </Route>
           <Route path="/settings/clear-browsing-data">
             <ClearBrowsingData />
-          </Route>
-          <Route path="/settings/data">
-            <DataSettings />
           </Route>
           <Route path="/settings/dev">
             <DevSettings />

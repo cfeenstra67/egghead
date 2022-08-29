@@ -156,7 +156,10 @@ export function prepareClauseForSearch(
     }
     if (isFilter(clause) && clause.fieldName.endsWith("At")) {
       if (clause.value !== null && clause.value !== undefined) {
-        clause.value = dateToSqliteString(cleanDateInput(clause.value as string));
+        const dtValue = cleanDateInput(clause.value as string);
+        if (!isNaN(dtValue.getTime())) {
+          clause.value = dateToSqliteString(dtValue);
+        }
       }
     } else if (isFilter(clause) && ['interactionCount', 'tabId', 'rowid'].includes(clause.fieldName)) {
       if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {

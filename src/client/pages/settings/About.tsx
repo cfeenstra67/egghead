@@ -26,9 +26,9 @@ export default function About() {
           {' '}<a href="https://github.com/cfeenstra67/egghead" target="_blank" rel="noreferrer">Github repo</a>.
         </p>
         <p>
-          If you have problems using the app, please open an issue on the Github repo
-          or contact me at{' '}
-          <a href="mailto:cameron.l.feenstra@gmail.com">cameron.l.feenstra@gmail.com</a>.
+          If you have problems using the app, or encounter any bugs, please open an
+          issue on the Github repo or contact me at{' '}
+          <a href="me@camfeenstra.com">me@camfeenstra.com</a>.
         </p>
       </Card>
     </Layout>

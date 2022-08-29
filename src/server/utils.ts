@@ -52,16 +52,17 @@ export function requestHandler(server: ServerInterface): RequestHandler {
       return { code: ServerResponseCode.Ok, ...response };
     } catch (err: any) {
       let message: string;
-      if (err === null && err === undefined) {
+      let stack: string | undefined = undefined;
+      if (err === null || err === undefined) {
         message = "";
-      } else if (err.stack !== undefined) {
-        message = err.stack;
       } else {
         message = err.toString();
+        stack = err.stack;
       }
       const response: ErrorResponse = {
         code: ServerResponseCode.Error,
         message,
+        stack,
       };
       return response as any;
     }
@@ -100,6 +101,7 @@ export function defaultSettings(): SettingsItems {
     dataCollectionEnabled: true,
     devModeEnabled: DEV_MODE,
     theme: Theme.Auto,
+    retentionPolicyMonths: 3,
   };
 }
 

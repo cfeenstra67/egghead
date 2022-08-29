@@ -1,5 +1,5 @@
 import chunk from 'lodash/chunk';
-import { DataSource, Repository, IsNull, In } from "typeorm";
+import { DataSource, Repository, IsNull, In, LessThan } from "typeorm";
 import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
 import { v4 as uuidv4 } from "uuid";
 import { maybeAbort } from './abort';
@@ -41,8 +41,10 @@ import {
   CreateGhostSessionsResponse,
   FixChromeParentsRequest,
   FixChromeParentsResponse,
+  ApplyRetentionPolicyRequest,
+  ApplyRetentionPolicyResponse,
 } from "./types";
-import { cleanURL, getHost, defaultSettings } from "./utils";
+import { cleanURL, getHost, defaultSettings, dateToSqliteString } from "./utils";
 
 const logger = parentLogger.child({ context: 'service' });
 
@@ -489,7 +491,8 @@ export class Server implements ServerInterface {
       });
 
       logger.debug(`Saving ${newSessions.length} sessions`);
-      for (const sessions of chunk(newSessions, 70)) {
+      const chunkSize = 100;
+      for (const sessions of chunk(newSessions, chunkSize)) {
         await manager.save(sessions);
       }
 
@@ -500,6 +503,7 @@ export class Server implements ServerInterface {
   async fixChromeParents(
     request: FixChromeParentsRequest
   ): Promise<FixChromeParentsResponse> {
+    const limit = 2500;
     const query = `
       update session
       set parentSessionId = updates.sessionId
@@ -517,17 +521,42 @@ export class Server implements ServerInterface {
           and s2.id is not s.id
           and s.tabId = ${GhostSessionTabId}
           and s2.tabId = ${GhostSessionTabId}
+          and s.url != s2.url
+        limit ${limit}
       ) updates
       where id = updates.sessionId
       returning id
     `;
 
-    const results = await this.dataSource.query(query);
-    if (results.length > 0) {
-      logger.info(`Fixed ${results.length} total chrome parents`);
+    let done = false;
+    let total = 0;
+    while (!done) {
+      const results = await this.dataSource.query(query);
+      logger.debug(`Fixed ${results.length} chrome parents`);
+      total += results.length;
+      done = results.length < limit;
     }
 
+    if (total > 0) {
+      logger.info(`Fixed ${total} total chrome parents`);
+    }
     return {};
+  }
+
+  async applyRetentionPolicy(request: ApplyRetentionPolicyRequest): Promise<ApplyRetentionPolicyResponse> {
+    return await this.dataSource.manager.transaction(async (manager) => {
+      const settingsRepo = manager.getRepository(Settings);
+      const settings = await this.getOrCreateSettings(settingsRepo);
+
+      const now = new Date();
+      const interval = settings.retentionPolicyMonths * 30 * 24 * 60 * 60 * 1000;
+      const policyStart = new Date(now.getTime() - interval);
+
+      const sessionRepo = manager.getRepository(Session);
+      await sessionRepo.delete({ startedAt: LessThan(policyStart) });
+
+      return {};
+    });
   }
 
 }

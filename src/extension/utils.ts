@@ -1,5 +1,6 @@
 import { HistoryCrawler } from './history-crawler';
 import { NavigationObserver } from "./navigation-observer";
+import { RetentionPolicyManager } from "./retention-policy-manager";
 import { ServerInterface } from "../server";
 import { TabObserver } from "./tab-observer";
 
@@ -21,11 +22,13 @@ export function setupObservers(server: ServerInterface): ObserversController {
   const navigationObserver = new NavigationObserver("nav");
   const tabObserver = new TabObserver(server);
   const historyCrawler = historyCrawlerFactory(server);
+  const retentionPolicyManager = new RetentionPolicyManager(server);
   tabObserver.observeTabs(navigationObserver);
   tabObserver.registerCleanup("TabObserver_cleanup");
   navigationObserver.observeNavigation();
   navigationObserver.cleanUpStorage();
   historyCrawler.registerCrawler("HistoryCrawler_crawl");
+  retentionPolicyManager.registerManager("RetentionPolicyManager_apply");
 
   return {
     resetState: async () => { await historyCrawler.resetState() },

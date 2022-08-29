@@ -17,7 +17,8 @@ export enum ServerMessage {
   RegenerateIndex = "regenerateIndex",
   GetSettings = "getSettings",
   UpdateSettings = "updateSettings",
-  FixChromeParents = "fixChromeParents"
+  FixChromeParents = "fixChromeParents",
+  ApplyRetentionPolicy = "applyRetentionPolicy",
 }
 
 export enum ServerResponseCode {
@@ -185,6 +186,10 @@ export interface FixChromeParentsRequest extends BaseRequest {}
 
 export interface FixChromeParentsResponse {}
 
+export interface ApplyRetentionPolicyRequest extends BaseRequest {}
+
+export interface ApplyRetentionPolicyResponse {}
+
 export type ServerMessageMapping = {
   [ServerMessage.Ping]: [PingRequest, PingResponse];
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
@@ -214,6 +219,7 @@ export type ServerMessageMapping = {
   [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
   [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
   [ServerMessage.FixChromeParents]: [FixChromeParentsRequest, FixChromeParentsResponse];
+  [ServerMessage.ApplyRetentionPolicy]: [ApplyRetentionPolicyRequest, ApplyRetentionPolicyResponse];
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage
@@ -247,6 +253,7 @@ export type ServerInterface = {
 export interface ErrorResponse {
   code: ServerResponseCode.Error | ServerResponseCode.Aborted;
   message: string;
+  stack?: string;
 }
 
 export type RequestHandler = <T extends ServerMessage>(

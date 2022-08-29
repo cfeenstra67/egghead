@@ -6907,7 +6907,7 @@ type-is@~1.6.18:
 
 "typeorm@https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz":
   version "0.3.7"
-  resolved "https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz#cc0cd8b5500e0294a23d67081841f394dd51ddc7"
+  resolved "https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz#c2d9c065d5b70b5276508279944e81f976b22cdc"
   dependencies:
     "@sqltools/formatter" "^1.2.2"
     app-root-path "^3.0.0"

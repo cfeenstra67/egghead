@@ -22,6 +22,7 @@ function createModule({
   devMode,
   ignoreAssets,
   platform,
+  manifest,
 }) {
   return {
     mode: 'production',
@@ -102,7 +103,7 @@ function createModule({
             noErrorOnMissing: platform !== 'web'
           },
           {
-            from: `manifests/${platform}.json`,
+            from: `manifests/${manifest ?? platform}.json`,
             to: 'manifest.json',
             noErrorOnMissing: platform === 'web',
           }
@@ -145,6 +146,19 @@ module.exports = [
     platform: 'chrome',
   }),
   createModule({
+    name: 'chrome-dev',
+    logLevel: 'debug',
+    devMode: true,
+    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    entry: {
+      background: './src/background.ts',
+      'content-script': './src/content-script.ts',
+      client: './src/client/chrome.tsx',
+      popup: './src/client/chrome-popup.tsx',
+    },
+    platform: 'chrome'
+  }),
+  createModule({
     name: 'firefox',
     logLevel: 'error',
     ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
@@ -157,17 +171,17 @@ module.exports = [
     platform: 'firefox',
   }),
   createModule({
-    name: 'chrome-dev',
-    logLevel: 'debug',
-    devMode: true,
+    name: 'firefox-mv2',
+    logLevel: 'error',
+    manifest: 'firefox-mv2',
     ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
-      client: './src/client/chrome.tsx',
-      popup: './src/client/chrome-popup.tsx',
+      client: './src/client/firefox.tsx',
+      popup: './src/client/firefox-popup.tsx',
     },
-    platform: 'chrome'
+    platform: 'firefox',
   }),
   createModule({
     name: 'demo',

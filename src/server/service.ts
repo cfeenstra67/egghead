@@ -79,7 +79,8 @@ const stopHosts = new Set([
 const stopProtocols = new Set([
   'chrome',
   'chrome-extension',
-  'moz-extension'
+  'moz-extension',
+  'about'
 ]);
 
 function shouldIndex(url: string): boolean {

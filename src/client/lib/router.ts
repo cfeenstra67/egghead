@@ -143,11 +143,12 @@ export function useHashLocation(): [string, NavigationHook] {
   return [loc, hashNavigate];
 }
 
-export function popupLocationHook(runtime: RuntimeInterface): () => [string, NavigationHook] {
+export function popupLocationHook(runtime: RuntimeInterface, historyUrl: string): () => [string, NavigationHook] {
   return () => {
     return ['', async (to) => {
-      logger.debug('TO %s', to, new URL(to, 'chrome://history').href);
-      await runtime.openUrl(new URL(to, 'chrome://history').href, true);
+      const outUrl = historyUrl + to;
+      logger.debug('TO %s', to, outUrl);
+      await runtime.openUrl(outUrl, true);
     }];
   };
 }

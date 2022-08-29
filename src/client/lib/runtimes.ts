@@ -127,9 +127,11 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
 
 export class PopupRuntime implements RuntimeInterface {
 
-  routerHook = popupLocationHook(this);
+  routerHook: RouterHook;
 
-  constructor(private readonly historyUrl: string) {}
+  constructor(private readonly historyUrl: string) {
+    this.routerHook = popupLocationHook(this, historyUrl);
+  }
 
   openHistory() {
     return new Promise<void>((resolve, reject) => {

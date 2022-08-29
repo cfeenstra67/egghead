@@ -15,7 +15,7 @@ root.render(
     getApp={() => (
       <Popup
         serverClientFactory={serverClientFactory}
-        runtime={new PopupRuntime(chrome.runtime.getURL('history.html'))}
+        runtime={new PopupRuntime(chrome.runtime.getURL('history.html') + '#')}
       />
     )}
   />

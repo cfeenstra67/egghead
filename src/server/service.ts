@@ -434,7 +434,10 @@ export class Server implements ServerInterface {
       });
 
       const existingSessions = await repo.find({
-        where: { chromeVisitId: In(visitIds.concat(referringVisitIds)) }
+        where: {
+          chromeVisitId: In(visitIds.concat(referringVisitIds)),
+          tabId: GhostSessionTabId,
+        }
       });
       maybeAbort(request.abort);
 

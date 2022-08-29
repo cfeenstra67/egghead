@@ -1,11 +1,12 @@
-name: Run Tests
+name: Create Release
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
-  run-tests:
+  create-release:
+    name: Create Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,4 +18,9 @@ jobs:
         run: |
           yarn install
           npm run ohm-generate
-      - run: npm run test
+      - name: Build
+        run: npm run build
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*.zip

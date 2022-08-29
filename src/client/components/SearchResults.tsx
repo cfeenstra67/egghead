@@ -28,12 +28,14 @@ export interface SearchResultsProps {
   sessions: SessionResponse[];
   isLoading?: boolean;
   onEndReached?: () => void;
+  query?: string;
 }
 
 export default function SearchResults({
   sessions,
   isLoading,
   onEndReached,
+  query,
 }: SearchResultsProps) {
   const groupedSessions = groupSessionsByDay(sessions);
 
@@ -51,6 +53,10 @@ export default function SearchResults({
       {sessions.length === 0 &&
         (isLoading ? (
           <Card>Loading...</Card> 
+        ) : query !== undefined && query.trim().length < 3 ? (
+          <Card>
+            No Results. Try lengthening your search to at least 3 characters.
+          </Card>
         ) : (
           <Card>No Results.</Card>
         ))}

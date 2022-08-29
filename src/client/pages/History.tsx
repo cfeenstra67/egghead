@@ -121,6 +121,7 @@ export default function History() {
           sessions={results}
           isLoading={state === SessionQueryState.Loading}
           onEndReached={loadNextPage}
+          query={query}
         />
       )}
     </Layout>

@@ -75,7 +75,6 @@
     "ts-node": "^10.7.0",
     "typeorm": "file:/Users/cam/random/typeorm-wa-sqlite/build/package",
     "typescript": "^4.6.4",
-    "typescript-plugin-css-modules": "^3.4.0",
     "url-loader": "^4.1.1",
     "uuid": "^8.3.2",
     "wa-sqlite": "file:/Users/cam/random/wa-sqlite",

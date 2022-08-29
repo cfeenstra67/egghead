@@ -1,4 +1,5 @@
 const CopyPlugin = require("copy-webpack-plugin");
+const MergeJsonWebpackPlugin = require("merge-jsons-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
@@ -28,7 +29,7 @@ function createModule({
     mode: 'production',
     name,
     entry,
-    devtool: 'inline-source-map',
+    devtool: devMode ? 'inline-source-map' : undefined,
     target: 'web',
     module: {
       rules: [
@@ -102,14 +103,23 @@ function createModule({
             to: '.',
             noErrorOnMissing: platform !== 'web'
           },
-          {
-            from: `manifests/${manifest ?? platform}.json`,
-            to: 'manifest.json',
-            noErrorOnMissing: platform === 'web',
-          }
+          // {
+          //   from: `manifests/${manifest ?? platform}.json`,
+          //   to: 'manifest.json',
+          //   noErrorOnMissing: platform === 'web',
+          // }
         ],
       }),
       new MiniCssExtractPlugin(),
+      ...(platform === 'web' ? [] : [
+        new MergeJsonWebpackPlugin({
+          files: ['manifests/base.json', `manifests/${manifest ?? platform}.json`],
+          output: {
+            fileName: 'manifest.json'
+          },
+          space: 2
+        }),
+      ]),
       // Enable for analysis when necessary
       // new BundleAnalyzerPlugin(),
     ],

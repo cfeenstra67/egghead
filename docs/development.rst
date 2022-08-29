@@ -33,6 +33,12 @@ This is all of the setup needed to be able to develop the app. The app is built 
 
   * build command - ``npx webpack --config-name firefox``
 
+* ``firefox-mv2`` - the full extension, ready to be loaded into firefox using w/ manifest v2 (this was created because the Firefox add-on store isn't accepting manifest v3 extensions yet, though it still hasn't been submitted there due to other issues).
+
+  * development command - ``npx webpack --config-name firefox --watch``
+
+  * build command - ``npx webpack --config-name firefox``
+
 * ``chrome-dev`` - the full extension ready to be loaded into chrome w/ development mode enabled. This enabled the "dev mode" option in settings by default and enables debug logging.
 
   * development command - ``npx webpack --config-name chrome-dev --watch``
@@ -65,7 +71,7 @@ This is all of the setup needed to be able to develop the app. The app is built 
 
 For local development, generally running the ``dev`` configuration makes the most sense.
 
-To build all production assets (the ``chrome``, ``firefox``, and ``demo`` configurations), simply run ``npm run build``.
+To build all production assets (the ``chrome``, ``firefox``, ``firefox-mv2``, and ``demo`` configurations), simply run ``npm run build``.
 
 Documentation
 ##################

@@ -13,5 +13,8 @@ jobs:
         with:
           node-version: '16'
           cache: yarn
-      - run: yarn install
+      - name: Set up dependencies
+        run: |
+          yarn install
+          npm run ohm-generate
       - run: npm run test

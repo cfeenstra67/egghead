@@ -414,9 +414,6 @@ export class HistoryCrawler {
           return result;
         });
 
-      promises.push(
-
-      );
       startTimestamp = new Date(startTimestamp.getTime() + this.interval);
       endTimestamp = new Date(endTimestamp.getTime() + this.interval);
       promises.push([crawlPromise, startTimestamp]);

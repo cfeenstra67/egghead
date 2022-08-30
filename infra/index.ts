@@ -171,8 +171,7 @@ function githubAssumeRolePolicy(providerArn: string): string {
         Condition: {
           'ForAllValues:StringLike': {
             'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-            'token.actions.githubusercontent.com:sub':
-              'repo:cfeenstra67/egghead:*',
+            'token.actions.githubusercontent.com:sub': 'repo:cfeenstra67/egghead:*',
           },
         },
       },

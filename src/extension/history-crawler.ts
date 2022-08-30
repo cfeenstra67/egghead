@@ -306,8 +306,6 @@ export class HistoryCrawler {
     const limit = 1000;
     const intervalCutoff = 1000;
 
-    const promises: Promise<HistoryCrawlStats>[] = [];
-
     const visitItems: Visit[] = [];
 
     while (currentStart.getTime() < end.getTime()) {
@@ -381,7 +379,6 @@ export class HistoryCrawler {
       stop = new Date();
     }
     const now = new Date();
-    const initialStartTimestamp = startTimestamp;
     const initialPercent = initialCrawlPercentDone ?? 0;
 
     // Add interval cushion before the start timestamp
@@ -428,7 +425,6 @@ export class HistoryCrawler {
     const stats: HistoryCrawlStats[] = [];
     for (const [promise, newStartTimestamp] of promises) {
       stats.push(await promise);
-      const percentDone = done / total * nonCorrelateVisitsPercent;
       yield (state) => ({
         ...state,
         startTimestamp: newStartTimestamp,

@@ -44,7 +44,7 @@ import {
   ApplyRetentionPolicyRequest,
   ApplyRetentionPolicyResponse,
 } from "./types";
-import { cleanURL, getHost, defaultSettings, dateToSqliteString } from "./utils";
+import { cleanURL, getHost, defaultSettings } from "./utils";
 
 const logger = parentLogger.child({ context: 'service' });
 

@@ -8,7 +8,7 @@
     "clean": "rm -rf dist",
     "check-types": "tsc --noEmit",
     "prebuild": "npm run clean && npm run check-types",
-    "build": "webpack --config-name chrome firefox && webpack --config-name firefox-mv2 demo && zip -rj dist/chrome.zip dist/chrome && zip -rj dist/firefox.zip dist/firefox && zip -rj dist/firefox-mv2.zip dist/firefox-mv2",
+    "build": "webpack --config-name chrome && webpack --config-name firefox && webpack --config-name firefox-mv2 && webpack --config-name demo && zip -rj dist/chrome.zip dist/chrome && zip -rj dist/firefox.zip dist/firefox && zip -rj dist/firefox-mv2.zip dist/firefox-mv2",
     "serve": "webpack serve --config-name dev --no-client-overlay",
     "serve-demo": "webpack serve --config-name demo --no-client-overlay",
     "typeorm": "typeorm-ts-node-commonjs",

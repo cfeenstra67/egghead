@@ -1,0 +1,25 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [1.0.1] - 2022-08-29
+
+### Added
+
+- Retention policy setting so that history data does not grow arbitrarily.
+
+- Warning when queries are less than 3 characters so that users know to lengthen their search. Search terms less than 3 characters long will always return no results because of the `trigram` tokenizer.
+
+### Changed
+
+- Performance improvements to allow the initial crawl to complete successfully in systems with a large amount of history.
+
+## [1.0.0] - 2022-08-23
+
+### Added
+
+- Initial release of egghead to the chrome web store

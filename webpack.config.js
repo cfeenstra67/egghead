@@ -29,7 +29,7 @@ function createModule({
     mode: 'production',
     name,
     entry,
-    devtool: devMode ? 'inline-source-map' : undefined,
+    devtool: devMode ? 'inline-source-map' : false,
     target: 'web',
     module: {
       rules: [
@@ -88,6 +88,7 @@ function createModule({
       new webpack.DefinePlugin({
         LOG_LEVEL: JSON.stringify(logLevel),
         DEV_MODE: JSON.stringify(!!devMode),
+        global: 'globalThis'
       }),
       new CopyPlugin({
         patterns: [
@@ -111,6 +112,10 @@ function createModule({
         ],
       }),
       new MiniCssExtractPlugin(),
+      new webpack.NormalModuleReplacementPlugin(
+        /node_modules\/lodash\/_root\.js/,
+        '../../patched-lodash-root.js'
+      ),
       ...(platform === 'web' ? [] : [
         new MergeJsonWebpackPlugin({
           files: ['manifests/base.json', `manifests/${manifest ?? platform}.json`],
@@ -123,6 +128,9 @@ function createModule({
       // Enable for analysis when necessary
       // new BundleAnalyzerPlugin(),
     ],
+    node: {
+      global: false
+    },
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.css'],
       fallback: {

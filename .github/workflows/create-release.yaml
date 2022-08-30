@@ -24,7 +24,6 @@ jobs:
             npx webpack --config-name $config
             zip -rj dist/$config.zip dist/$config
           done
-          make html
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -42,7 +41,7 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
       - name: Set up Python Dependencies
         run: poetry install
-      - name: Build Demo
+      - name: Build Demo 
         run: |
           mkdir -p data/demo
           curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db

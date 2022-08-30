@@ -19,8 +19,39 @@ jobs:
           yarn install
           npm run ohm-generate
       - name: Build
-        run: npm run build
+        run: |
+          for config in chrome firefox firefox-mv2; do
+            npx webpack --config-name $config
+            zip -rj dist/$config.zip dist/$config
+          done
+          make html
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*.zip
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::081142152120:role/egghead-github-role-2a57924
+          aws-region: us-east-2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          cache: poetry
+      - uses: Gr1N/setup-poetry@v7
+      - name: Set up Python Dependencies
+        run: poetry install
+      - name: Build Demo
+        run: |
+          mkdir -p data/demo
+          curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db
+          curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
+          npx webpack --config-name demo
+          make html
+      - uses: pulumi/actions@v3
+        with:
+          command: up
+          stack-name: dev
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

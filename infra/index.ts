@@ -11,6 +11,7 @@ interface StaticWebsiteArgs {
   dnsName: string;
   indexDocument: string;
   logsBucket: aws.s3.GetBucketResult;
+  tags: Record<string, string>;
 }
 
 async function staticWebsite({
@@ -20,6 +21,7 @@ async function staticWebsite({
   dnsName,
   indexDocument,
   logsBucket,
+  tags,
 }: StaticWebsiteArgs) {
 
   const rootDomain = dnsName.split('.').slice(-2).join('.');
@@ -36,6 +38,7 @@ async function staticWebsite({
   const certificate = new aws.acm.Certificate(`${idPrefix}certificate`, {
     domainName: dnsName,
     validationMethod: 'DNS',
+    tags,
   }, {
     provider: eastProvider
   });
@@ -60,7 +63,8 @@ async function staticWebsite({
   const siteBucket = new aws.s3.Bucket(`${idPrefix}${dnsName}-site-bucket`, {
     bucket: dnsName,
     acl: 'public-read',
-    website: { indexDocument }
+    website: { indexDocument },
+    tags,
   });
 
   for (const directory of directories ?? []) {
@@ -73,6 +77,7 @@ async function staticWebsite({
         source: new pulumi.asset.FileAsset(file),
         acl: 'public-read',
         contentType,
+        tags,
       });
     }
   }
@@ -85,6 +90,7 @@ async function staticWebsite({
       source: new pulumi.asset.FileAsset(file),
       acl: 'public-read',
       contentType,
+      tags,
     });
   }
 
@@ -127,6 +133,7 @@ async function staticWebsite({
       includeCookies: false,
       prefix: `${dnsName}/`
     },
+    tags,
   });
 
   new aws.route53.Record(`${idPrefix}${dnsName}`, {
@@ -142,10 +149,68 @@ async function staticWebsite({
     ],
   });
   return {
+    bucketArn: siteBucket.arn,
     websiteEndpoint: siteBucket.websiteEndpoint,
     cloudfrontDomain: distribution.domainName,
     endpoint: `https://${dnsName}`,
   };
+}
+
+function githubAssumeRolePolicy(providerArn: string): string {
+  return JSON.stringify({
+    Version: '2012-10-17',
+    Id: 'github-assume-role-policy',
+    Statement: [
+      {
+        Sid: 'AllowGithubActionsAssume',
+        Effect: 'Allow',
+        Action: ['sts:AssumeRoleWithWebIdentity'],
+        Principal: {
+          Federated: providerArn,
+        },
+        Condition: {
+          'ForAllValues:StringLike': {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+            'token.actions.githubusercontent.com:sub':
+              'repo:cfeenstra67/egghead:*',
+          },
+        },
+      },
+    ],
+  });
+}
+
+function githubRolePolicy(bucketArns: string[]): string {
+  const readActions = [
+    'iam',
+    's3',
+    'acm',
+    'route53',
+    'cloudfront'
+  ].flatMap((service) => [
+    `${service}:Get*`,
+    `${service}:List*`,
+    `${service}:Describe*`,
+  ]);
+
+  return JSON.stringify({
+    Version: '2012-10-17',
+    Id: 'github-role-policy',
+    Statement: [
+      {
+        Sid: 'AllowRead',
+        Effect: 'Allow',
+        Action: readActions,
+        Resource: ['*'],
+      },
+      {
+        Sid: 'DeployActions',
+        Effect: 'Allow',
+        Resource: bucketArns.flatMap((arn) => [arn, arn + '/*']),
+        Action: ['s3:PutObject*'],
+      },
+    ],
+  });
 }
 
 export = async () => {
@@ -154,6 +219,7 @@ export = async () => {
   const dnsName = config.require('dns-name');
   const docsDnsName = config.require('docs-dns-name');
   const logsBucketName = config.require('logs-bucket');
+  const tags = { Source: 'pulumi', Project: 'egghead' };
 
   const logsBucket = await aws.s3.getBucket({
     bucket: logsBucketName
@@ -163,12 +229,14 @@ export = async () => {
     idPrefix: '',
     directories: [path.normalize(path.resolve(__dirname, '../dist/demo'))],
     files: [
-      path.normalize(path.resolve(__dirname, '../dist/firefox.zip')),
       path.normalize(path.resolve(__dirname, '../dist/chrome.zip')),
+      path.normalize(path.resolve(__dirname, '../dist/firefox.zip')),
+      path.normalize(path.resolve(__dirname, '../dist/firefox-mv2.zip')),
     ],
     dnsName,
     indexDocument: 'demo-history.html',
     logsBucket,
+    tags,
   });
 
   const docsSite = await staticWebsite({
@@ -177,12 +245,42 @@ export = async () => {
     dnsName: docsDnsName,
     indexDocument: 'index.html',
     logsBucket,
+    tags,
+  });
+
+  // This allows us to authenticate to AWS using `githubRole` from github actions
+  // workflows without having to store secrets in environment variables.
+  const githubOpenIdProvider = new aws.iam.OpenIdConnectProvider(
+    'github-openid-provider',
+    {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIdLists: ['sts.amazonaws.com'],
+      thumbprintLists: ['6938fd4d98bab03faadb97b34396831e3780aea1'],
+      tags,
+    }
+  );
+
+  // Role assumed by github actions workflows
+  const githubRole = new aws.iam.Role('egghead-github-role', {
+    assumeRolePolicy: githubOpenIdProvider.arn.apply(githubAssumeRolePolicy),
+    inlinePolicies: [
+      {
+        name: 'github-role-policy',
+        policy: pulumi
+          .all([mainSite.bucketArn, docsSite.bucketArn])
+          .apply(githubRolePolicy)
+      },
+    ],
+    tags,
   });
 
   return {
-    ...mainSite,
+    websiteEndpoint: mainSite.websiteEndpoint,
+    cloudfrontDomain: mainSite.cloudfrontDomain,
+    endpoint: mainSite.endpoint,
     docsWebsiteEndpoint: docsSite.websiteEndpoint,
     docsCloudfrontDomain: docsSite.cloudfrontDomain,
     docsEndpoint: docsSite.endpoint,
+    githubRoleArn: githubRole.arn,
   };
 }

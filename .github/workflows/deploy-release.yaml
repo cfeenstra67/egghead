@@ -1,4 +1,4 @@
-name: Create Release
+name: Deploy Release
 on:
   push:
     tags:
@@ -29,6 +29,19 @@ jobs:
         with:
           files: dist/*.zip
 
+  deploy-demo:
+    name: Deploy Demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: yarn
+      - name: Set up dependencies
+        run: |
+          yarn install
+          npm run ohm-generate
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

@@ -5,7 +5,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "egghead@camfeenstra.com"
+      "id": "egghead-history@camfeenstra.com"
     }
   },
   "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",

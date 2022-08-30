@@ -42,11 +42,6 @@ jobs:
         run: |
           yarn install
           npm run ohm-generate
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::081142152120:role/egghead-github-role-2a57924
-          aws-region: us-east-2
       - uses: actions/setup-python@v4
         with:
           python-version: '3.8'
@@ -61,6 +56,11 @@ jobs:
           curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
           npx webpack --config-name demo
           make html
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::081142152120:role/egghead-github-role-2a57924
+          aws-region: us-east-2
       - uses: pulumi/actions@v3
         with:
           command: up

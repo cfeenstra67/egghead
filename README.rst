@@ -37,7 +37,7 @@ Building the Extension
 
 In order to build the extension for use in your browser, first clone the repository. From the repo root, run ``yarn install`` to install dependencies.
 
-Once that's done, run ``npm run ohm-generate && npx webpack --config-name prod`` to build the extension. The final output will be found in the ``dist/prod`` directory relative to the repostiory root. You can find instructions on how to load this directory as an extension into your browser manually `here <https://developer.chrome.com/docs/extensions/mv3/getstarted/>`_.
+Once that's done, run ``npm run ohm-generate && npx webpack --config-name chrome`` to build the extension. The final output will be found in the ``dist/chrome`` directory relative to the repostiory root. You can find instructions on how to load this directory as an extension into your browser manually `here <https://developer.chrome.com/docs/extensions/mv3/getstarted/>`_.
 
 Contact
 #########

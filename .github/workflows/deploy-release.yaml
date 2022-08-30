@@ -59,6 +59,10 @@ jobs:
           curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
           npx webpack --config-name demo
           make html
+          for config in chrome firefox firefox-mv2; do
+            npx webpack --config-name $config
+            zip -rj dist/$config.zip dist/$config
+          done
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

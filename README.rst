@@ -8,20 +8,26 @@ Egghead
 
 .. raw:: html
 
-    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-evenly">
-       <a
-         href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
-         target="_blank"
-       >
-         <img src="/public/chrome-badge.png" />
-       </a>
-       <a
-         href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
-         target="_blank"
-       >
-         <img src="/public/firefox-badge.png" />
-       </a>
-    </div>
+    <table>
+      <tr>
+         <td align="center">
+            <a
+               href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
+               target="_blank"
+            >
+               <img src="/public/chrome-badge.png" />
+            </a>
+         </td>
+         <td>
+            <a
+               href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
+               target="_blank"
+            >
+               <img src="/public/firefox-badge.png" />
+            </a>
+         </td>
+      </tr>
+    </table>
 
 Introduction
 #################

@@ -8,7 +8,7 @@ Egghead
 
 .. raw:: html
 
-    <table>
+    <table width="100%">
       <tr>
          <td align="center">
             <a

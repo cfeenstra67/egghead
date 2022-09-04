@@ -8,24 +8,24 @@ Egghead
 
 .. raw:: html
 
-    <table width="100%">
+    <table>
       <tr>
-         <td align="center">
+         <th align="center" width="500px">
             <a
                href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
                target="_blank"
             >
                <img src="/public/chrome-badge.png" />
             </a>
-         </td>
-         <td>
+         </th>
+         <th align="center" width="500px">
             <a
                href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
                target="_blank"
             >
                <img src="/public/firefox-badge.png" />
             </a>
-         </td>
+         </th>
       </tr>
     </table>
 

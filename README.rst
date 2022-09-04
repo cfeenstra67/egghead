@@ -13,13 +13,13 @@ Egghead
          href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
          target="_blank"
        >
-         <img src="/chrome-badge.png" />
+         <img src="/public/chrome-badge.png" />
        </a>
        <a
          href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
          target="_blank"
        >
-         <img src="/firefox-badge.png" />
+         <img src="/public/firefox-badge.png" />
        </a>
     </div>
 

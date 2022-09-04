@@ -73,6 +73,20 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
             my personal website
           </a>.
         </p>
+        <div className={styles.badges}>
+          <a
+            href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
+            target="_blank"
+          >
+            <img src="/chrome-badge.png" />
+          </a>
+          <a
+            href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
+            target="_blank"
+          >
+            <img src="/firefox-badge.png" />
+          </a>
+        </div>
       </div>
     </div>
   );

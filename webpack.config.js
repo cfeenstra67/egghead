@@ -150,11 +150,18 @@ function createModule({
   };
 }
 
+const nonDemoIgnores = [
+  '**/sql-wasm.wasm',
+  '**/demo-history.html',
+  '**/chrome-badge.png',
+  '**/firefox-badge.png',
+];
+
 module.exports = [
   createModule({
     name: 'chrome',
     logLevel: 'error',
-    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    ignoreAssets: nonDemoIgnores,
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
@@ -167,7 +174,7 @@ module.exports = [
     name: 'chrome-dev',
     logLevel: 'debug',
     devMode: true,
-    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    ignoreAssets: nonDemoIgnores,
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
@@ -179,7 +186,7 @@ module.exports = [
   createModule({
     name: 'firefox',
     logLevel: 'error',
-    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    ignoreAssets: nonDemoIgnores,
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
@@ -192,7 +199,7 @@ module.exports = [
     name: 'firefox-mv2',
     logLevel: 'error',
     manifest: 'firefox-mv2',
-    ignoreAssets: ['**/sql-wasm.wasm', '**/demo-history.html'],
+    ignoreAssets: nonDemoIgnores,
     entry: {
       background: './src/background.ts',
       'content-script': './src/content-script.ts',
@@ -204,7 +211,7 @@ module.exports = [
   createModule({
     name: 'demo',
     logLevel: 'error',
-    ignoreAssets: ['**/*.png', '**/history.html'],
+    ignoreAssets: ['**/icon-*.png', '**/history.html'],
     entry: {
       client: './src/client/demo.tsx',
       popup: './src/client/demo-popup.tsx',
@@ -215,7 +222,11 @@ module.exports = [
     name: 'dev',
     logLevel: 'debug',
     devMode: true,
-    ignoreAssets: ['**/demo-history.html'],
+    ignoreAssets: [
+      '**/demo-history.html',
+      '**/chrome-badge.png',
+      '**/firefox-badge.png',
+    ],
     entry: {
       client: './src/client/web.tsx',
       popup: './src/client/web-popup.tsx',

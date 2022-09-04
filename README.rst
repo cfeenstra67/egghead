@@ -6,18 +6,22 @@ Egghead
 
 `Read documentation here <https://docs.egghead.camfeenstra.com>`_
 
-.. |firefox-badge| image:: public/firefox-badge.png
-   :target: https://addons.mozilla.org/en-US/firefox/addon/egghead-history/
-   :scale: 100%
-   :align: center
-.. |chrome-badge| image:: public/chrome-badge.png
-   :target: https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb
-   :scale: 100%
-   :align: center
+.. raw:: html
 
-+----------------+-----------------+
-| |chrome-badge| | |firefox-badge| |
-+----------------+-----------------+
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-evenly">
+       <a
+         href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
+         target="_blank"
+       >
+         <img src="/chrome-badge.png" />
+       </a>
+       <a
+         href="https://addons.mozilla.org/en-US/firefox/addon/egghead-history/"
+         target="_blank"
+       >
+         <img src="/firefox-badge.png" />
+       </a>
+    </div>
 
 Introduction
 #################

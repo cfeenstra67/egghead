@@ -2,10 +2,6 @@
 Egghead
 ################
 
-`Live Demo <https://egghead.camfeenstra.com>`_
-
-`Read documentation here <https://docs.egghead.camfeenstra.com>`_
-
 .. raw:: html
 
     <table>
@@ -28,6 +24,10 @@ Egghead
          </th>
       </tr>
     </table>
+
+`Live Demo <https://egghead.camfeenstra.com>`_
+
+`Read documentation here <https://docs.egghead.camfeenstra.com>`_
 
 Introduction
 #################

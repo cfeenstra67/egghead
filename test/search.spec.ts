@@ -830,9 +830,77 @@ const examples: TestCase[] = [
     data: [],
     resultIds: []
   },
-  // {
-  //   id: 'parentheses'
-  // }
+  {
+    id: 'and-like-word-1',
+    query: 'andrew long',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"andrew"'
+        },
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"long"'
+        },
+      ]
+    },
+    data: [],
+    resultIds: [],
+  },
+  {
+    id: 'or-like-word-1',
+    query: 'order and ordinance',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"order"'
+        },
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"ordinance"'
+        },
+      ]
+    },
+    data: [],
+    resultIds: [],
+  },
+  {
+    id: 'not-like-word-1',
+    query: 'notebook abc not blah',
+    clause: {
+      operator: AggregateOperator.And,
+      clauses: [
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"notebook"'
+        },
+        {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: '"abc"'
+        },
+        {
+          operator: UnaryOperator.Not,
+          clause: {
+            operator: BinaryOperator.Match,
+            fieldName: IndexToken,
+            value: '"blah"',
+          }
+        }
+      ]
+    },
+    data: [],
+    resultIds: [],
+  },
 ];
 
 describe(SearchService, () => {
@@ -860,7 +928,7 @@ describe(SearchService, () => {
 
   it.each(parseExamples)('%s: parse: %s = %s', (id: string, queryString: string, expected: Clause<Session>) => {
     const result = parseQueryString<Session>(queryString);
-    // console.log('RESULT', result, expected);
+    // console.log('RESULT', id, result, expected);
     expect(clausesEqual(result, expected)).toBe(true);
   });
 

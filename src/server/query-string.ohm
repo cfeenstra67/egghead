@@ -1,24 +1,24 @@
 QueryString {
-    Query = OrQuery*
+    Query = orQuery*
 
     and = caseInsensitive<"and">
     or = caseInsensitive<"or">
     not = caseInsensitive<"not">
 
-    OrQuery =
-      | OrQuery or AndQuery -- or
-      | AndQuery
+    orQuery =
+      | orQuery space+ or space+ andQuery -- or
+      | andQuery
 
-    AndQuery =
-      | AndQuery and NotQuery -- and
-      | NotQuery
+    andQuery =
+      | andQuery space+ and space+ notQuery -- and
+      | notQuery
 
-    NotQuery =
-      | not NotQuery -- not
-      | QueryComp
+    notQuery =
+      | not space+ notQuery -- not
+      | queryComp
 
-    QueryComp = 
-      | "(" OrQuery* ")"? -- parentheses
+    queryComp = 
+      | "(" spaces (orQuery spaces)* ")"? -- parentheses
       | queryTerm
 
     queryTerm =

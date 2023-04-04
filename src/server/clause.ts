@@ -268,22 +268,22 @@ export function getSearchString(inputString: string): string {
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
 
   semantics.addOperation<Clause<T>>("clause", {
-    NotQuery_not: (_, notQuery) => {
+    notQuery_not: (_1, _2, notQuery) => {
       return {
         operator: UnaryOperator.Not,
         clause: notQuery.clause(),
       };
     },
-    QueryComp_parentheses: (_1, query, _2) => {
+    queryComp_parentheses: (_1, _2, query, _3, _4) => {
       return query.clause();
     },
-    AndQuery_and: (andQuery, _, orQuery) => {
+    andQuery_and: (andQuery, _1, _2, _3, orQuery) => {
       return {
         operator: AggregateOperator.And,
         clauses: [andQuery.clause(), orQuery.clause()],
       };
     },
-    OrQuery_or: (orQuery, _, comp) => {
+    orQuery_or: (orQuery, _1, _2, _3, comp) => {
       return {
         operator: AggregateOperator.Or,
         clauses: [orQuery.clause(), comp.clause()],

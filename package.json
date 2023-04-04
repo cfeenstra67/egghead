@@ -1,6 +1,6 @@
 {
   "name": "browser-history",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "index.js",
   "author": "cfeenstra67 <cameron.l.feenstra@gmail.com>",
   "license": "MIT",

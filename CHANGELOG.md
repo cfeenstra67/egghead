@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2023-04-03
+
+### Changed
+
+- Fixed an issue with query string parsing where words containing operator like `notebook` (containing `not`) would not be parsed correctly.
+
 ## [1.0.2] - 2022-08-09
 
 ## Changed

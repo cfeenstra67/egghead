@@ -105,7 +105,7 @@ To create a new release:
 
 1. Determine the new version number; this should be either bumping the major, minor, or patch version of the app. The type of version bump will depend on the changes, see the `semver <https://semver.org/spec/v2.0.0.html>` spec for guidance.
 
-2. Update the ``version`` fields of ``package.json`` and ``manifests/base.json`` with the new version.
+2. Update the ``version`` fields of ``package.json``, ``manifests/base.json``, and ``pyproject.toml`` with the new version.
 
 3. Update the changelog to include descriptions of all changes, move anything from the "Unreleased" section to the section for the new version number.
 

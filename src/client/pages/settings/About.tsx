@@ -1,6 +1,7 @@
 import Card from '../../components/Card';
 import Layout from '../../components/Layout';
 import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar';
+import { version, platform } from '../../../constants';
 import styles from '../../styles/About.module.css';
 
 export default function About() {
@@ -11,6 +12,9 @@ export default function About() {
       <SettingsSideBar page={SettingsPage.About} />
 
       <Card className={styles.aboutCard}>
+        <p><b>Version:</b> {version}</p>
+        <p><b>Platform:</b> {platform}</p>
+        <hr />
         <p>
           <b>Egghead</b> is a browser extension developed by Cam Feenstra with the
           goal of helping you get value from your browser history.

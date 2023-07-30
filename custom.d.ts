@@ -26,6 +26,8 @@ declare const LOG_LEVEL: string;
 
 declare const DEV_MODE: boolean;
 
+declare const PLATFORM: string;
+
 declare interface Navigator {
   locks: LockManager;
 }

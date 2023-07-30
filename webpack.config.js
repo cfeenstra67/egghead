@@ -88,6 +88,7 @@ function createModule({
       new webpack.DefinePlugin({
         LOG_LEVEL: JSON.stringify(logLevel),
         DEV_MODE: JSON.stringify(!!devMode),
+        PLATFORM: JSON.stringify(platform),
         global: 'globalThis'
       }),
       new CopyPlugin({

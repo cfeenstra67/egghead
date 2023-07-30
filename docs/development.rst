@@ -97,3 +97,22 @@ The documentation site can be found in ``dist/docs/html``. On a Mac, you can ope
    $ open dist/docs/html/index.html
 
 .. _the demo site: https://egghead.camfeenstra.com
+
+Release Flow
+###############
+
+To create a new release:
+
+1. Determine the new version number; this should be either bumping the major, minor, or patch version of the app. The type of version bump will depend on the changes, see the `semver <https://semver.org/spec/v2.0.0.html>` spec for guidance.
+
+2. Update the ``version`` fields of ``package.json`` and ``manifests/base.json`` with the new version.
+
+3. Update the changelog to include descriptions of all changes, move anything from the "Unreleased" section to the section for the new version number.
+
+4. Commit the changes.
+
+5. Create a new tag with ``git tag v<version>``, e.g. ``git tag v1.0.3``.
+
+6. Push the tag to the github repo with ``git push v<version>``. This will create a new release via a Github Actions workflow.
+
+7. Download the ``chrome.zip`` and ``firefox-mv2.zip`` zip files and manually upload them to the chrome and firefox web store respectively. (Be sure to use ``firefox-mv2.zip`` and not ``firefox.zip``; firefox still supports manifest version 2 and it doesn't seem possible to use WASM w/ manifest version 3 on firefox last time I tested it).

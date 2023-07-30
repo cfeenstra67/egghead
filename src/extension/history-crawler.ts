@@ -133,6 +133,9 @@ export class HistoryCrawler {
         continue;
       }
       const matchingSessions = sessionsByUrl[cleanUrl].filter((otherSession) => {
+        if (otherSession.visitId === session.visitId) {
+          return true;
+        }
         const diff = Math.abs(session.visitTime - otherSession.visitTime);
         return diff < cutoff;
       });

@@ -13,6 +13,7 @@ runs:
         node-version: '16'
         cache: yarn
     - name: Set up dependencies
+      shell: bash
       run: |
         yarn install
         npm run ohm-generate
@@ -22,8 +23,10 @@ runs:
         python-version: '3.8'
         cache: poetry
     - name: Set up Python Dependencies
+      shell: bash
       run: poetry install
     - name: Build Demo 
+      shell: bash
       run: |
         mkdir -p data/demo
         curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db

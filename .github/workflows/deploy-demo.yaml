@@ -1,0 +1,19 @@
+name: Deploy Demo
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: true
+
+jobs:
+  deploy-demo:
+    name: Deploy Demo
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/deploy-demo
+ 

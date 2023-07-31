@@ -49,16 +49,14 @@ Technical Specs
 
 Egghead is written entirely in Typescript and uses SQLite as its back end, and specifically it heavily relies on SQLite's FTS5 module for searching.
 
-It's distributed as a browser extension; hopefully it will be available via browser extension stores soon.
+It's distributed as a browser extension; check the top of the README for links to install it on the Chrome web store (which also works for any chrome-compatible browser such as Brave and Edge) or the Firefox add-on store.
 
 A live demo of the app is also available at `egghead.camfeenstra.com <https://egghead.camfeenstra.com>`_. This demo will allow you to perform searches against a demo database, but in order to see the real power of egghead you'll have to use it as an extension.
 
-Building the Extension
+Development
 #######################
 
-In order to build the extension for use in your browser, first clone the repository. From the repo root, run ``yarn install`` to install dependencies.
-
-Once that's done, run ``npm run ohm-generate && npx webpack --config-name chrome`` to build the extension. The final output will be found in the ``dist/chrome`` directory relative to the repostiory root. You can find instructions on how to load this directory as an extension into your browser manually `here <https://developer.chrome.com/docs/extensions/mv3/getstarted/>`_.
+Check out the `development documentation <https://docs.egghead.camfeenstra.com/development.html>`_ for information on how to build and develop the extension for different targets.
 
 Contact
 #########
@@ -72,7 +70,7 @@ Egghead is licensed under GPL v3.
 
 .. code-block::
 
-   Copyright (C) 2022 Cameron Feenstra
+   Copyright (C) 2023 Cameron Feenstra
  
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

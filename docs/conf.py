@@ -1,3 +1,5 @@
+import json
+import os
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -16,14 +18,17 @@
 
 
 # -- Project information -----------------------------------------------------
+root_dir = os.path.join(os.path.dirname(__file__), "..")
+
+with open(os.path.join(root_dir, "package.json")) as f:
+    package_json = json.load(f)
 
 project = 'Egghead'
-copyright = '2022, Cam Feenstra'
+copyright = '2023, Cam Feenstra'
 author = 'Cam Feenstra'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
-
+release = package_json["version"]
 
 # -- General configuration ---------------------------------------------------
 

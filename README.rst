@@ -66,21 +66,4 @@ If you have problems using this repository, please open an issue or reach out to
 License
 #########
 
-Egghead is licensed under GPL v3.
-
-.. code-block::
-
-   Copyright (C) 2023 Cameron Feenstra
- 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
- 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
- 
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+Egghead is licensed under the MIT license. This was changed from GPL v3 after v1.0.4 due to the the license change in the ``wa-sqlite`` package.

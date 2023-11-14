@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated license to MIT
+
+- Switched package manager to `pnpm`
+
 ## [1.0.4] - 2023-07-30
 
 ### Added

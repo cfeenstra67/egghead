@@ -1,5 +1,14 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+patchedDependencies:
+  lodash@4.17.21:
+    hash: hhqokmt4nz6uhpjpmmdfytjeb4
+    path: patches/lodash@4.17.21.patch
+
 dependencies:
   '@jlongster/sql.js':
     specifier: ^1.6.7
@@ -54,7 +63,7 @@ dependencies:
     version: 3.3.1(webpack@5.73.0)
   typeorm:
     specifier: https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz
-    version: '@github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz(better-sqlite3@7.6.2)(ts-node@10.9.1)(wa-sqlite@0.8.2)'
+    version: '@github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz(better-sqlite3@9.2.2)(ts-node@10.9.1)(wa-sqlite@0.8.2)'
   uuid:
     specifier: ^8.3.2
     version: 8.3.2
@@ -115,8 +124,8 @@ devDependencies:
     specifier: ^5.26.0
     version: 5.30.6(eslint@8.20.0)(typescript@4.7.4)
   better-sqlite3:
-    specifier: ^7.6.2
-    version: 7.6.2
+    specifier: ^9.2.2
+    version: 9.2.2
   copy-webpack-plugin:
     specifier: ^10.2.4
     version: 10.2.4(webpack@5.73.0)
@@ -161,7 +170,7 @@ devDependencies:
     version: 1.0.4
   lodash:
     specifier: ^4.17.21
-    version: 4.17.21
+    version: 4.17.21(patch_hash=hhqokmt4nz6uhpjpmmdfytjeb4)
   merge-jsons-webpack-plugin:
     specifier: ^2.0.1
     version: 2.0.1
@@ -2848,7 +2857,7 @@ packages:
   /async@2.6.4:
     resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.21(patch_hash=hhqokmt4nz6uhpjpmmdfytjeb4)
     dev: true
 
   /atomic-sleep@1.0.0:
@@ -3007,8 +3016,8 @@ packages:
   /batch@0.6.1:
     resolution: {integrity: sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw==}
 
-  /better-sqlite3@7.6.2:
-    resolution: {integrity: sha512-S5zIU1Hink2AH4xPsN0W43T1/AJ5jrPh7Oy07ocuW/AKYYY02GWzz9NH0nbSMn/gw6fDZ5jZ1QsHt1BXAwJ6Lg==}
+  /better-sqlite3@9.2.2:
+    resolution: {integrity: sha512-qwjWB46il0lsDkeB4rSRI96HyDQr8sxeu1MkBVLMrwusq1KRu4Bpt1TMI+8zIJkDUtZ3umjAkaEjIlokZKWCQw==}
     requiresBuild: true
     dependencies:
       bindings: 1.5.0
@@ -5544,8 +5553,9 @@ packages:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: true
 
-  /lodash@4.17.21:
+  /lodash@4.17.21(patch_hash=hhqokmt4nz6uhpjpmmdfytjeb4):
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+    patched: true
 
   /loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -7471,7 +7481,7 @@ packages:
       chalk: 4.1.2
       commander: 7.2.0
       gzip-size: 6.0.0
-      lodash: 4.17.21
+      lodash: 4.17.21(patch_hash=hhqokmt4nz6uhpjpmmdfytjeb4)
       opener: 1.5.2
       sirv: 1.0.19
       ws: 7.5.9
@@ -7819,7 +7829,7 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  '@github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz(better-sqlite3@7.6.2)(ts-node@10.9.1)(wa-sqlite@0.8.2)':
+  '@github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz(better-sqlite3@9.2.2)(ts-node@10.9.1)(wa-sqlite@0.8.2)':
     resolution: {tarball: https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz}
     id: '@github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz'
     name: typeorm
@@ -7883,7 +7893,7 @@ packages:
     dependencies:
       '@sqltools/formatter': 1.2.3
       app-root-path: 3.1.0
-      better-sqlite3: 7.6.2
+      better-sqlite3: 9.2.2
       buffer: 6.0.3
       chalk: 4.1.2
       cli-highlight: 2.1.11

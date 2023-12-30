@@ -113,10 +113,6 @@ function createModule({
         ],
       }),
       new MiniCssExtractPlugin(),
-      new webpack.NormalModuleReplacementPlugin(
-        /node_modules\/lodash\/_root\.js/,
-        '../../patched-lodash-root.js'
-      ),
       ...(platform === 'web' ? [] : [
         new MergeJsonWebpackPlugin({
           files: ['manifests/base.json', `manifests/${manifest ?? platform}.json`],

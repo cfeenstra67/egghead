@@ -1,0 +1,20 @@
+diff --git a/_root.js b/_root.js
+index d2852bed4d2e469b3b87ed31df2350047e005ff4..9c1894886aa6eae25e093e04739adb51900ef03b 100644
+--- a/_root.js
++++ b/_root.js
+@@ -1,9 +1,14 @@
++// Patched version of the lodash/_root module which currently includes a
++// literal eval. This makes the code fail static analysis/security checks
+ var freeGlobal = require('./_freeGlobal');
+ 
+ /** Detect free variable `self`. */
+ var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+ 
+ /** Used as a reference to the global object. */
+-var root = freeGlobal || freeSelf || Function('return this')();
++var root = freeGlobal || freeSelf;
++if (!root) {
++  throw new Error('undefined root');
++}
+ 
+ module.exports = root;

@@ -6,6 +6,7 @@ authors = ["cfeenstra67 <cameron.l.feenstra@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+certifi = ">=2023.7.22"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^5.0.2"

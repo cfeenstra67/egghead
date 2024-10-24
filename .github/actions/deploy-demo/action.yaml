@@ -8,15 +8,19 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.5.0
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
-        cache: yarn
+        node-version: 20
+        cache: pnpm
     - name: Set up dependencies
       shell: bash
       run: |
-        yarn install
-        npm run ohm-generate
+        pnpm install
+        pnpm ohm-generate
     - uses: Gr1N/setup-poetry@v8
     - uses: actions/setup-python@v4
       with:

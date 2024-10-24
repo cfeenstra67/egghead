@@ -10,18 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: yarn
+          node-version: 20
+          cache: pnpm
       - name: Set up dependencies
+        shell: bash
         run: |
-          yarn install
-          npm run ohm-generate
+          pnpm install
+          pnpm ohm-generate
       - name: Build
         run: |
           for config in chrome firefox firefox-mv2; do
-            npx webpack --config-name $config
+            pnpm webpack --config-name $config
             zip -rj dist/$config.zip dist/$config
           done
       - name: Create Release

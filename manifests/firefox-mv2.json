@@ -16,6 +16,7 @@
     "alarms",
     "history",
     "scripting",
+    "offscreen",
     "http://*/",
     "https://*/"
   ],

@@ -18,7 +18,8 @@
     "tabs",
     "alarms",
     "history",
-    "scripting"
+    "scripting",
+    "offscreen"
   ],
   "action": {
     "default_popup": "popup.html"

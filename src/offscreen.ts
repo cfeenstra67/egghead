@@ -12,8 +12,6 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
     return false;
   }
 
-  logger.info(`Handling request ${JSON.stringify(request)}`);
-
   workerClient(request).then((response) => {
     sendResponse(response.response);
   }).catch((error) => {

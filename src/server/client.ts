@@ -1,68 +1,70 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Aborted } from './abort';
-import {
-  ServerMessage,
-  ServerResponseCode,
-} from './types';
+import { v4 as uuidv4 } from "uuid";
+import { Aborted } from "./abort";
+import { ServerMessage, ServerResponseCode } from "./types";
 import type {
-  ServerInterface,
-  TypedServerRequestForMessage,
-  ServerResponseForMessage,
-  PingRequest,
-  PingResponse,
-  QueryRequest,
-  QueryResponse,
-  QuerySessionsRequest,
-  QuerySessionsResponse,
-  ExportDatabaseRequest,
-  ExportDatabaseResponse,
-  RegenerateIndexRequest,
-  RegenerateIndexResponse,
-  TabChangedRequest,
-  TabChangedResponse,
-  TabClosedRequest,
-  TabClosedResponse,
-  RequestHandler,
-  QuerySessionFacetsRequest,
-  QuerySessionFacetsResponse,
-  QuerySessionTimelineRequest,
-  QuerySessionTimelineResponse,
-  GetSettingsRequest,
-  GetSettingsResponse,
-  UpdateSettingsRequest,
-  UpdateSettingsResponse,
-  ImportDatabaseRequest,
-  ImportDatabaseResponse,
-  TabInteractionRequest,
-  TabInteractionResponse,
+  ApplyRetentionPolicyRequest,
+  ApplyRetentionPolicyResponse,
   CorrelateChromeVisitRequest,
   CorrelateChromeVisitResponse,
   CreateGhostSessionsRequest,
   CreateGhostSessionsResponse,
+  ExportDatabaseRequest,
+  ExportDatabaseResponse,
   FixChromeParentsRequest,
   FixChromeParentsResponse,
-  ApplyRetentionPolicyRequest,
-  ApplyRetentionPolicyResponse,
+  GetSettingsRequest,
+  GetSettingsResponse,
+  ImportDatabaseRequest,
+  ImportDatabaseResponse,
+  PingRequest,
+  PingResponse,
+  QueryRequest,
+  QueryResponse,
+  QuerySessionFacetsRequest,
+  QuerySessionFacetsResponse,
+  QuerySessionTimelineRequest,
+  QuerySessionTimelineResponse,
+  QuerySessionsRequest,
+  QuerySessionsResponse,
+  RegenerateIndexRequest,
+  RegenerateIndexResponse,
+  RequestHandler,
+  ServerInterface,
+  ServerResponseForMessage,
+  TabChangedRequest,
+  TabChangedResponse,
+  TabClosedRequest,
+  TabClosedResponse,
+  TabInteractionRequest,
+  TabInteractionResponse,
+  TypedServerRequestForMessage,
+  UpdateSettingsRequest,
+  UpdateSettingsResponse,
 } from "./types";
 
 // For use in a web page or from background to offscreen communication
-export function createExtensionRequestProcessor(target: 'background' | 'offscreen'): RequestHandler {
+export function createExtensionRequestProcessor(
+  target: "background" | "offscreen",
+): RequestHandler {
   return (request) => {
     const { abort, ...baseRequest } = request;
     const requestId = uuidv4();
-  
-    abort?.addEventListener('abort', () => {
-      chrome.runtime.sendMessage({ type: 'abort', requestId, target });
+
+    abort?.addEventListener("abort", () => {
+      chrome.runtime.sendMessage({ type: "abort", requestId, target });
     });
-  
+
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ requestId, request: baseRequest, target }, (response) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(response);
-        }
-      });
+      chrome.runtime.sendMessage(
+        { requestId, request: baseRequest, target },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(response);
+          }
+        },
+      );
     });
   };
 }
@@ -71,7 +73,7 @@ export class ServerClient implements ServerInterface {
   constructor(readonly processRequest: RequestHandler) {}
 
   private async sendRequestAndRaiseForError<T extends ServerMessage>(
-    request: TypedServerRequestForMessage<T>
+    request: TypedServerRequestForMessage<T>,
   ): Promise<ServerResponseForMessage<T>> {
     const response = await this.processRequest(request);
     if (response.code === ServerResponseCode.Ok) {
@@ -86,7 +88,7 @@ export class ServerClient implements ServerInterface {
   async ping(request: PingRequest): Promise<PingResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.Ping,
-      ...request
+      ...request,
     });
   }
 
@@ -98,7 +100,7 @@ export class ServerClient implements ServerInterface {
   }
 
   async querySessions(
-    request: QuerySessionsRequest
+    request: QuerySessionsRequest,
   ): Promise<QuerySessionsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessions,
@@ -107,7 +109,7 @@ export class ServerClient implements ServerInterface {
   }
 
   async exportDatabase(
-    request: ExportDatabaseRequest
+    request: ExportDatabaseRequest,
   ): Promise<ExportDatabaseResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ExportDatabase,
@@ -115,9 +117,7 @@ export class ServerClient implements ServerInterface {
     });
   }
 
-  async resetDatabase(
-    request: {}
-  ): Promise<{}> {
+  async resetDatabase(request: {}): Promise<{}> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ResetDatabase,
       ...request,
@@ -125,7 +125,7 @@ export class ServerClient implements ServerInterface {
   }
 
   async regenerateIndex(
-    request: RegenerateIndexRequest
+    request: RegenerateIndexRequest,
   ): Promise<RegenerateIndexResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.RegenerateIndex,
@@ -148,7 +148,7 @@ export class ServerClient implements ServerInterface {
   }
 
   async querySessionFacets(
-    request: QuerySessionFacetsRequest
+    request: QuerySessionFacetsRequest,
   ): Promise<QuerySessionFacetsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessionFacets,
@@ -157,7 +157,7 @@ export class ServerClient implements ServerInterface {
   }
 
   async querySessionTimeline(
-    request: QuerySessionTimelineRequest
+    request: QuerySessionTimelineRequest,
   ): Promise<QuerySessionTimelineResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.QuerySessionTimeline,
@@ -165,53 +165,51 @@ export class ServerClient implements ServerInterface {
     });
   }
 
-  async getSettings(
-    request: GetSettingsRequest
-  ): Promise<GetSettingsResponse> {
+  async getSettings(request: GetSettingsRequest): Promise<GetSettingsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.GetSettings,
-      ...request
+      ...request,
     });
   }
 
   async updateSettings(
-    request: UpdateSettingsRequest
+    request: UpdateSettingsRequest,
   ): Promise<UpdateSettingsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.UpdateSettings,
-      ...request
+      ...request,
     });
   }
 
   async importDatabase(
-    request: ImportDatabaseRequest
+    request: ImportDatabaseRequest,
   ): Promise<ImportDatabaseResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ImportDatabase,
-      ...request
+      ...request,
     });
   }
 
   async tabInteraction(
-    request: TabInteractionRequest
+    request: TabInteractionRequest,
   ): Promise<TabInteractionResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.TabInteraction,
-      ...request
+      ...request,
     });
   }
 
   async correlateChromeVisit(
-    request: CorrelateChromeVisitRequest
+    request: CorrelateChromeVisitRequest,
   ): Promise<CorrelateChromeVisitResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.CorrelateChromeVisit,
-      ...request
+      ...request,
     });
   }
 
   async createGhostSessions(
-    request: CreateGhostSessionsRequest
+    request: CreateGhostSessionsRequest,
   ): Promise<CreateGhostSessionsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.CreateGhostSessions,
@@ -220,21 +218,22 @@ export class ServerClient implements ServerInterface {
   }
 
   async fixChromeParents(
-    request: FixChromeParentsRequest
+    request: FixChromeParentsRequest,
   ): Promise<FixChromeParentsResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.FixChromeParents,
-      ...request
+      ...request,
     });
   }
 
-  async applyRetentionPolicy(request: ApplyRetentionPolicyRequest): Promise<ApplyRetentionPolicyResponse> {
+  async applyRetentionPolicy(
+    request: ApplyRetentionPolicyRequest,
+  ): Promise<ApplyRetentionPolicyResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ApplyRetentionPolicy,
-      ...request
+      ...request,
     });
   }
-
 }
 
 export class ServerError extends Error {

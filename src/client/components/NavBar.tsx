@@ -1,7 +1,7 @@
 import { Link } from "wouter";
-import styles from "../styles/NavBar.module.css";
-import EggheadIcon from '../icons/egghead.svg';
+import EggheadIcon from "../icons/egghead.svg";
 import SettingsIcon from "../icons/settings.svg";
+import styles from "../styles/NavBar.module.css";
 import SearchField from "./SearchField";
 
 function LeftContent() {

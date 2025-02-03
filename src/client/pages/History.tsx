@@ -1,19 +1,19 @@
-import { useCallback, useState, useContext } from "react";
+import { useCallback, useContext, useState } from "react";
+import type { Session } from "../../models";
+import type { QuerySessionsRequest } from "../../server";
+import {
+  AggregateOperator,
+  BinaryOperator,
+  type Clause,
+  IndexToken,
+} from "../../server/clause";
+import { dateToSqliteString } from "../../server/utils";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SearchResultsSideBar from "../components/SearchResultsSideBar";
 import Timeline from "../components/Timeline";
-import { useSessionQuery, SessionQueryState } from "../lib/session-query";
 import { AppContext } from "../lib";
-import type { Session } from "../../models";
-import type { QuerySessionsRequest } from "../../server";
-import {
-  Clause,
-  AggregateOperator,
-  BinaryOperator,
-  IndexToken,
-} from "../../server/clause";
-import { dateToSqliteString } from "../../server/utils";
+import { SessionQueryState, useSessionQuery } from "../lib/session-query";
 
 export default function History() {
   const { query } = useContext(AppContext);
@@ -54,7 +54,10 @@ export default function History() {
     }
     if (dateRange !== null) {
       const [start, end] = dateRange;
-      console.log('RANGE', { start: [start, dateToSqliteString(start)], end: [start, dateToSqliteString(end)] });
+      console.log("RANGE", {
+        start: [start, dateToSqliteString(start)],
+        end: [start, dateToSqliteString(end)],
+      });
 
       clauses.push({
         fieldName: "startedAt",
@@ -79,21 +82,17 @@ export default function History() {
     }
 
     return newRequest;
-  }, [
-    query,
-    selectedTerms,
-    selectedHosts,
-    dateRange,
-  ]);
+  }, [query, selectedTerms, selectedHosts, dateRange]);
 
-  const { request, results, state, initialLoadComplete, loadNextPage } = useSessionQuery({
-    onChange: () => {
-      window.scroll(0, 0);
-      setTimelineLoading(true);
-      setSidebarLoading(true);
-    },
-    getRequest,
-  });
+  const { request, results, state, initialLoadComplete, loadNextPage } =
+    useSessionQuery({
+      onChange: () => {
+        window.scroll(0, 0);
+        setTimelineLoading(true);
+        setSidebarLoading(true);
+      },
+      getRequest,
+    });
 
   return (
     <Layout>

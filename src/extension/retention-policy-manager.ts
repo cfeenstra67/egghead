@@ -1,7 +1,6 @@
-import { ServerInterface } from "../server";
+import type { ServerInterface } from "../server";
 
 export class RetentionPolicyManager {
-
   constructor(private readonly server: ServerInterface) {}
 
   registerManager(alarmName: string) {
@@ -10,7 +9,6 @@ export class RetentionPolicyManager {
       if (alarm.name === alarmName) {
         await this.server.applyRetentionPolicy({});
       }
-    })
+    });
   }
-
 }

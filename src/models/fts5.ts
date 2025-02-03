@@ -1,4 +1,4 @@
-import { SQLConnection } from "../server/sql-primitives";
+import type { SQLConnection } from "../server/sql-primitives";
 
 const dummyColumnName = "dum";
 
@@ -50,7 +50,7 @@ export function fts5createTableSql(args: Fts5TableArgs): string {
     columnStrings.join(", "),
     `, content=${getFullTableName(
       args.contentTableName,
-      args.contentSchemaName
+      args.contentSchemaName,
     )}`,
   ];
 
@@ -105,7 +105,7 @@ export function fts5InsertTriggerSql(args: Fts5TableArgs): string {
     .concat([quoteDdlName(dummyColumnName)]);
 
   const selectCols = [args.contentRowId || "rowid", ...args.columns]
-    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
+    .map((input) => `new.${quoteDdlName(getColumn(input)[0])}`)
     .concat([`'${dummyColumnName}'`]);
 
   const components = [
@@ -139,11 +139,11 @@ export function fts5UpdateTriggerSql(args: Fts5TableArgs): string {
     .concat([quoteDdlName(dummyColumnName)]);
 
   const oldSelectCols = [args.contentRowId || "rowid", ...args.columns]
-    .map((input) => "old." + quoteDdlName(getColumn(input)[0]))
+    .map((input) => `old.${quoteDdlName(getColumn(input)[0])}`)
     .concat([`'${dummyColumnName}'`]);
 
   const newSelectCols = [args.contentRowId || "rowid", ...args.columns]
-    .map((input) => "new." + quoteDdlName(getColumn(input)[0]))
+    .map((input) => `new.${quoteDdlName(getColumn(input)[0])}`)
     .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
@@ -186,7 +186,7 @@ export function fts5DeleteTriggerSql(args: Fts5TableArgs): string {
     .concat([quoteDdlName(dummyColumnName)]);
 
   const oldSelectCols = [args.contentRowId || "rowid", ...args.columns]
-    .map((input) => "old." + quoteDdlName(getColumn(input)[0]))
+    .map((input) => `old.${quoteDdlName(getColumn(input)[0])}`)
     .concat([`'${dummyColumnName}'`]);
 
   const fullTableName = getFullTableName(args.tableName, args.schemaName);
@@ -232,7 +232,7 @@ export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
 
 export async function createFts5IndexV2(
   args: Fts5TableArgs,
-  connection: SQLConnection
+  connection: SQLConnection,
 ): Promise<void> {
   await connection(fts5createTableSql(args));
   await connection(fts5CreateVocabTableSql(args));
@@ -247,16 +247,16 @@ export async function dropFts5IndexV2(
   connection: SQLConnection,
 ): Promise<void> {
   await connection(
-    `DROP TRIGGER IF EXISTS ${quoteDdlName(insertTriggerName(args))}`
+    `DROP TRIGGER IF EXISTS ${quoteDdlName(insertTriggerName(args))}`,
   );
   await connection(
-    `DROP TRIGGER IF EXISTS ${quoteDdlName(updateTriggerName(args))}`
+    `DROP TRIGGER IF EXISTS ${quoteDdlName(updateTriggerName(args))}`,
   );
   await connection(
-    `DROP TRIGGER IF EXISTS ${quoteDdlName(deleteTriggerName(args))}`
+    `DROP TRIGGER IF EXISTS ${quoteDdlName(deleteTriggerName(args))}`,
   );
   await connection(`DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`);
   await connection(
-    `DROP TABLE IF EXISTS ${getFullTableName(args.tableName, args.schemaName)}`
+    `DROP TABLE IF EXISTS ${getFullTableName(args.tableName, args.schemaName)}`,
   );
 }

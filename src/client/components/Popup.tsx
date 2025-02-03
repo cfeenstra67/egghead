@@ -1,63 +1,66 @@
-import { useContext, useState, useCallback } from "react";
-import Bubble from "./Bubble";
-import { AppContext } from "../lib/context";
-import { useSessionQuery, SessionQueryState } from "../lib/session-query";
+import { useCallback, useContext, useState } from "react";
 import type { Session } from "../../models";
+import type { QuerySessionsRequest } from "../../server";
+import { Aborted } from "../../server/abort";
+import {
+  AggregateOperator,
+  BinaryOperator,
+  type Clause,
+} from "../../server/clause";
+import { AppContext } from "../lib/context";
+import { SessionQueryState, useSessionQuery } from "../lib/session-query";
+import styles from "../styles/Popup.module.css";
+import utilStyles from "../styles/utils.module.css";
+import Bubble from "./Bubble";
 import PopupLayout from "./PopupLayout";
 import PopupSearchBar from "./PopupSearchBar";
 import SearchResults from "./SearchResults";
-import type { QuerySessionsRequest } from "../../server";
-import { Clause, BinaryOperator, AggregateOperator } from "../../server/clause";
-import { Aborted } from "../../server/abort";
-import styles from "../styles/Popup.module.css";
-import utilStyles from "../styles/utils.module.css";
 
 export default function Popup() {
   const { query, runtime } = useContext(AppContext);
   const [activeSessionsOnly, setActiveSessionsOnly] = useState(false);
   const [currentDomainOnly, setCurrentDomainOnly] = useState(false);
 
-  const getRequest = useCallback(async (abort: AbortSignal) => {
-    const newRequest: QuerySessionsRequest = {
-      query,
-      isSearch: true,
-    };
-
-    const clauses: Clause<Session>[] = [];
-
-    if (currentDomainOnly) {
-      const currentUrl = await runtime.getCurrentUrl();
-      if (abort.aborted) {
-        throw new Aborted();
-      }
-      clauses.push({
-        operator: BinaryOperator.Equals,
-        fieldName: 'host',
-        value: new URL(currentUrl).hostname,
-      });
-    }
-    if (activeSessionsOnly) {
-      clauses.push({
-        operator: BinaryOperator.Equals,
-        fieldName: 'endedAt',
-        value: null
-      });
-    }
-
-    if (clauses.length === 1) {
-      newRequest.filter = clauses[0]
-    } else if (clauses.length > 1) {
-      newRequest.filter = {
-        operator: AggregateOperator.And,
-        clauses,
+  const getRequest = useCallback(
+    async (abort: AbortSignal) => {
+      const newRequest: QuerySessionsRequest = {
+        query,
+        isSearch: true,
       };
-    }
-    return newRequest;
-  }, [
-    query,
-    activeSessionsOnly,
-    currentDomainOnly,
-  ]);
+
+      const clauses: Clause<Session>[] = [];
+
+      if (currentDomainOnly) {
+        const currentUrl = await runtime.getCurrentUrl();
+        if (abort.aborted) {
+          throw new Aborted();
+        }
+        clauses.push({
+          operator: BinaryOperator.Equals,
+          fieldName: "host",
+          value: new URL(currentUrl).hostname,
+        });
+      }
+      if (activeSessionsOnly) {
+        clauses.push({
+          operator: BinaryOperator.Equals,
+          fieldName: "endedAt",
+          value: null,
+        });
+      }
+
+      if (clauses.length === 1) {
+        newRequest.filter = clauses[0];
+      } else if (clauses.length > 1) {
+        newRequest.filter = {
+          operator: AggregateOperator.And,
+          clauses,
+        };
+      }
+      return newRequest;
+    },
+    [query, activeSessionsOnly, currentDomainOnly],
+  );
 
   const { results, state, loadNextPage } = useSessionQuery({
     getRequest,
@@ -68,9 +71,7 @@ export default function Popup() {
     <PopupLayout>
       <PopupSearchBar />
       <div className={styles.popupButtons}>
-        <Bubble onClick={() => runtime.openHistory()}>
-          Open History
-        </Bubble>
+        <Bubble onClick={() => runtime.openHistory()}>Open History</Bubble>
         <Bubble
           onClick={() => setActiveSessionsOnly(!activeSessionsOnly)}
           selected={activeSessionsOnly}

@@ -1,6 +1,6 @@
-import { AbstractDBController } from "./abstract-db-controller";
+import type { AbstractDBController } from "./abstract-db-controller";
 import { Server } from "./service";
-import { RequestHandler } from "./types";
+import type { RequestHandler } from "./types";
 import { requestHandler } from "./utils";
 
 export interface BackgroundClient {
@@ -9,7 +9,7 @@ export interface BackgroundClient {
 }
 
 export function createBackgroundClient(
-  dbController: AbstractDBController
+  dbController: AbstractDBController,
 ): BackgroundClient {
   const handle: RequestHandler = async (request) => {
     const db = await dbController.useConnection();
@@ -20,7 +20,7 @@ export function createBackgroundClient(
 
   const close = async () => {
     await dbController.teardownDb();
-  }
+  };
 
   return { handle, close };
 }

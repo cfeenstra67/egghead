@@ -1,28 +1,28 @@
-
 .form {
-    display: grid;
-    grid-template-columns: 300px auto;
-    align-items: center;
-    justify-items: start;
-    gap: var(--padding-2);
+  display: grid;
+  grid-template-columns: 300px auto;
+  align-items: center;
+  justify-items: start;
+  gap: var(--padding-2);
 }
 
 @media (max-width: 660px) {
-    .form {
-        grid-template-columns: auto;
-    }
+  .form {
+    grid-template-columns: auto;
+  }
 }
 
-.form input, .form label {
-    padding: var(--padding);
+.form input,
+.form label {
+  padding: var(--padding);
 }
 
 .form input {
-    margin-right: var(--padding);
+  margin-right: var(--padding);
 }
 
 .form small {
-    padding: 0 var(--padding);
-    color: var(--secondary-text-color);
-    word-wrap: break-word;
+  padding: 0 var(--padding);
+  color: var(--secondary-text-color);
+  word-wrap: break-word;
 }

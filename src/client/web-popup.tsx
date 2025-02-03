@@ -1,8 +1,7 @@
-import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import InitialLoad from "./components/InitialLoad";
 import Popup from "./Popup";
-import { WebRuntime } from './lib/runtimes';
+import InitialLoad from "./components/InitialLoad";
+import { WebRuntime } from "./lib/runtimes";
 import { serverFactory } from "./lib/server-client";
 
 const body = document.getElementById("body") as Element;
@@ -17,5 +16,5 @@ root.render(
         runtime={new WebRuntime()}
       />
     )}
-  />
+  />,
 );

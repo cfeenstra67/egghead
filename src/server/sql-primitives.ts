@@ -1,18 +1,26 @@
 import {
-  Kysely,
+  type Compilable,
+  type CompiledQuery,
   DummyDriver,
+  type Generated,
+  Kysely,
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
-  Generated,
-  Compilable,
-  CompiledQuery,
-} from 'kysely';
-import { Session, SessionIndex, SessionTermIndex, SessionTermIndexVocab, Settings } from '../models';
+} from "kysely";
+import type {
+  Session,
+  SessionIndex,
+  SessionTermIndex,
+  SessionTermIndexVocab,
+  Settings,
+} from "../models";
 
 export type RemoveRelations<T> = {
-  [key in keyof T as T[key] extends Promise<unknown> ? never : key]: key extends 'id' ? Generated<T[key]> : T[key]
-} & { rowid: Generated<number>; };
+  [key in keyof T as T[key] extends Promise<unknown>
+    ? never
+    : key]: key extends "id" ? Generated<T[key]> : T[key];
+} & { rowid: Generated<number> };
 
 export interface Database {
   session: RemoveRelations<Session>;
@@ -29,22 +37,22 @@ export interface SQLConnection {
   close: () => Promise<void>;
   export?: () => Promise<Uint8Array>;
   import?: (data: Uint8Array) => Promise<void>;
-};
+}
 
 export function createQueryBuilder(): QueryBuilder {
   return new Kysely<Database>({
     dialect: {
       createAdapter() {
-        return new SqliteAdapter()
+        return new SqliteAdapter();
       },
       createDriver() {
-        return new DummyDriver()
+        return new DummyDriver();
       },
       createIntrospector(db: Kysely<unknown>) {
-        return new SqliteIntrospector(db)
+        return new SqliteIntrospector(db);
       },
       createQueryCompiler() {
-        return new SqliteQueryCompiler()
+        return new SqliteQueryCompiler();
       },
     },
   });
@@ -52,11 +60,19 @@ export function createQueryBuilder(): QueryBuilder {
 
 // type CompilationTarget = Compilable<CompiledQuery<{}>> & Expression<unknown>;
 
-export type RemoveAnnotations<T> = { [key in keyof T]: T[key] extends Generated<infer I> ? I : T[key] };
+export type RemoveAnnotations<T> = {
+  [key in keyof T]: T[key] extends Generated<infer I> ? I : T[key];
+};
 
-type OutputType<T extends Compilable<CompiledQuery<unknown>>> = ReturnType<T['compile']> extends CompiledQuery<infer O> ? RemoveAnnotations<O> : never;
+type OutputType<T extends Compilable<CompiledQuery<unknown>>> = ReturnType<
+  T["compile"]
+> extends CompiledQuery<infer O>
+  ? RemoveAnnotations<O>
+  : never;
 
-export async function executeQuery<T extends Compilable<CompiledQuery<unknown>>>(expr: T, conn: SQLConnection): Promise<OutputType<T>[]> {
+export async function executeQuery<
+  T extends Compilable<CompiledQuery<unknown>>,
+>(expr: T, conn: SQLConnection): Promise<OutputType<T>[]> {
   const compiled = expr.compile();
 
   return await conn(compiled.sql, compiled.parameters);

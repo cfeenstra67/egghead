@@ -1,4 +1,4 @@
-import styles from '../styles/RadioSelect.module.css';
+import styles from "../styles/RadioSelect.module.css";
 
 export interface RadioSelectOption {
   value: string;
@@ -12,7 +12,11 @@ export interface RadioSelectProps {
   options: RadioSelectOption[];
 }
 
-export default function RadioSelect({ value, setValue, options }: RadioSelectProps) {
+export default function RadioSelect({
+  value,
+  setValue,
+  options,
+}: RadioSelectProps) {
   return (
     <>
       {options.map((option) => (

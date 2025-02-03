@@ -1,6 +1,6 @@
-import { RawBuilder, sql } from "kysely";
+import { type RawBuilder, sql } from "kysely";
 import queryStringGrammar, {
-  QueryStringSemantics,
+  type QueryStringSemantics,
 } from "./query-string.ohm-bundle";
 
 export const IndexToken = "__index__";
@@ -28,16 +28,16 @@ export enum AggregateOperator {
 
 export type FilterValue<
   T,
-  O extends BinaryOperator
+  O extends BinaryOperator,
 > = O extends BinaryOperator.In
   ? T[]
   : O extends BinaryOperator.Equals
-  ? T | null
-  : O extends BinaryOperator.NotEquals
-  ? T | null
-  : O extends BinaryOperator.Match
-  ? string
-  : T;
+    ? T | null
+    : O extends BinaryOperator.NotEquals
+      ? T | null
+      : O extends BinaryOperator.Match
+        ? string
+        : T;
 
 type Keys<T> = keyof T | typeof IndexToken;
 
@@ -85,16 +85,20 @@ export type ClauseDsl<T> =
     }
   | FiltersClauseDsl<T>;
 
-export function isFilter<T>(clause: Clause<T>): clause is Filter<T, BinaryOperator, Keys<T>> {
+export function isFilter<T>(
+  clause: Clause<T>,
+): clause is Filter<T, BinaryOperator, Keys<T>> {
   return Object.values(BinaryOperator).includes(clause.operator as any);
 }
 
-export function isUnary<T>(clause: Clause<T>): clause is Unary<T, UnaryOperator> {
+export function isUnary<T>(
+  clause: Clause<T>,
+): clause is Unary<T, UnaryOperator> {
   return Object.values(UnaryOperator).includes(clause.operator as any);
 }
 
 export function isAggregate<T>(
-  clause: Clause<T>
+  clause: Clause<T>,
 ): clause is AggregateClause<T, AggregateOperator> {
   return Object.values(AggregateOperator).includes(clause.operator as any);
 }
@@ -199,9 +203,9 @@ export function renderClause<T>({
   if (clause.clauses.length === 0) {
     switch (clause.operator) {
       case AggregateOperator.And:
-        return ['TRUE', {}, paramIndex];
+        return ["TRUE", {}, paramIndex];
       case AggregateOperator.Or:
-        return ['FALSE', {}, paramIndex];
+        return ["FALSE", {}, paramIndex];
     }
   }
 
@@ -269,14 +273,16 @@ export function renderClauseV2<T>({
     });
   });
 
-  const final = parts.reduce((a, b) => sql<boolean>`${a} ${sql.raw(clause.operator)} ${b}`)
-  
+  const final = parts.reduce(
+    (a, b) => sql<boolean>`${a} ${sql.raw(clause.operator)} ${b}`,
+  );
+
   return sql`(${final})`;
 }
 
 export function clausesEqual<T>(
   clause1: Clause<T>,
-  clause2: Clause<T>
+  clause2: Clause<T>,
 ): boolean {
   if (clause1.operator !== clause2.operator) {
     return false;
@@ -320,7 +326,6 @@ export function getSearchString(inputString: string): string {
 }
 
 function addClauseOperation<T>(semantics: QueryStringSemantics): void {
-
   semantics.addOperation<Clause<T>>("clause", {
     notQuery_not: (_1, _2, notQuery) => {
       return {
@@ -370,7 +375,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       let outOp: BinaryOperator | undefined = undefined;
       const op = operator.sourceString.slice(
         0,
-        operator.sourceString.length - 1
+        operator.sourceString.length - 1,
       );
       if (op) {
         outOp = {
@@ -434,7 +439,7 @@ function factorUnaryClause<T>(clause: Unary<T, UnaryOperator>): Clause<T> {
         operator: UnaryOperator.Not,
         clause,
       })),
-    }
+    };
   }
   return {
     operator: AggregateOperator.And,
@@ -442,14 +447,13 @@ function factorUnaryClause<T>(clause: Unary<T, UnaryOperator>): Clause<T> {
       operator: UnaryOperator.Not,
       clause,
     })),
-  }
+  };
 }
 
 // Source: https://stackoverflow.com/questions/12303989/cartesian-product-of-multiple-arrays-in-javascript
 function* cartesianProduct<T>(head: T[], ...tail: T[][]): Generator<T[]> {
-  const remainder = tail.length > 0 ? (
-    cartesianProduct(tail[0], ...tail.slice(1)) 
-  ) : [[]];
+  const remainder =
+    tail.length > 0 ? cartesianProduct(tail[0], ...tail.slice(1)) : [[]];
   for (const r of remainder) {
     for (const h of head) {
       yield [h, ...r];
@@ -457,7 +461,9 @@ function* cartesianProduct<T>(head: T[], ...tail: T[][]): Generator<T[]> {
   }
 }
 
-function factorAggregateClause<T>(clause: AggregateClause<T, AggregateOperator>): Clause<T> {
+function factorAggregateClause<T>(
+  clause: AggregateClause<T, AggregateOperator>,
+): Clause<T> {
   const factoredClauses = clause.clauses.map(factorClause);
 
   if (clause.operator === AggregateOperator.Or) {
@@ -503,7 +509,7 @@ function factorAggregateClause<T>(clause: AggregateClause<T, AggregateOperator>)
   const results: Clause<T>[] = [];
   const combosGenerator = cartesianProduct(
     orClauseClauses[0],
-    ...orClauseClauses.slice(1)
+    ...orClauseClauses.slice(1),
   );
   for (const combo of combosGenerator) {
     if (otherClauses.length === 0 && combo.length === 1) {
@@ -537,7 +543,7 @@ export function factorClause<T>(clause: Clause<T>): Clause<T> {
 
 export function mapClauses<T>(
   clause: Clause<T>,
-  func: (clause: Clause<T>) => Clause<T>
+  func: (clause: Clause<T>) => Clause<T>,
 ): Clause<T> {
   if (isUnary(clause)) {
     return func({
@@ -550,6 +556,6 @@ export function mapClauses<T>(
   }
   return func({
     operator: clause.operator,
-    clauses: clause.clauses.map((c) => mapClauses(c, func))
+    clauses: clause.clauses.map((c) => mapClauses(c, func)),
   });
 }

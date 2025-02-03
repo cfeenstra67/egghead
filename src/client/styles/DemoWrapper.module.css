@@ -1,39 +1,39 @@
-
 .content {
-    padding-top: var(--padding-2);
-    max-width: 600px;
-    margin: auto;
+  padding-top: var(--padding-2);
+  max-width: 600px;
+  margin: auto;
 }
 
 .content input {
-    margin: 4px;
+  margin: 4px;
 }
 
 .content h1 {
-    text-align: center;
+  text-align: center;
 }
 
-.content p, .content label {
-    line-height: calc(var(--paragraph-font-size) + var(--padding));
+.content p,
+.content label {
+  line-height: calc(var(--paragraph-font-size) + var(--padding));
 }
 
 .content code {
-    font-size: var(--paragraph-font-size);
-    font-weight: bolder;
+  font-size: var(--paragraph-font-size);
+  font-weight: bolder;
 }
 
 .content a {
-    color: var(--link-color);
+  color: var(--link-color);
 }
 
 .content a:visited {
-    color: var(--visited-link-color);
+  color: var(--visited-link-color);
 }
 
 .badges {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-evenly;
-    margin-top: 32px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-top: 32px;
 }

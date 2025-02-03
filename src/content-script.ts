@@ -1,14 +1,16 @@
-import throttle from 'lodash/throttle';
+import throttle from "lodash/throttle";
 import { ServerClient, createExtensionRequestProcessor } from "./server/client";
 
 function startContentScript() {
-  const serverClient = new ServerClient(createExtensionRequestProcessor('background'));
+  const serverClient = new ServerClient(
+    createExtensionRequestProcessor("background"),
+  );
 
   const interactionInterval = 3000;
 
   const postInteraction = throttle(() => {
     try {
-      chrome.runtime?.sendMessage({ type: 'me' }, async (tabId) => {
+      chrome.runtime?.sendMessage({ type: "me" }, async (tabId) => {
         await serverClient.tabInteraction({
           tabId: tabId,
           url: window.location.href,
@@ -16,7 +18,7 @@ function startContentScript() {
         });
       });
     } catch (error: any) {
-      if (error.toString().includes('Extension context invalidated.')) {
+      if (error.toString().includes("Extension context invalidated.")) {
         close();
         return;
       }
@@ -25,14 +27,14 @@ function startContentScript() {
   }, interactionInterval);
 
   const events = [
-    'mousemove',
-    'click',
-    'touchmove',
-    'touchstart',
-    'mousedown',
-    'keydown',
-    'keyup',
-    'scroll',
+    "mousemove",
+    "click",
+    "touchmove",
+    "touchstart",
+    "mousedown",
+    "keydown",
+    "keyup",
+    "scroll",
   ];
 
   // Capture any interaction event, then let the throttling sort out what we
@@ -45,7 +47,7 @@ function startContentScript() {
     events.forEach((eventName) => {
       document.removeEventListener(eventName, postInteraction);
     });
-  }
+  };
 }
 
 startContentScript();

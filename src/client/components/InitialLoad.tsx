@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import Card from './Card';
-import Layout from './Layout';
-import PopupLayout from './PopupLayout';
+import { useMemo, useState } from "react";
+import Card from "./Card";
+import Layout from "./Layout";
+import PopupLayout from "./PopupLayout";
 
 interface LoadingStateProps {
   isPopup?: boolean;
@@ -15,9 +15,7 @@ function LoadingState({ isPopup, progress }: LoadingStateProps) {
     <UseLayout>
       {!isPopup && <h1>History</h1>}
       <Card>
-        <p>
-          Loading database: {(progress * 100).toFixed(1)}%.
-        </p>
+        <p>Loading database: {(progress * 100).toFixed(1)}%.</p>
       </Card>
     </UseLayout>
   );
@@ -30,18 +28,16 @@ interface ErrorStateProps {
 
 function ErrorState({ isPopup, error }: ErrorStateProps) {
   const UseLayout = isPopup ? PopupLayout : Layout;
-  
+
   return (
     <UseLayout>
       {!isPopup && <h1>History</h1>}
       <Card>
+        <p>An error occurred while loading the database: {error}.</p>
         <p>
-          An error occurred while loading the database: {error}.
-        </p>
-        <p>
-          {'Unfortunately this app isn\'t usable in this state, try reloading '}
-          {'the page or contacting me at me@camfeenstra.com for help if the '}
-          {'issue persists.'}
+          {"Unfortunately this app isn't usable in this state, try reloading "}
+          {"the page or contacting me at me@camfeenstra.com for help if the "}
+          {"issue persists."}
         </p>
       </Card>
     </UseLayout>
@@ -59,47 +55,52 @@ export default function InitialLoad({
   getApp,
   isPopup,
 }: InitialLoadProps) {
-
   const [db, setDb] = useState<Uint8Array | null>(null);
   const [progress, setProgress] = useState(0);
   const [dbError, setDbError] = useState<string | null>(null);
 
   useMemo(() => {
-    fetch(dbUrl).then(async (response) => {
-      if (response.status !== 200) {
-        throw new Error(`Database load failed with status ${response.status}`);
-      }
-      const totalLength = Number(response.headers.get('Content-Length') ?? 0);
-      if (totalLength === 0 || !response.body) {
-        throw new Error(`Empty database found at ${dbUrl}, this is not expected`);
-      }
-      let receivedLength = 0;
-      const chunks: Uint8Array[] = [];
-
-      const reader = response.body.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
+    fetch(dbUrl)
+      .then(async (response) => {
+        if (response.status !== 200) {
+          throw new Error(
+            `Database load failed with status ${response.status}`,
+          );
         }
-        if (value) {
-          chunks.push(value);
-          receivedLength += value.length;
-          setProgress(receivedLength / totalLength);
+        const totalLength = Number(response.headers.get("Content-Length") ?? 0);
+        if (totalLength === 0 || !response.body) {
+          throw new Error(
+            `Empty database found at ${dbUrl}, this is not expected`,
+          );
         }
-      }
+        let receivedLength = 0;
+        const chunks: Uint8Array[] = [];
 
-      const result = new Uint8Array(receivedLength);
-      let position = 0;
-      for (const chunk of chunks) {
-        result.set(chunk, position);
-        position += chunk.length;
-      }
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          if (value) {
+            chunks.push(value);
+            receivedLength += value.length;
+            setProgress(receivedLength / totalLength);
+          }
+        }
 
-      setDb(result);
-    }).catch(async (error) => {
-      setDbError(error.toString())
-    });
+        const result = new Uint8Array(receivedLength);
+        let position = 0;
+        for (const chunk of chunks) {
+          result.set(chunk, position);
+          position += chunk.length;
+        }
+
+        setDb(result);
+      })
+      .catch(async (error) => {
+        setDbError(error.toString());
+      });
   }, [dbUrl]);
 
   const app = useMemo(() => db && getApp(db), [db, getApp]);
@@ -108,5 +109,7 @@ export default function InitialLoad({
     <ErrorState isPopup={isPopup} error={dbError} />
   ) : app === null ? (
     <LoadingState isPopup={isPopup} progress={progress} />
-  ) : app;
+  ) : (
+    app
+  );
 }

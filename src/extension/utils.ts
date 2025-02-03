@@ -1,15 +1,11 @@
-import { HistoryCrawler } from './history-crawler';
+import type { ServerInterface } from "../server";
+import { HistoryCrawler } from "./history-crawler";
 import { NavigationObserver } from "./navigation-observer";
 import { RetentionPolicyManager } from "./retention-policy-manager";
-import { ServerInterface } from "../server";
 import { TabObserver } from "./tab-observer";
 
 export function historyCrawlerFactory(server: ServerInterface): HistoryCrawler {
-  return new HistoryCrawler(
-    server,
-    "historyCrawler",
-    24 * 60 * 60 * 1000
-  );
+  return new HistoryCrawler(server, "historyCrawler", 24 * 60 * 60 * 1000);
 }
 
 export interface ObserversController {
@@ -31,8 +27,14 @@ export function setupObservers(server: ServerInterface): ObserversController {
   retentionPolicyManager.registerManager("RetentionPolicyManager_apply");
 
   return {
-    resetState: async () => { await historyCrawler.resetState() },
-    runCrawler: async () => { await historyCrawler.runCrawler() },
-    maybeRunCrawler: async () => { await historyCrawler.runCrawler(true) },
-  }
+    resetState: async () => {
+      await historyCrawler.resetState();
+    },
+    runCrawler: async () => {
+      await historyCrawler.runCrawler();
+    },
+    maybeRunCrawler: async () => {
+      await historyCrawler.runCrawler(true);
+    },
+  };
 }

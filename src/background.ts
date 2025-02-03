@@ -1,61 +1,67 @@
-import parentLogger from './logger';
-import { createOffscreenClient } from "./server/offscreen-client";
+import { setupObservers } from "./extension/utils";
+import parentLogger from "./logger";
 import { ServerResponseCode } from "./server";
 import { Aborted } from "./server/abort";
 import { ServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
+import { createOffscreenClient } from "./server/offscreen-client";
 import {
   jobManagerMiddleware,
-  logRequestMiddleware,
   logJobMiddleware,
+  logRequestMiddleware,
   // jobLockingMiddleware,
 } from "./server/utils";
-import { setupObservers } from './extension/utils';
 
-const logger = parentLogger.child({ context: 'background' });
+const logger = parentLogger.child({ context: "background" });
 
 const serverConnection = createOffscreenClient();
 const loggingServerConnection = logRequestMiddleware(serverConnection);
 const jobManager = new JobManager({
-  middlewares: [logJobMiddleware]
+  middlewares: [logJobMiddleware],
 });
-const managedConnection = jobManagerMiddleware(loggingServerConnection, jobManager)
+const managedConnection = jobManagerMiddleware(
+  loggingServerConnection,
+  jobManager,
+);
 const serverClient = new ServerClient(managedConnection);
 
 const observersController = setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.target && request.target !== 'background') {
+  if (request.target && request.target !== "background") {
     return;
   }
 
-  if (request.type === 'me') {
+  if (request.type === "me") {
     sendResponse(sender.tab?.id);
     return false;
   }
-  if (request.type === 'openTabId') {
+  if (request.type === "openTabId") {
     chrome.tabs.update(request.tabId, { active: true }, () => {
-      sendResponse('OK');
+      sendResponse("OK");
     });
     return true;
   }
-  if (request.type === 'abort') {
+  if (request.type === "abort") {
     jobManager.abortJob(request.requestId);
-    sendResponse('OK');
+    sendResponse("OK");
     return false;
   }
-  if (request.type === 'maybeRestartCrawler') {
+  if (request.type === "maybeRestartCrawler") {
     observersController.maybeRunCrawler();
-    sendResponse('OK');
+    sendResponse("OK");
     return false;
   }
-  if (request.type === 'resetCrawlerState') {
-    observersController.resetState().then(() => {
-      sendResponse('OK');
-    }).catch((error) => {
-      logger.error(error);
-      sendResponse('ERROR');
-    })
+  if (request.type === "resetCrawlerState") {
+    observersController
+      .resetState()
+      .then(() => {
+        sendResponse("OK");
+      })
+      .catch((error) => {
+        logger.error(error);
+        sendResponse("ERROR");
+      });
     return true;
   }
   const { request: innerRequest, requestId } = request;
@@ -63,7 +69,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return loggingServerConnection({ ...innerRequest, abort: abortSignal });
   });
 
-  jobManager.jobPromise(requestId)
+  jobManager
+    .jobPromise(requestId)
     .then((response) => {
       sendResponse(response);
     })
@@ -71,7 +78,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (error instanceof Aborted) {
         sendResponse({
           code: ServerResponseCode.Aborted,
-          message: 'Aborted',
+          message: "Aborted",
         });
         return;
       }
@@ -81,7 +88,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         message: error.toString(),
         stack: error.stack,
       });
-    })
+    });
   return true;
 });
 
@@ -100,22 +107,22 @@ chrome.runtime.onInstalled.addListener(async () => {
       throw chrome.runtime.lastError;
     }
     for (const tab of tabs) {
-      if (
-        tab.id !== undefined &&
-        !tab.url?.startsWith('chrome://')
-      ) {
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content-script.js'],
-        }, () => {
-          if (chrome.runtime.lastError) {
-            logger.warn(
-              'error executing content script on %s: %s',
-              tab.url,
-              chrome.runtime.lastError
-            );
-          }
-        });
+      if (tab.id !== undefined && !tab.url?.startsWith("chrome://")) {
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tab.id },
+            files: ["content-script.js"],
+          },
+          () => {
+            if (chrome.runtime.lastError) {
+              logger.warn(
+                "error executing content script on %s: %s",
+                tab.url,
+                chrome.runtime.lastError,
+              );
+            }
+          },
+        );
       }
     }
   });

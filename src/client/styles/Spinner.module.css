@@ -1,6 +1,10 @@
 @keyframes spinner {
-  0% { transform: translate(-50%,-50%) rotate(0deg); }
-  100% { transform: translate(-50%,-50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 .spinner div {
   position: absolute;
@@ -13,7 +17,7 @@
 .spinner div {
   animation: spinner 1s linear infinite;
   top: 50px;
-  left: 50px
+  left: 50px;
 }
 .spinnerParent {
   width: 18px;
@@ -29,4 +33,6 @@
   backface-visibility: hidden;
   transform-origin: 0 0; /* see note above */
 }
-.spinner div { box-sizing: content-box; }
+.spinner div {
+  box-sizing: content-box;
+}

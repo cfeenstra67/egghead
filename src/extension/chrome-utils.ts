@@ -2,7 +2,7 @@ export function getTabById(
   tabId: number,
   callback: (tab: chrome.tabs.Tab) => void,
   pollInterval?: number,
-  errorCallback?: (message: string) => void
+  errorCallback?: (message: string) => void,
 ): void {
   pollInterval = pollInterval || 100;
 
@@ -26,7 +26,7 @@ export function getWindowById(
   windowId: number,
   callback: (tab: chrome.windows.Window) => void,
   pollInterval?: number,
-  errorCallback?: (message: string) => void
+  errorCallback?: (message: string) => void,
 ): void {
   pollInterval = pollInterval || 100;
 

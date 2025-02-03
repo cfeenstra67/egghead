@@ -1,6 +1,5 @@
-
 .card {
-    background-color: var(--secondary-bg-color);
-    border-radius: var(--padding);
-    padding: var(--padding-2);
+  background-color: var(--secondary-bg-color);
+  border-radius: var(--padding);
+  padding: var(--padding-2);
 }

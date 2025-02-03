@@ -1,58 +1,60 @@
-
 .option {
-    display: grid;
-    grid-template-columns: 172px 24px max-content min-content auto;
-    align-items: center;
-    column-gap: var(--padding-2);
+  display: grid;
+  grid-template-columns: 172px 24px max-content min-content auto;
+  align-items: center;
+  column-gap: var(--padding-2);
 }
 
 .option > *:nth-child(2) {
-    grid-column: 3;
+  grid-column: 3;
 }
 
 .option > input[type="file"] {
-    color:  rgba(0, 0, 0, 0);
+  color: rgba(0, 0, 0, 0);
 }
 
 .queryTool {
-    margin-top: var(--padding);
+  margin-top: var(--padding);
 }
 
 .editor {
-    margin-top: var(--padding-2);
-    margin-bottom: var(--padding-2);
-    border:  1px solid var(--secondary-text-color);
-    font-family: "Fira code", "Fira Mono", monospace;
-    font-size: var(--paragraph-font-size);
-    border-radius: var(--border-radius);
+  margin-top: var(--padding-2);
+  margin-bottom: var(--padding-2);
+  border: 1px solid var(--secondary-text-color);
+  font-family: "Fira code", "Fira Mono", monospace;
+  font-size: var(--paragraph-font-size);
+  border-radius: var(--border-radius);
 }
 
 .editorTextArea {
-    background-color: var(--bg-color) !important;
+  background-color: var(--bg-color) !important;
 }
 
 .resultTable {
-    margin-top: var(--padding-2);
-    overflow-x: scroll;
+  margin-top: var(--padding-2);
+  overflow-x: scroll;
 }
 
-.resultTable table, .resultTable th, .resultTable td {
-    border:  1px solid var(--primary-text-color);
+.resultTable table,
+.resultTable th,
+.resultTable td {
+  border: 1px solid var(--primary-text-color);
 }
 
-.resultTable th, .resultTable td {
-    padding: var(--padding);
+.resultTable th,
+.resultTable td {
+  padding: var(--padding);
 }
 
 .resultTable th {
-    font-weight: bolder;
+  font-weight: bolder;
 }
 
 .resultTable table {
-    border-collapse: collapse;
-    width: 100%;
+  border-collapse: collapse;
+  width: 100%;
 }
 
 .queryToolSeeMore {
-    cursor: pointer;
+  cursor: pointer;
 }

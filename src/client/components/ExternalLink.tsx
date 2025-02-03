@@ -1,5 +1,5 @@
-import { useContext, useCallback } from 'react';
-import { AppContext } from '../lib/context';
+import { useCallback, useContext } from "react";
+import { AppContext } from "../lib/context";
 
 export interface ExternalLinkProps {
   href: string;
@@ -10,16 +10,21 @@ export interface ExternalLinkProps {
   rel?: string;
 }
 
-export function useExternalLinkOpener(newTab?: boolean): (url: string, tabId?: number) => void {
+export function useExternalLinkOpener(
+  newTab?: boolean,
+): (url: string, tabId?: number) => void {
   const { runtime } = useContext(AppContext);
 
-  return useCallback((url, tabId) => {
-    if (newTab && tabId && runtime.openTabId) {
-      runtime.openTabId(tabId);
-    } else {
-      runtime.openUrl(url, newTab);
-    }
-  }, [runtime, newTab]);
+  return useCallback(
+    (url, tabId) => {
+      if (newTab && tabId && runtime.openTabId) {
+        runtime.openTabId(tabId);
+      } else {
+        runtime.openUrl(url, newTab);
+      }
+    },
+    [runtime, newTab],
+  );
 }
 
 export default function ExternalLink({
@@ -32,18 +37,16 @@ export default function ExternalLink({
 }: ExternalLinkProps) {
   const openLink = useExternalLinkOpener(newTab);
 
-  const onClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
-    openLink(href, tabId);
-    event.preventDefault();
-  }, [tabId, openLink]);
+  const onClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      openLink(href, tabId);
+      event.preventDefault();
+    },
+    [tabId, openLink],
+  );
 
   return (
-    <a
-      href={href}
-      onClick={onClick}
-      className={className}
-      rel={rel}
-    >
+    <a href={href} onClick={onClick} className={className} rel={rel}>
       {children}
     </a>
   );

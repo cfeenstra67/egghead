@@ -1,16 +1,16 @@
 import "chart.js/auto";
-import { useEffect, useState, useContext, useCallback } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Chart } from "react-chartjs-2";
-import Bubble from "./Bubble";
-import { AppContext } from "../lib";
-import { useTheme } from "../lib/theme";
-import { Theme } from "../../server/types";
 import type {
-  QuerySessionsRequest,
   QuerySessionTimelineRequest,
   QuerySessionTimelineResponse,
+  QuerySessionsRequest,
 } from "../../server";
+import { Theme } from "../../server/types";
+import { AppContext } from "../lib";
+import { useTheme } from "../lib/theme";
 import styles from "../styles/Timeline.module.css";
+import Bubble from "./Bubble";
 
 export interface TimelineProps {
   request: QuerySessionsRequest;
@@ -22,14 +22,14 @@ export interface TimelineProps {
 
 function dateStringToDateRange(
   granularity: QuerySessionTimelineRequest["granularity"] & string,
-  dateString: string
+  dateString: string,
 ): [Date, Date] {
-  const parseIntOnly = (input: string) => parseInt(input);
+  const parseIntOnly = (input: string) => Number.parseInt(input);
 
   switch (granularity) {
     case "hour":
       const [hourDateString, hourString] = dateString.split("T");
-      const hour = parseInt(hourString);
+      const hour = Number.parseInt(hourString);
       const [hourYear, hourMonth, hourDay] = hourDateString
         .split("-")
         .map(parseIntOnly);
@@ -58,7 +58,7 @@ function dateStringToDateRange(
 
 function dateStringToLabel(
   granularity: QuerySessionTimelineRequest["granularity"] & string,
-  dateString: string
+  dateString: string,
 ): string {
   const [start, end] = dateStringToDateRange(granularity, dateString);
   const localeName = "en-US";
@@ -80,10 +80,13 @@ function dateStringToLabel(
         month: "short",
       });
       const offset = 24 * 3600 * 1000 - 1;
-      const weekEnd = new Date(end.getTime() - offset).toLocaleString(localeName, {
-        day: "numeric",
-        month: "short",
-      });
+      const weekEnd = new Date(end.getTime() - offset).toLocaleString(
+        localeName,
+        {
+          day: "numeric",
+          month: "short",
+        },
+      );
       return `${weekStart} - ${weekEnd}`;
     case "month":
       return start.toLocaleString(localeName, { month: "short" });
@@ -105,7 +108,7 @@ function dateRangeToLabel(start: Date, end: Date): string {
 
 function fillMissingLabels(
   granularity: QuerySessionTimelineRequest["granularity"] & string,
-  timeline: QuerySessionTimelineResponse["timeline"]
+  timeline: QuerySessionTimelineResponse["timeline"],
 ): QuerySessionTimelineResponse["timeline"] {
   if (timeline.length === 0) {
     return [];
@@ -113,11 +116,11 @@ function fillMissingLabels(
   const start = dateStringToDateRange(granularity, timeline[0].dateString)[0];
   const end = dateStringToDateRange(
     granularity,
-    timeline[timeline.length - 1].dateString
+    timeline[timeline.length - 1].dateString,
   )[1];
 
   function twoDigit(num: number): string {
-    return ("00" + num).slice(-2);
+    return `00${num}`.slice(-2);
   }
 
   let getNext: (d: Date) => Date;
@@ -130,7 +133,7 @@ function fillMissingLabels(
           d.getMonth(),
           d.getDate(),
           d.getHours() + 1,
-          d.getMinutes()
+          d.getMinutes(),
         );
       getLabel = (d) =>
         `${d.getFullYear()}-` +
@@ -145,7 +148,7 @@ function fillMissingLabels(
           d.getMonth(),
           d.getDate() + 1,
           d.getHours(),
-          d.getMinutes()
+          d.getMinutes(),
         );
       getLabel = (d) =>
         `${d.getFullYear()}-` +
@@ -159,12 +162,12 @@ function fillMissingLabels(
           d.getMonth(),
           d.getDate() + 7,
           d.getHours(),
-          d.getMinutes()
+          d.getMinutes(),
         );
       getLabel = (d) => {
         const yearStart = new Date(d.getFullYear(), 0, 1);
         const days = Math.floor(
-          (d.getTime() - yearStart.getTime()) / (24 * 3600 * 1000)
+          (d.getTime() - yearStart.getTime()) / (24 * 3600 * 1000),
         );
         const weekNumber = Math.ceil((d.getDay() + 1 + days) / 7);
         return `${d.getFullYear()}-${weekNumber}`;
@@ -177,7 +180,7 @@ function fillMissingLabels(
           d.getMonth() + 1,
           d.getDate(),
           d.getHours(),
-          d.getMinutes()
+          d.getMinutes(),
         );
       getLabel = (d) => `${d.getFullYear()}-${twoDigit(d.getMonth() + 1)}`;
       break;
@@ -186,7 +189,7 @@ function fillMissingLabels(
   const stepsByKey = Object.fromEntries(
     timeline.map((step) => {
       return [step.dateString, step];
-    })
+    }),
   );
   let current = start;
   const out: QuerySessionTimelineResponse["timeline"] = [];
@@ -226,7 +229,7 @@ export default function Timeline({
       setDateRange([start, end]);
       setDateRangeStack(dateRangeStack.concat([[start, end]]));
     },
-    [dateRangeStack, setDateRangeStack]
+    [dateRangeStack, setDateRangeStack],
   );
 
   const popDateStack = useCallback(() => {
@@ -258,7 +261,7 @@ export default function Timeline({
           granularity: timelineResp.granularity,
           timeline: fillMissingLabels(
             timelineResp.granularity,
-            timelineResp.timeline
+            timelineResp.timeline,
           ),
         });
       } finally {
@@ -276,11 +279,8 @@ export default function Timeline({
   const dataPoints = timeline.timeline.map((x) => x.count);
 
   const theme = useTheme();
-  const backgroundColor = theme === Theme.Light ? (
-    '#535453'
-  ) : (
-    "rgba(255, 255, 255, 0.2)"
-  );
+  const backgroundColor =
+    theme === Theme.Light ? "#535453" : "rgba(255, 255, 255, 0.2)";
 
   return (
     <>
@@ -321,7 +321,7 @@ export default function Timeline({
                   timeline.timeline[elements[0].index].dateString;
                 const range = dateStringToDateRange(
                   timeline.granularity,
-                  selectedLabel
+                  selectedLabel,
                 );
                 const currentRange = dateRangeStack[dateRangeStack.length - 1];
                 if (

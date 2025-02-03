@@ -1,11 +1,11 @@
-import { getTabById } from "./chrome-utils";
-import parentLogger from '../logger';
-import { Session } from "../models";
-import { NavigationObserver } from "./navigation-observer";
-import { ServerInterface, TabChangedRequest } from "../server";
+import parentLogger from "../logger";
+import type { Session } from "../models";
+import type { ServerInterface, TabChangedRequest } from "../server";
 import { dslToClause } from "../server/clause";
+import { getTabById } from "./chrome-utils";
+import type { NavigationObserver } from "./navigation-observer";
 
-const logger = parentLogger.child({ context: 'tab-observer' });
+const logger = parentLogger.child({ context: "tab-observer" });
 
 interface TabStateDiff {
   updates: Omit<TabChangedRequest, "type">[];
@@ -37,7 +37,7 @@ export class TabObserver {
 
   observeTabs(navigationObserver: NavigationObserver): void {
     navigationObserver.onNavigationComplete(
-      this.handleNavigationComplete.bind(this)
+      this.handleNavigationComplete.bind(this),
     );
     chrome.tabs.onRemoved.addListener(this.handleTabRemoved.bind(this));
   }
@@ -65,7 +65,7 @@ export class TabObserver {
           tab,
           sourceTabId: event.detail.source.tabId ?? undefined,
           transitionType: event.detail.transitionType,
-        })
+        }),
       );
       logger.info("Tab changed %s", response);
     });
@@ -73,7 +73,7 @@ export class TabObserver {
 
   async handleTabRemoved(
     tabId: number,
-    removeInfo: chrome.tabs.TabRemoveInfo
+    removeInfo: chrome.tabs.TabRemoveInfo,
   ): Promise<void> {
     const response = await this.server.tabClosed({ tabId });
     logger.info("Tab closed %s", response);
@@ -83,14 +83,18 @@ export class TabObserver {
     const diff = await this.diffCurrentState();
     logger.info(
       `Cleaning up ${diff.deletes.length} tab(s): ${diff.deletes}; ` +
-        `${diff.updates.length} tab(s) open.`
+        `${diff.updates.length} tab(s) open.`,
     );
     await Promise.all(
-      diff.updates.map(async (update) => {
-        await this.server.tabChanged(update);
-      }).concat(diff.deletes.map(async (tabId) => {
-        await this.server.tabClosed({ tabId });
-      }))
+      diff.updates
+        .map(async (update) => {
+          await this.server.tabChanged(update);
+        })
+        .concat(
+          diff.deletes.map(async (tabId) => {
+            await this.server.tabClosed({ tabId });
+          }),
+        ),
     );
   }
 
@@ -109,7 +113,7 @@ export class TabObserver {
         const updates: TabStateDiff["updates"] = [];
 
         const currentActiveSessionTabIds = new Set(
-          results.map((session) => session.tabId)
+          results.map((session) => session.tabId),
         );
 
         tabs.forEach((tab) => {

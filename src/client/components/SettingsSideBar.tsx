@@ -1,16 +1,16 @@
-import { Link } from 'wouter';
-import ExternalLink from './ExternalLink';
-import { useSettingsContext } from '../lib/SettingsContext';
-import SideBar from './SideBar';
-import styles from '../styles/SettingsSideBar.module.css';
+import { Link } from "wouter";
+import { useSettingsContext } from "../lib/SettingsContext";
+import styles from "../styles/SettingsSideBar.module.css";
+import ExternalLink from "./ExternalLink";
+import SideBar from "./SideBar";
 
 export enum SettingsPage {
-  General = 'General',
-  ClearBrowsingData = 'ClearBrowsingData',
-  Data = 'Data',
-  Dev = 'Dev',
-  Docs = 'Docs',
-  About = 'About',
+  General = "General",
+  ClearBrowsingData = "ClearBrowsingData",
+  Data = "Data",
+  Dev = "Dev",
+  Docs = "Docs",
+  About = "About",
 }
 
 interface SettingsSideBarItemProps {
@@ -19,23 +19,34 @@ interface SettingsSideBarItemProps {
   selected?: boolean;
 }
 
-function SettingsSideBarItem({ url, title, selected }: SettingsSideBarItemProps) {
+function SettingsSideBarItem({
+  url,
+  title,
+  selected,
+}: SettingsSideBarItemProps) {
   return (
-    <Link href={url} className={`${styles.item} ${selected ? styles.activeItem : ''}`}>
+    <Link
+      href={url}
+      className={`${styles.item} ${selected ? styles.activeItem : ""}`}
+    >
       {title}
-    </Link> 
+    </Link>
   );
 }
 
-function ExternalSettingsSideBarItem({ url, title, selected }: SettingsSideBarItemProps) {
+function ExternalSettingsSideBarItem({
+  url,
+  title,
+  selected,
+}: SettingsSideBarItemProps) {
   return (
     <ExternalLink
       href={url}
       newTab
-      className={`${styles.item} ${selected ? styles.activeItem : ''}`}
+      className={`${styles.item} ${selected ? styles.activeItem : ""}`}
     >
       {title}
-    </ExternalLink> 
+    </ExternalLink>
   );
 }
 

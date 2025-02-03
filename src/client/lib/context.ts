@@ -1,6 +1,6 @@
 import { createContext } from "react";
-import { RuntimeInterface, WebRuntime } from './runtimes';
 import type { ServerInterface } from "../../server";
+import { type RuntimeInterface, WebRuntime } from "./runtimes";
 
 export interface AppContext {
   serverClientFactory: () => Promise<ServerInterface>;

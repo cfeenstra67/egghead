@@ -11,7 +11,7 @@ export default function Highlighted({ title }: { title: string }) {
     }
     const inner = match[0].slice(
       "{~{~{".length,
-      match[0].length - "}~}~}".length
+      match[0].length - "}~}~}".length,
     );
     components.push(<span className={styles.highlighted}>{inner}</span>);
     lastIndex = match.index + match[0].length;

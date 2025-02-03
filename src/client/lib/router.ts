@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
-import parentLogger from '../../logger';
-import type { RuntimeInterface } from './runtimes';
+import { useEffect, useMemo, useState } from "react";
+import parentLogger from "../../logger";
+import type { RuntimeInterface } from "./runtimes";
 
-const logger = parentLogger.child({ context: 'router' });
+const logger = parentLogger.child({ context: "router" });
 
 export type NavigationHook = (
   to: string,
@@ -143,12 +143,18 @@ export function useHashLocation(): [string, NavigationHook] {
   return [loc, hashNavigate];
 }
 
-export function popupLocationHook(runtime: RuntimeInterface, historyUrl: string): () => [string, NavigationHook] {
+export function popupLocationHook(
+  runtime: RuntimeInterface,
+  historyUrl: string,
+): () => [string, NavigationHook] {
   return () => {
-    return ['', async (to) => {
-      const outUrl = historyUrl + to;
-      logger.debug('TO %s', to, outUrl);
-      await runtime.openUrl(outUrl, true);
-    }];
+    return [
+      "",
+      async (to) => {
+        const outUrl = historyUrl + to;
+        logger.debug("TO %s", to, outUrl);
+        await runtime.openUrl(outUrl, true);
+      },
+    ];
   };
 }

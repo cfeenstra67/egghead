@@ -1,6 +1,8 @@
-import Card from '../../components/Card';
-import Layout from '../../components/Layout';
-import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar';
+import Card from "../../components/Card";
+import Layout from "../../components/Layout";
+import SettingsSideBar, {
+  SettingsPage,
+} from "../../components/SettingsSideBar";
 
 export default function ClearBrowsingData() {
   return (
@@ -9,9 +11,7 @@ export default function ClearBrowsingData() {
 
       <SettingsSideBar page={SettingsPage.ClearBrowsingData} />
 
-      <Card>
-        Coming soon!
-      </Card>
+      <Card>Coming soon!</Card>
     </Layout>
   );
 }

@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
-import Card from './Card';
-import { historyCrawlerFactory } from '../../extension/utils';
-import Layout from './Layout';
-import PopupLayout from './PopupLayout';
-import type { ServerInterface } from '../../server';
+import { useEffect, useMemo, useState } from "react";
+import { historyCrawlerFactory } from "../../extension/utils";
+import type { ServerInterface } from "../../server";
+import Card from "./Card";
+import Layout from "./Layout";
+import PopupLayout from "./PopupLayout";
 
 interface LoadingStateProps {
   isPopup?: boolean;
@@ -21,22 +21,19 @@ function LoadingState({ isPopup, percentDone, lastError }: LoadingStateProps) {
         {lastError === undefined ? (
           <>
             <p>
-              Loading your existing browsing history for searching
-              (this only happens once). This should only take a minute
-              or two...
+              Loading your existing browsing history for searching (this only
+              happens once). This should only take a minute or two...
             </p>
-            <p>
-              Percent done: {percentDone.toFixed(0)}%
-            </p>
+            <p>Percent done: {percentDone.toFixed(0)}%</p>
           </>
         ) : (
           <>
             <p>
-              Unfortunately the app encountered an unrecoverable error
-              while ingesting your existing browsing history. You{"'"}ll
-              need to reinstall the extension to fix the issue. If you
-              continue to experience issues, please report the following
-              error to the developer at me@camfeenstra.com:
+              Unfortunately the app encountered an unrecoverable error while
+              ingesting your existing browsing history. You{"'"}ll need to
+              reinstall the extension to fix the issue. If you continue to
+              experience issues, please report the following error to the
+              developer at me@camfeenstra.com:
             </p>
             <p>{lastError}</p>
           </>
@@ -57,14 +54,13 @@ export default function InitialCrawl({
   getApp,
   isPopup,
 }: InitialCrawlProps) {
-
   const [upToDate, setUpToDate] = useState(false);
   const [percentDone, setPercentDone] = useState(0);
   const [lastError, setLastError] = useState<string | undefined>(undefined);
 
   async function checkIfUpToDate() {
     const server = await serverClientFactory();
-    chrome.runtime.sendMessage({ type: 'maybeRestartCrawler' });
+    chrome.runtime.sendMessage({ type: "maybeRestartCrawler" });
     const crawler = historyCrawlerFactory(server);
     const currentState = await crawler.getState();
     setUpToDate(currentState.upToDate);
@@ -83,9 +79,11 @@ export default function InitialCrawl({
     return () => clearInterval(ivl);
   }, [upToDate]);
 
-  const app = useMemo(() => upToDate ? getApp() : <></>, [upToDate, getApp]);
+  const app = useMemo(() => (upToDate ? getApp() : <></>), [upToDate, getApp]);
 
-  return upToDate ? app : (
+  return upToDate ? (
+    app
+  ) : (
     <LoadingState
       percentDone={percentDone}
       isPopup={isPopup}

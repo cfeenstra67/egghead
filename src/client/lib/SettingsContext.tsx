@@ -1,13 +1,8 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from 'react';
-import { AppContext } from './context';
-import type { SettingsItems } from '../../models';
-import { Aborted } from '../../server/abort';
+import { createContext, useContext, useEffect, useState } from "react";
+import type { SettingsItems } from "../../models";
+import { Aborted } from "../../server/abort";
 import { defaultSettings } from "../../server/utils";
+import { AppContext } from "./context";
 
 export interface SettingsContext {
   items: SettingsItems;
@@ -17,8 +12,12 @@ export interface SettingsContext {
 
 const settingsContext = createContext<SettingsContext>({
   items: defaultSettings(),
-  refresh: () => { throw new Error('Not implemented.') },
-  patch: (items) => { throw new Error('Not implemented.') },
+  refresh: () => {
+    throw new Error("Not implemented.");
+  },
+  patch: (items) => {
+    throw new Error("Not implemented.");
+  },
 });
 
 export function useSettingsContext(): SettingsContext {

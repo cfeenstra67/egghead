@@ -1,25 +1,25 @@
 import type { Table } from "./base";
 
 export const sessionTable = {
-  name: 'session',
+  name: "session",
   columns: {
-    id: { type: 'varchar' },
-    tabId: { type: 'integer' },
-    host: { type: 'varchar', nullable: true },
-    url: { type: 'varchar' },
-    title: { type: 'varchar' },
-    rawUrl: { type: 'varchar' },
-    parentSessionId: { type: 'varchar', nullable: true },
-    nextSessionId: { type: 'varchar', nullable: true },
-    transitionType: { type: 'varchar', nullable: true },
-    startedAt: { type: 'datetime' },
-    endedAt: { type: 'datetime', nullable: true },
-    interactionCount: { type: 'integer' },
-    lastInteractionAt: { type: 'datetime' },
-    chromeVisitId: { type: 'varchar', nullable: true },
-    chromeReferringVisitId: { type: 'varchar', nullable: true },
-    dum: { type: 'varchar', nullable: true }
-  }
+    id: { type: "varchar" },
+    tabId: { type: "integer" },
+    host: { type: "varchar", nullable: true },
+    url: { type: "varchar" },
+    title: { type: "varchar" },
+    rawUrl: { type: "varchar" },
+    parentSessionId: { type: "varchar", nullable: true },
+    nextSessionId: { type: "varchar", nullable: true },
+    transitionType: { type: "varchar", nullable: true },
+    startedAt: { type: "datetime" },
+    endedAt: { type: "datetime", nullable: true },
+    interactionCount: { type: "integer" },
+    lastInteractionAt: { type: "datetime" },
+    chromeVisitId: { type: "varchar", nullable: true },
+    chromeReferringVisitId: { type: "varchar", nullable: true },
+    dum: { type: "varchar", nullable: true },
+  },
 } as const satisfies Table;
 
 // @Entity()
@@ -98,7 +98,7 @@ export class SessionIndex extends Session {
 
 export const sessionIndexTable = {
   ...sessionTable,
-  name: 'session_index'
+  name: "session_index",
 } as const satisfies Table;
 
 // @Entity("session_term_index")
@@ -109,7 +109,7 @@ export class SessionTermIndex extends Session {
 
 export const sessionTermIndexTable = {
   ...sessionTable,
-  name: 'session_term_index'
+  name: "session_term_index",
 } as const satisfies Table;
 
 // @Entity("session_term_index_vocab")

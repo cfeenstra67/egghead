@@ -1,7 +1,11 @@
-import { RouterHook, useExtensionLocation, useHashLocation, popupLocationHook } from './router';
+import {
+  type RouterHook,
+  popupLocationHook,
+  useExtensionLocation,
+  useHashLocation,
+} from "./router";
 
 export interface RuntimeInterface {
-
   routerHook: RouterHook;
 
   openHistory(): Promise<void>;
@@ -13,15 +17,13 @@ export interface RuntimeInterface {
   openTabId?: (tabId: number) => Promise<void>;
 
   goBack(): Promise<void>;
-
 }
 
 export class WebRuntime implements RuntimeInterface {
-
   routerHook = useHashLocation;
 
   async openHistory() {
-    window.open('http://localhost:8080/history.html');
+    window.open("http://localhost:8080/history.html");
   }
 
   async getCurrentUrl() {
@@ -39,11 +41,9 @@ export class WebRuntime implements RuntimeInterface {
   async goBack() {
     history.back();
   }
-
 }
 
 export class ChromeEmbeddedRuntime implements RuntimeInterface {
-
   constructor(private readonly tabId: number) {}
 
   routerHook = useExtensionLocation;
@@ -56,25 +56,25 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
         } else {
           resolve(tab);
         }
-      })
+      });
     });
   }
 
   openHistory() {
     return new Promise<void>((resolve, reject) => {
-      chrome.tabs.create({ url: 'chrome://history' }, () => {
+      chrome.tabs.create({ url: "chrome://history" }, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
         } else {
           resolve(undefined);
         }
       });
-    })
+    });
   }
 
   async getCurrentUrl() {
     const tab = await this.getCurrentTab();
-    return tab.url ?? 'about:blank';
+    return tab.url ?? "about:blank";
   }
 
   async openUrl(url: string, newTab?: boolean) {
@@ -86,7 +86,7 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
           } else {
             resolve(undefined);
           }
-        })
+        });
       });
     } else {
       const currentTab = await this.getCurrentTab();
@@ -98,7 +98,7 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
             } else if (tab) {
               resolve(tab.windowId);
             } else {
-              reject(new Error('unexpected error updating tab'));
+              reject(new Error("unexpected error updating tab"));
             }
           });
         }),
@@ -120,13 +120,11 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
   }
 
   async goBack() {
-    await this.openUrl('chrome://history');
+    await this.openUrl("chrome://history");
   }
-
 }
 
 export class PopupRuntime implements RuntimeInterface {
-
   routerHook: RouterHook;
 
   constructor(private readonly historyUrl: string) {
@@ -142,7 +140,7 @@ export class PopupRuntime implements RuntimeInterface {
           resolve(undefined);
         }
       });
-    })
+    });
   }
 
   private getCurrentTab(): Promise<chrome.tabs.Tab> {
@@ -153,15 +151,15 @@ export class PopupRuntime implements RuntimeInterface {
         } else if (tabs[0]) {
           resolve(tabs[0]);
         } else {
-          reject(new Error('No active tab'));
+          reject(new Error("No active tab"));
         }
-      })
+      });
     });
   }
 
   async getCurrentUrl() {
     const tab = await this.getCurrentTab();
-    return tab.url ?? 'about:blank';
+    return tab.url ?? "about:blank";
   }
 
   async openUrl(url: string, newTab?: boolean) {
@@ -173,7 +171,7 @@ export class PopupRuntime implements RuntimeInterface {
           } else {
             resolve(undefined);
           }
-        })
+        });
       });
     } else {
       const currentTab = await this.getCurrentTab();
@@ -185,7 +183,7 @@ export class PopupRuntime implements RuntimeInterface {
             } else if (tab) {
               resolve(tab.windowId);
             } else {
-              reject(new Error('unexpected error updating tab'));
+              reject(new Error("unexpected error updating tab"));
             }
           });
         }),
@@ -209,5 +207,4 @@ export class PopupRuntime implements RuntimeInterface {
   async goBack() {
     await this.openUrl(this.historyUrl);
   }
-
 }

@@ -1,11 +1,13 @@
-import Card from '../../components/Card';
-import Form from '../../components/Form';
-import Layout from "../../components/Layout";
-import SettingsSideBar, { SettingsPage } from '../../components/SettingsSideBar';
-import { useSettingsContext } from '../../lib/SettingsContext';
 import { Theme } from "../../../server/types";
-import styles from "../../styles/utils.module.css";
+import Card from "../../components/Card";
+import Form from "../../components/Form";
+import Layout from "../../components/Layout";
+import SettingsSideBar, {
+  SettingsPage,
+} from "../../components/SettingsSideBar";
+import { useSettingsContext } from "../../lib/SettingsContext";
 import settingsStyles from "../../styles/Settings.module.css";
+import styles from "../../styles/utils.module.css";
 
 export default function Settings() {
   const settings = useSettingsContext();
@@ -22,14 +24,14 @@ export default function Settings() {
             <label htmlFor="theme">Theme</label>
             <small>
               {'Change the look and feel of Egghead. Choosing "Auto" will '}
-              {'respect your system-wide theme preference.'}
+              {"respect your system-wide theme preference."}
             </small>
           </div>
           <select
             name="theme"
             id="theme"
             onChange={(evt) => {
-              settings.patch({ theme: evt.target.value as Theme })
+              settings.patch({ theme: evt.target.value as Theme });
             }}
           >
             <option value={Theme.Auto}>Auto</option>
@@ -40,8 +42,12 @@ export default function Settings() {
           <div className={styles.column}>
             <label htmlFor="retention-policy">Retention Period</label>
             <small>
-              {"Specify how many months you'd like egghead to retain your data "}
-              {"for. Reducing this can help improve search performance. Changing "}
+              {
+                "Specify how many months you'd like egghead to retain your data "
+              }
+              {
+                "for. Reducing this can help improve search performance. Changing "
+              }
               {"this setting will take up to one hour to take effect."}
             </small>
           </div>
@@ -52,7 +58,9 @@ export default function Settings() {
               id="retention-policy"
               value={settings.items.retentionPolicyMonths}
               onChange={(evt) => {
-                settings.patch({ retentionPolicyMonths: parseInt(evt.target.value) });
+                settings.patch({
+                  retentionPolicyMonths: Number.parseInt(evt.target.value),
+                });
               }}
             />
             <span>Month(s)</span>
@@ -60,9 +68,7 @@ export default function Settings() {
 
           <div className={styles.column}>
             <label htmlFor="devModeEnabled">Dev Mode Enabled</label>
-            <small>
-              {"Only enable this if you know what you're doing."}
-            </small>
+            <small>{"Only enable this if you know what you're doing."}</small>
           </div>
           <input
             type="checkbox"

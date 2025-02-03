@@ -1,23 +1,22 @@
-
 .navBar {
-    --title-width: calc(var(--sidebar-width) - var(--padding));
-    position: fixed;
-    top: 0;
-    width: calc(100% - var(--padding) * 4);
-    height: calc(var(--navbar-height) - var(--padding) * 2);
-    background-color: var(--secondary-bg-color);
-    display: grid;
-    grid-template-columns: var(--title-width) 0px auto 0px var(--title-width);
-    grid-column-gap: var(--padding);
-    padding: var(--padding) var(--padding-2);
-    /*box-shadow: 0 6px 4px 0 var(--bg-color);*/
-    z-index: 3;
+  --title-width: calc(var(--sidebar-width) - var(--padding));
+  position: fixed;
+  top: 0;
+  width: calc(100% - var(--padding) * 4);
+  height: calc(var(--navbar-height) - var(--padding) * 2);
+  background-color: var(--secondary-bg-color);
+  display: grid;
+  grid-template-columns: var(--title-width) 0px auto 0px var(--title-width);
+  grid-column-gap: var(--padding);
+  padding: var(--padding) var(--padding-2);
+  /*box-shadow: 0 6px 4px 0 var(--bg-color);*/
+  z-index: 3;
 }
 
 @media only screen and (min-width: 1000px) {
-    .navBar {
-        grid-template-columns: var(--title-width) 1fr 50% 1fr var(--title-width);
-    }
+  .navBar {
+    grid-template-columns: var(--title-width) 1fr 50% 1fr var(--title-width);
+  }
 }
 
 /*@media only screen and (min-width: 1232px) {
@@ -27,64 +26,64 @@
 }
 */
 @media only screen and (max-width: 800px) {
-    .navBar {
-        grid-template-columns: 1fr 0px 60% 0px 1fr;
-    }
+  .navBar {
+    grid-template-columns: 1fr 0px 60% 0px 1fr;
+  }
 }
 
 @media only screen and (max-width: 600px) {
-    .navBar {
-        grid-template-columns: 1fr 0px 70% 0px min-content;
-    }
+  .navBar {
+    grid-template-columns: 1fr 0px 70% 0px min-content;
+  }
 }
 
 @media only screen and (max-width: 400px) {
-    .navBar {
-        grid-template-columns: min-content 0px auto 0px min-content;
-    }
+  .navBar {
+    grid-template-columns: min-content 0px auto 0px min-content;
+  }
 }
 
 .navBar > * {
-    position: relative;
-    align-self: center;
+  position: relative;
+  align-self: center;
 }
 
 .navBar h1 {
-    margin-block-start: 0;
-    margin-block-end: 0;
-    font-size: 22px;
-    font-weight: 400;
-    cursor: pointer;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  font-size: 22px;
+  font-weight: 400;
+  cursor: pointer;
 }
 
 .rightContent {
-    grid-column: 5;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
+  grid-column: 5;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
 }
 
 .leftContent {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .eggheadIcon {
-    width: 30px;
-    height: 30px;
-    fill: var(--primary-text-color);
+  width: 30px;
+  height: 30px;
+  fill: var(--primary-text-color);
 }
 
 .eggheadIcon:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .settingsIcon {
-    width: 20px;
-    height: 20px;
-    fill: var(--primary-text-color);
+  width: 20px;
+  height: 20px;
+  fill: var(--primary-text-color);
 }
 
 .settingsIcon:hover {
-    cursor: pointer;
+  cursor: pointer;
 }

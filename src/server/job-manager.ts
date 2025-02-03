@@ -6,17 +6,18 @@ export interface JobContext {
   addTime: Date;
 }
 
-export type JobManagerMiddleware =
-  <T>(job: (abort: AbortSignal) => Promise<T>, ctx: JobContext) => (abort: AbortSignal) => Promise<T>;
+export type JobManagerMiddleware = <T>(
+  job: (abort: AbortSignal) => Promise<T>,
+  ctx: JobContext,
+) => (abort: AbortSignal) => Promise<T>;
 
 export interface JobManagerOptions {
   requestTimeout?: number;
-  concurrency?: number,
+  concurrency?: number;
   middlewares?: JobManagerMiddleware[];
 }
 
 export class JobManager {
-
   private readonly queue: queue;
   private readonly aborts: Record<string, AbortController>;
   private readonly middlewares: JobManagerMiddleware[];
@@ -36,7 +37,7 @@ export class JobManager {
   private async runJob<T>(
     ctx: JobContext,
     abort: AbortSignal,
-    job: (abort: AbortSignal) => Promise<T>
+    job: (abort: AbortSignal) => Promise<T>,
   ): Promise<T> {
     let finalJob = (abort: AbortSignal) => {
       if (abort.aborted) {
@@ -52,11 +53,8 @@ export class JobManager {
 
   addJob(jobId: string, job: (abort: AbortSignal) => Promise<any>): void {
     const abortController = new AbortController();
-    const jobInstance = () => this.runJob(
-      { addTime: new Date(), jobId },
-      abortController.signal,
-      job
-    );
+    const jobInstance = () =>
+      this.runJob({ addTime: new Date(), jobId }, abortController.signal, job);
     jobInstance.id = jobId;
     this.aborts[jobId] = abortController;
     this.queue.push(jobInstance);
@@ -87,23 +85,23 @@ export class JobManager {
           reject(err);
           this.removeListener("error", errorCb);
         }
-      }
+      };
       this.on("error", errorCb);
       const timeoutCb = (_: any, job: any) => {
         if (job.id === jobId) {
           reject(new Error(`Job timed out after ${this.requestTimeout}ms.`));
           this.removeListener("timeout", timeoutCb);
         }
-      }
+      };
       this.on("timeout", timeoutCb);
     });
   }
 
   private handleEvent(job: any, event: string | symbol): void {
-    if (['timeout'].includes(event as string)) {
+    if (["timeout"].includes(event as string)) {
       this.aborts[job.id]?.abort();
     }
-    if (['success', 'error', 'timeout'].includes(event as string)) {
+    if (["success", "error", "timeout"].includes(event as string)) {
       this.completeJob(job.id);
     }
   }
@@ -113,17 +111,16 @@ export class JobManager {
       this.handleEvent(job, event);
       return handler(arg, job);
     });
-  }
+  };
 
   once: queue["once"] = (event, handler) => {
     return this.queue.once(event, (arg, job) => {
       this.handleEvent(job, event);
       return handler(arg, job);
     });
-  }
+  };
 
   removeListener: queue["removeListener"] = (event, handler) => {
     return this.queue.removeListener(event, handler);
-  }
-
+  };
 }

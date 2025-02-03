@@ -1,20 +1,20 @@
 import { useState } from "react";
-import { Router, Route, Switch, useLocation } from "wouter";
+import { Route, Router, Switch, useLocation } from "wouter";
+import type { ServerInterface } from "../server";
 import { AppContext } from "./lib";
-import { RuntimeInterface } from './lib/runtimes';
-import { SettingsContextProvider } from './lib/SettingsContext';
+import { SettingsContextProvider } from "./lib/SettingsContext";
+import type { RuntimeInterface } from "./lib/runtimes";
 import History from "./pages/History";
+import NotFound from "./pages/NotFound";
 import SessionDetail from "./pages/SessionDetail";
 import About from "./pages/settings/About";
 import ClearBrowsingData from "./pages/settings/ClearBrowsingData";
-import GeneralSettings from "./pages/settings/GeneralSettings";
 import DevSettings from "./pages/settings/DevSettings";
-import NotFound from "./pages/NotFound";
-import type { ServerInterface } from "../server";
+import GeneralSettings from "./pages/settings/GeneralSettings";
 
 // Global CSS
-import 'animate.css';
-import 'highlight.js/styles/monokai-sublime.css';
+import "animate.css";
+import "highlight.js/styles/monokai-sublime.css";
 import "./styles/App.css";
 
 export interface AppProps {

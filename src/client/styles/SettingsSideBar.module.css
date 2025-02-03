@@ -1,22 +1,21 @@
-
 .item:first-child {
-    margin-top: calc(var(--padding) * 2.5);
+  margin-top: calc(var(--padding) * 2.5);
 }
 
 .item {
-    padding: var(--padding);
-    margin: var(--padding) calc(var(--padding) * 3);
-    cursor: pointer;
-    border-radius: var(--border-radius);
-    color: var(--primary-text-color);
-    text-decoration: none;
+  padding: var(--padding);
+  margin: var(--padding) calc(var(--padding) * 3);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  color: var(--primary-text-color);
+  text-decoration: none;
 }
 
 .activeItem {
-    background-color: var(--secondary-bg-color);
-    cursor: default;
+  background-color: var(--secondary-bg-color);
+  cursor: default;
 }
 
 .item:hover {
-    background-color: var(--secondary-bg-color);
+  background-color: var(--secondary-bg-color);
 }

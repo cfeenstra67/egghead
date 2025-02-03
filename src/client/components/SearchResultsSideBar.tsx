@@ -1,11 +1,11 @@
-import { useState, useContext, useCallback, useMemo } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
+import type {
+  QuerySessionFacetsFacetValue,
+  QuerySessionsRequest,
+} from "../../server";
 import CloseCircle from "../icons/close-circle.svg";
 import DropdownIcon from "../icons/dropdown.svg";
 import { AppContext } from "../lib";
-import type {
-  QuerySessionsRequest,
-  QuerySessionFacetsFacetValue,
-} from "../../server";
 import styles from "../styles/SideBar.module.css";
 import SideBar, { SideBarComponent } from "./SideBar";
 import Spinner from "./Spinner";
@@ -39,10 +39,7 @@ function CollapsibleComponent({
         />
         <span>{title}</span>
         {clearable && (
-          <CloseCircle
-            className={styles.icon}
-            onClick={() => onClear && onClear()}
-          />
+          <CloseCircle className={styles.icon} onClick={() => onClear?.()} />
         )}
       </div>
       <div className={styles.collapsibleSideBarContent}>
@@ -82,7 +79,7 @@ function HostsComponent({
         setSelectedHosts(selectedHosts.concat([host]));
       }
     },
-    [selectedHosts, setSelectedHosts]
+    [selectedHosts, setSelectedHosts],
   );
 
   return (
@@ -143,7 +140,7 @@ function TermsComponent({
         setSelectedTerms(selectedTerms.concat([word]));
       }
     },
-    [selectedTerms, setSelectedTerms]
+    [selectedTerms, setSelectedTerms],
   );
 
   return (
@@ -210,7 +207,7 @@ export default function SearchSideBar({
         const client = await serverClientFactory();
         const facets = await client.querySessionFacets({
           ...request,
-          abort: abortController.signal
+          abort: abortController.signal,
         });
         const hostValues = new Set(facets.host.map((host) => host.value));
         selectedHosts.forEach((host) => {

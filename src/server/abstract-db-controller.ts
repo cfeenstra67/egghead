@@ -1,5 +1,5 @@
 import EventTarget from "@ungap/event-target";
-import { SQLConnection } from "./sql-primitives";
+import type { SQLConnection } from "./sql-primitives";
 
 export abstract class AbstractDBController {
   initCalled: boolean;
@@ -31,7 +31,7 @@ export abstract class AbstractDBController {
   }
 
   async reset() {
-    console.error('not implemented');
+    console.error("not implemented");
   }
 
   useConnection(): Promise<SQLConnection> {

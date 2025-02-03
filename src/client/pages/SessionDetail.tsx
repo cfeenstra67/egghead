@@ -1,20 +1,20 @@
-import { useState, useCallback, useContext } from "react";
+import { useCallback, useContext, useState } from "react";
+import type { Session } from "../../models";
+import type { QuerySessionsRequest } from "../../server";
+import { Aborted } from "../../server/abort";
+import {
+  AggregateOperator,
+  BinaryOperator,
+  type Clause,
+} from "../../server/clause";
+import { dateToSqliteString } from "../../server/utils";
 import Card from "../components/Card";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SessionCard from "../components/SessionCard";
 import Timeline from "../components/Timeline";
 import { AppContext } from "../lib";
-import { useSessionQuery, SessionQueryState } from "../lib/session-query";
-import type { Session } from "../../models";
-import type { QuerySessionsRequest } from "../../server";
-import { Aborted } from "../../server/abort";
-import {
-  Clause,
-  AggregateOperator,
-  BinaryOperator,
-} from "../../server/clause";
-import { dateToSqliteString } from "../../server/utils";
+import { SessionQueryState, useSessionQuery } from "../lib/session-query";
 import utilStyles from "../styles/utils.module.css";
 
 export interface SessionDetailProps {
@@ -28,18 +28,18 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
     return {
       filter: {
         operator: BinaryOperator.Equals,
-        fieldName: 'id' as const,
+        fieldName: "id" as const,
         value: sessionId,
-      }
+      },
     };
   }, [sessionId]);
 
-  const { 
+  const {
     results: sessionResults,
     state: sessionQueryState,
-    error: sessionQueryError
+    error: sessionQueryError,
   } = useSessionQuery({
-    getRequest: getSessionRequest
+    getRequest: getSessionRequest,
   });
   const session = sessionResults[0];
 
@@ -57,9 +57,9 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
     const clauses: Clause<Session>[] = [
       {
         operator: BinaryOperator.Equals,
-        fieldName: 'url',
+        fieldName: "url",
         value: session.url,
-      }
+      },
     ];
 
     if (dateRange !== null) {
@@ -97,36 +97,25 @@ export default function SessionDetail({ sessionId }: SessionDetailProps) {
     initialLoadComplete: otherSessionsInitialLoadComplete,
     request: otherSessionsRequest,
   } = useSessionQuery({
-    getRequest: getOtherSessionsRequest
+    getRequest: getOtherSessionsRequest,
   });
 
   return (
     <Layout full>
       <div className={utilStyles.row}>
-        <button
-          className={utilStyles.button}
-          onClick={() => runtime.goBack()}
-        >
+        <button className={utilStyles.button} onClick={() => runtime.goBack()}>
           Back
         </button>
-        <h1 className={utilStyles.marginLeft3}>
-          Session Detail
-        </h1>
+        <h1 className={utilStyles.marginLeft3}>Session Detail</h1>
       </div>
       {session ? (
         <SessionCard session={session} />
       ) : sessionQueryState === SessionQueryState.Loading ? (
-        <Card>
-          Loading session...
-        </Card>
+        <Card>Loading session...</Card>
       ) : sessionQueryError ? (
-        <Card>
-          Error loading session: {sessionQueryError}.
-        </Card>
+        <Card>Error loading session: {sessionQueryError}.</Card>
       ) : (
-        <Card>
-          Session not found.
-        </Card>
+        <Card>Session not found.</Card>
       )}
       <div className={utilStyles.marginTop2}>
         <Timeline

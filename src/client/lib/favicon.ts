@@ -8,12 +8,12 @@
 
 // Source: https://stackoverflow.com/questions/72244038/need-t2-gstatic-url-parameters-for-web-scraping
 export function getFaviconUrlPublicApi(domain: string, size: number): string {
-  const url = new URL('https://t2.gstatic.com/faviconV2');
-  url.searchParams.set('client', 'SOCIAL');
-  url.searchParams.set('type', 'FAVICON');
-  url.searchParams.set('fallback_opts', 'TYPE,SIZE,URL');
-  url.searchParams.set('url', `http://${domain}`);
-  url.searchParams.set('size', size.toString());
+  const url = new URL("https://t2.gstatic.com/faviconV2");
+  url.searchParams.set("client", "SOCIAL");
+  url.searchParams.set("type", "FAVICON");
+  url.searchParams.set("fallback_opts", "TYPE,SIZE,URL");
+  url.searchParams.set("url", `http://${domain}`);
+  url.searchParams.set("size", size.toString());
   return url.href;
 }
 

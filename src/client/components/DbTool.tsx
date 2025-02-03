@@ -1,18 +1,18 @@
-import hljs from 'highlight.js/lib/core';
-import sqlLang from 'highlight.js/lib/languages/sql';
-import { useContext, useState, useCallback, createRef } from "react";
-import Editor from 'react-simple-code-editor';
-import Card from './Card';
-import { AppContext, downloadUrl, cleanupUrl } from "../lib";
-import parentLogger from '../../logger';
-import type { ServerInterface, ErrorResponse } from "../../server";
-import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
+import hljs from "highlight.js/lib/core";
+import sqlLang from "highlight.js/lib/languages/sql";
+import { createRef, useCallback, useContext, useState } from "react";
+import Editor from "react-simple-code-editor";
+import parentLogger from "../../logger";
+import type { ErrorResponse, ServerInterface } from "../../server";
+import { AppContext, cleanupUrl, downloadUrl } from "../lib";
 import styles from "../styles/DbTool.module.css";
 import settingsStyles from "../styles/Settings.module.css";
+import Card from "./Card";
+import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
 
-hljs.registerLanguage('sql', sqlLang);
+hljs.registerLanguage("sql", sqlLang);
 
-const logger = parentLogger.child({ context: 'DbTool' });
+const logger = parentLogger.child({ context: "DbTool" });
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
@@ -66,18 +66,22 @@ function ImportDbOption({ serverClientFactory }: OptionProps) {
 
     setState(LoadingState.Loading);
 
-    reader.addEventListener('load', async () => {
-      try {
-        await client.importDatabase({
-          databaseUrl: reader.result as string,
-        });
-        setError('');
-        setState(LoadingState.Success);
-      } catch (error: any) {
-        setError(error.toString());
-        setState(LoadingState.Failed);
-      }
-    }, false);
+    reader.addEventListener(
+      "load",
+      async () => {
+        try {
+          await client.importDatabase({
+            databaseUrl: reader.result as string,
+          });
+          setError("");
+          setState(LoadingState.Success);
+        } catch (error: any) {
+          setError(error.toString());
+          setState(LoadingState.Failed);
+        }
+      },
+      false,
+    );
 
     if (file) {
       reader.readAsDataURL(file);
@@ -108,7 +112,7 @@ function ResetDbOption({ serverClientFactory }: OptionProps) {
       const client = await serverClientFactory();
 
       await client.resetDatabase({});
-      setError('');
+      setError("");
       setState(LoadingState.Success);
     } catch (error: any) {
       setError(error.toString());
@@ -172,9 +176,11 @@ function ResetCrawlerStateOption() {
 
     setState(LoadingState.Loading);
     try {
-      const resp = await chrome.runtime.sendMessage({ type: 'resetCrawlerState' });
-      if (resp === 'ERROR') {
-        throw new Error('error resetting crawler state');
+      const resp = await chrome.runtime.sendMessage({
+        type: "resetCrawlerState",
+      });
+      if (resp === "ERROR") {
+        throw new Error("error resetting crawler state");
       }
       setState(LoadingState.Success);
     } catch (err: any) {
@@ -240,7 +246,7 @@ function QueryToolResult({ results }: QueryToolResultProps) {
 }
 
 function QueryToolOption({ serverClientFactory }: OptionProps) {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loadTime, setLoadTime] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -267,7 +273,7 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
   }, [code]);
 
   function handleKeyDown(
-    evt: React.KeyboardEvent<HTMLTextAreaElement | HTMLDivElement>
+    evt: React.KeyboardEvent<HTMLTextAreaElement | HTMLDivElement>,
   ) {
     // Cmd + return for submit
     if (evt.keyCode === 13 && evt.metaKey) {
@@ -283,7 +289,7 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
       <Editor
         value={code}
         onValueChange={(code) => setCode(code)}
-        highlight={(code) => hljs.highlight(code, { language: 'sql' }).value}
+        highlight={(code) => hljs.highlight(code, { language: "sql" }).value}
         padding={10}
         className={styles.editor}
         textareaClassName={styles.editorTextArea}
@@ -298,7 +304,9 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
         <span>Error: {error}</span>
       ) : loadTime !== null ? (
         <span>Execution time: {loadTime}ms</span>
-      ) : <></>}
+      ) : (
+        <></>
+      )}
 
       <QueryToolResult results={results} />
     </div>

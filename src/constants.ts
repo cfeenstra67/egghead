@@ -1,5 +1,4 @@
-
-const pkg = require('../package.json');
+const pkg = require("../package.json");
 
 export const version: string = pkg.version;
 

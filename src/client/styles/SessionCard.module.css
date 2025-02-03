@@ -1,27 +1,26 @@
-
 .sessionCard {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    column-gap: var(--padding-2);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: var(--padding-2);
 }
 
 .content a {
-    text-decoration: none;
-    text-decoration-color: none;
-    color: var(--primary-text-color);
+  text-decoration: none;
+  text-decoration-color: none;
+  color: var(--primary-text-color);
 }
 
 .host {
-    font-style: italic;
-    white-space: nowrap;
-    overflow: visible;
-    color: var(--secondary-text-color);
-    padding-right: 4px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: visible;
+  color: var(--secondary-text-color);
+  padding-right: 4px;
 }
 
 .sessionCard p {
-    display: block;
-    color: var(--secondary-text-color);
-    margin: var(--padding) 0;
+  display: block;
+  color: var(--secondary-text-color);
+  margin: var(--padding) 0;
 }

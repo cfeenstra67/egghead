@@ -1,5 +1,5 @@
-import SearchField from "./SearchField";
 import styles from "../styles/PopupSearchBar.module.css";
+import SearchField from "./SearchField";
 
 export default function PopupSearchBar() {
   return (

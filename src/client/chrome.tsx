@@ -1,15 +1,18 @@
-import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import {
+  ServerClient,
+  createExtensionRequestProcessor,
+} from "../server/client";
 import App from "./App";
 import InitialCrawl from "./components/InitialCrawl";
 import { findTabId } from "./lib";
-import { ChromeEmbeddedRuntime } from './lib/runtimes';
-import { ServerClient, createExtensionRequestProcessor } from "../server/client";
+import { ChromeEmbeddedRuntime } from "./lib/runtimes";
 
 const body = document.getElementById("body") as Element;
 findTabId().then((tabId) => {
   const root = ReactDOM.createRoot(body);
-  const serverClientFactory = async () => new ServerClient(createExtensionRequestProcessor('background'));
+  const serverClientFactory = async () =>
+    new ServerClient(createExtensionRequestProcessor("background"));
   root.render(
     <InitialCrawl
       serverClientFactory={serverClientFactory}
@@ -19,6 +22,6 @@ findTabId().then((tabId) => {
           runtime={new ChromeEmbeddedRuntime(tabId)}
         />
       )}
-    />
+    />,
   );
 });

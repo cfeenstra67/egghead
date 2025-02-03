@@ -1,13 +1,16 @@
-import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import {
+  ServerClient,
+  createExtensionRequestProcessor,
+} from "../server/client";
 import App from "./App";
 import InitialCrawl from "./components/InitialCrawl";
-import { WebRuntime } from './lib/runtimes';
-import { ServerClient, createExtensionRequestProcessor } from "../server/client";
+import { WebRuntime } from "./lib/runtimes";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
-const serverClientFactory = async () => new ServerClient(createExtensionRequestProcessor('background'));
+const serverClientFactory = async () =>
+  new ServerClient(createExtensionRequestProcessor("background"));
 root.render(
   <InitialCrawl
     serverClientFactory={serverClientFactory}
@@ -17,5 +20,5 @@ root.render(
         runtime={new WebRuntime()}
       />
     )}
-  />
+  />,
 );

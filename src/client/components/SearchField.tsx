@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { AppContext } from "../lib";
 import CloseCircleIcon from "../icons/close-circle.svg";
 import SearchIcon from "../icons/search-icon.svg";
+import { AppContext } from "../lib";
 import styles from "../styles/SearchField.module.css";
 
 export interface SearchFieldProps {

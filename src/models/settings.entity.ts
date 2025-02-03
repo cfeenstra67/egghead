@@ -1,10 +1,9 @@
-import { Theme } from '../server/types';
+import type { Theme } from "../server/types";
 
-export type SettingsItems = Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>;
+export type SettingsItems = Omit<Settings, "id" | "createdAt" | "updatedAt">;
 
 // @Entity()
 export class Settings {
-
   // @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -25,5 +24,4 @@ export class Settings {
 
   // @Column()
   updatedAt!: Date;
-
 }

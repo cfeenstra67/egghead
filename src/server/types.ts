@@ -1,6 +1,6 @@
-import type { Clause } from "./clause";
 import type { Session, SettingsItems } from "../models";
-import type { RemoveAnnotations, RemoveRelations } from './sql-primitives';
+import type { Clause } from "./clause";
+import type { RemoveAnnotations, RemoveRelations } from "./sql-primitives";
 
 export enum ServerMessage {
   Ping = "ping",
@@ -30,9 +30,9 @@ export enum ServerResponseCode {
 }
 
 export enum Theme {
-  Auto = 'auto',
-  Light = 'light',
-  Dark = 'dark',
+  Auto = "auto",
+  Light = "light",
+  Dark = "dark",
 }
 
 export interface BaseRequest {
@@ -41,7 +41,7 @@ export interface BaseRequest {
 
 export interface PingRequest extends BaseRequest {}
 
-export interface PingResponse {}
+export type PingResponse = {};
 
 export interface QueryRequest extends BaseRequest {
   query: string;
@@ -59,13 +59,13 @@ export interface TabChangedRequest extends BaseRequest {
   transitionType?: string;
 }
 
-export interface TabChangedResponse {}
+export type TabChangedResponse = {};
 
 export interface TabClosedRequest extends BaseRequest {
   tabId: number;
 }
 
-export interface TabClosedResponse {}
+export type TabClosedResponse = {};
 
 export interface TabInteractionRequest extends BaseRequest {
   tabId: number;
@@ -73,7 +73,7 @@ export interface TabInteractionRequest extends BaseRequest {
   title?: string;
 }
 
-export interface TabInteractionResponse {}
+export type TabInteractionResponse = {};
 
 export interface CorrelateChromeVisitRequest extends BaseRequest {
   sessionId: string;
@@ -82,7 +82,7 @@ export interface CorrelateChromeVisitRequest extends BaseRequest {
   transition?: string;
 }
 
-export interface CorrelateChromeVisitResponse {}
+export type CorrelateChromeVisitResponse = {};
 
 export interface GhostSession {
   visitTime: number;
@@ -97,7 +97,7 @@ export interface CreateGhostSessionsRequest extends BaseRequest {
   sessions: GhostSession[];
 }
 
-export interface CreateGhostSessionsResponse {}
+export type CreateGhostSessionsResponse = {};
 
 export interface QuerySessionsRequest extends BaseRequest {
   query?: string;
@@ -108,7 +108,10 @@ export interface QuerySessionsRequest extends BaseRequest {
 }
 
 export interface SessionResponse
-  extends Omit<RemoveAnnotations<RemoveRelations<Session>>, "startedAt" | "endedAt"> {
+  extends Omit<
+    RemoveAnnotations<RemoveRelations<Session>>,
+    "startedAt" | "endedAt"
+  > {
   childCount: number;
   childTransitions: Record<string, string>;
   highlightedTitle: string;
@@ -164,11 +167,11 @@ export interface ImportDatabaseRequest extends BaseRequest {
   databaseUrl: string;
 }
 
-export interface ImportDatabaseResponse {}
+export type ImportDatabaseResponse = {};
 
 export interface RegenerateIndexRequest extends BaseRequest {}
 
-export interface RegenerateIndexResponse {}
+export type RegenerateIndexResponse = {};
 
 export interface GetSettingsRequest extends BaseRequest {}
 
@@ -186,11 +189,11 @@ export interface UpdateSettingsResponse {
 
 export interface FixChromeParentsRequest extends BaseRequest {}
 
-export interface FixChromeParentsResponse {}
+export type FixChromeParentsResponse = {};
 
 export interface ApplyRetentionPolicyRequest extends BaseRequest {}
 
-export interface ApplyRetentionPolicyResponse {}
+export type ApplyRetentionPolicyResponse = {};
 
 export type ServerMessageMapping = {
   [ServerMessage.Ping]: [PingRequest, PingResponse];
@@ -198,31 +201,52 @@ export type ServerMessageMapping = {
   [ServerMessage.QuerySessions]: [QuerySessionsRequest, QuerySessionsResponse];
   [ServerMessage.QuerySessionFacets]: [
     QuerySessionFacetsRequest,
-    QuerySessionFacetsResponse
+    QuerySessionFacetsResponse,
   ];
   [ServerMessage.QuerySessionTimeline]: [
     QuerySessionTimelineRequest,
-    QuerySessionTimelineResponse
+    QuerySessionTimelineResponse,
   ];
   [ServerMessage.ExportDatabase]: [
     ExportDatabaseRequest,
-    ExportDatabaseResponse
+    ExportDatabaseResponse,
   ];
   [ServerMessage.RegenerateIndex]: [
     RegenerateIndexRequest,
-    RegenerateIndexResponse
+    RegenerateIndexResponse,
   ];
   [ServerMessage.TabChanged]: [TabChangedRequest, TabChangedResponse];
   [ServerMessage.TabClosed]: [TabClosedRequest, TabClosedResponse];
-  [ServerMessage.TabInteraction]: [TabInteractionRequest, TabInteractionResponse];
-  [ServerMessage.CorrelateChromeVisit]: [CorrelateChromeVisitRequest, CorrelateChromeVisitResponse];
-  [ServerMessage.CreateGhostSessions]: [CreateGhostSessionsRequest, CreateGhostSessionsResponse];
+  [ServerMessage.TabInteraction]: [
+    TabInteractionRequest,
+    TabInteractionResponse,
+  ];
+  [ServerMessage.CorrelateChromeVisit]: [
+    CorrelateChromeVisitRequest,
+    CorrelateChromeVisitResponse,
+  ];
+  [ServerMessage.CreateGhostSessions]: [
+    CreateGhostSessionsRequest,
+    CreateGhostSessionsResponse,
+  ];
   [ServerMessage.GetSettings]: [GetSettingsRequest, GetSettingsResponse];
-  [ServerMessage.ImportDatabase]: [ImportDatabaseRequest, ImportDatabaseResponse];
-  [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
-  [ServerMessage.FixChromeParents]: [FixChromeParentsRequest, FixChromeParentsResponse];
-  [ServerMessage.ApplyRetentionPolicy]: [ApplyRetentionPolicyRequest, ApplyRetentionPolicyResponse];
-  [ServerMessage.ResetDatabase]: [BaseRequest, {}]
+  [ServerMessage.ImportDatabase]: [
+    ImportDatabaseRequest,
+    ImportDatabaseResponse,
+  ];
+  [ServerMessage.UpdateSettings]: [
+    UpdateSettingsRequest,
+    UpdateSettingsResponse,
+  ];
+  [ServerMessage.FixChromeParents]: [
+    FixChromeParentsRequest,
+    FixChromeParentsResponse,
+  ];
+  [ServerMessage.ApplyRetentionPolicy]: [
+    ApplyRetentionPolicyRequest,
+    ApplyRetentionPolicyResponse,
+  ];
+  [ServerMessage.ResetDatabase]: [BaseRequest, {}];
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage
@@ -249,7 +273,7 @@ export type ServerResponse = ServerResponseForMessage<ServerMessage>;
 
 export type ServerInterface = {
   [key in keyof ServerMessageMapping as `${key}`]: (
-    input: ServerRequestForMessage<key>
+    input: ServerRequestForMessage<key>,
   ) => Promise<ServerResponseForMessage<key>>;
 };
 
@@ -260,17 +284,17 @@ export interface ErrorResponse {
 }
 
 export type RequestHandler = <T extends ServerMessage>(
-  input: TypedServerRequestForMessage<T>
+  input: TypedServerRequestForMessage<T>,
 ) => Promise<ServerResponseForMessageWithCode<T>>;
 
 export interface WorkerRequest<T extends ServerMessage> {
-  type: 'request';
+  type: "request";
   requestId: string;
-  request: Omit<TypedServerRequestForMessage<T>, 'abort'>;
+  request: Omit<TypedServerRequestForMessage<T>, "abort">;
 }
 
 export interface WorkerAbortRequest {
-  type: 'abort';
+  type: "abort";
   requestId: string;
 }
 
@@ -282,5 +306,5 @@ export interface WorkerResponse<T extends ServerMessage> {
 }
 
 export type WorkerHandler = <T extends ServerMessage>(
-  input: WorkerRequest<T> | WorkerAbortRequest
+  input: WorkerRequest<T> | WorkerAbortRequest,
 ) => Promise<WorkerResponse<T>>;

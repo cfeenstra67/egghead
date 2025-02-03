@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTheme } from "../lib/theme";
 import styles from "../styles/Layout.module.css";
-import themes from '../styles/themes.module.css';
+import themes from "../styles/themes.module.css";
 import NavBar from "./NavBar";
 
 export interface LayoutProps {
@@ -14,15 +14,12 @@ export function useLayoutClassNames(): string[] {
 
   return useMemo(() => {
     const result = themes[theme];
-    return [
-      styles.layout,
-      result ?? themes.dark,
-    ];
+    return [styles.layout, result ?? themes.dark];
   }, [theme]);
 }
 
 export default function Layout({ children, full }: LayoutProps) {
-  const layoutClassNames = useLayoutClassNames()
+  const layoutClassNames = useLayoutClassNames();
 
   const contentClassNames = [
     styles.content,
@@ -30,11 +27,9 @@ export default function Layout({ children, full }: LayoutProps) {
   ];
 
   return (
-    <div className={layoutClassNames.join(' ')}>
+    <div className={layoutClassNames.join(" ")}>
       <NavBar />
-      <div className={contentClassNames.join(' ')}>
-        {children}
-      </div>
+      <div className={contentClassNames.join(" ")}>{children}</div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import hljs from 'highlight.js/lib/core';
-import { useMemo, useCallback, useState, useEffect } from 'react';
-import styles from '../styles/CodeBlock.module.css';
+import hljs from "highlight.js/lib/core";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import styles from "../styles/CodeBlock.module.css";
 
 export interface CodeBlockProps {
   language: string;
@@ -8,9 +8,10 @@ export interface CodeBlockProps {
 }
 
 export default function CodeBlock({ code, language }: CodeBlockProps) {
-  const highlightedCode = useMemo(() => (
-    hljs.highlight(code, { language }).value
-  ), [code, language]);
+  const highlightedCode = useMemo(
+    () => hljs.highlight(code, { language }).value,
+    [code, language],
+  );
 
   const [iconAnimating, setIconAnimating] = useState(false);
   const [iconClassNames, setIconClassNames] = useState([styles.copyIcon]);
@@ -36,7 +37,9 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
 
   return (
     <div className={styles.codeBlock} onClick={onClick}>
-      <div className={iconClassNames.join(' ')}><div/></div>
+      <div className={iconClassNames.join(" ")}>
+        <div />
+      </div>
       <pre dangerouslySetInnerHTML={{ __html: highlightedCode }} />
     </div>
   );

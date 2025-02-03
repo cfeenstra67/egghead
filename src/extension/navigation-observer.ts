@@ -1,7 +1,7 @@
 import EventTarget from "@ungap/event-target";
-import parentLogger from '../logger';
+import parentLogger from "../logger";
 
-const logger = parentLogger.child({ context: 'navigation-observer' });
+const logger = parentLogger.child({ context: "navigation-observer" });
 
 // Modified from here:
 // https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/mv2-archive/api/webNavigation/basic/navigation_collector.js
@@ -51,7 +51,7 @@ export class NavigationObserver {
   patchState(
     id: string,
     patch: (obj: NavigationObserver.PendingRequest) => void,
-    callback?: () => void
+    callback?: () => void,
   ) {
     this.loadState(() => {
       this.prepareDataStorage(id);
@@ -77,25 +77,25 @@ export class NavigationObserver {
 
   observeNavigation() {
     chrome.webNavigation.onCreatedNavigationTarget.addListener(
-      this.onCreatedNavigationTargetListener.bind(this)
+      this.onCreatedNavigationTargetListener.bind(this),
     );
     chrome.webNavigation.onBeforeNavigate.addListener(
-      this.onBeforeNavigateListener.bind(this)
+      this.onBeforeNavigateListener.bind(this),
     );
     chrome.webNavigation.onCompleted.addListener(
-      this.wrapEventHandler(this.onCompletedListener.bind(this))
+      this.wrapEventHandler(this.onCompletedListener.bind(this)),
     );
     chrome.webNavigation.onCommitted.addListener(
-      this.wrapEventHandler(this.onCommittedListener.bind(this))
+      this.wrapEventHandler(this.onCommittedListener.bind(this)),
     );
     chrome.webNavigation.onErrorOccurred.addListener(
-      this.wrapEventHandler(this.onErrorOccurredListener.bind(this))
+      this.wrapEventHandler(this.onErrorOccurredListener.bind(this)),
     );
     chrome.webNavigation.onReferenceFragmentUpdated.addListener(
-      this.wrapEventHandler(this.onReferenceFragmentUpdatedListener.bind(this))
+      this.wrapEventHandler(this.onReferenceFragmentUpdatedListener.bind(this)),
     );
     chrome.webNavigation.onHistoryStateUpdated.addListener(
-      this.wrapEventHandler(this.onHistoryStateUpdatedListener.bind(this))
+      this.wrapEventHandler(this.onHistoryStateUpdatedListener.bind(this)),
     );
   }
 
@@ -127,17 +127,19 @@ export class NavigationObserver {
 
   parseId(id: string): [number | null, number | null] {
     const parts = id.split("-", 2);
-    if (parts.length != 2) {
+    if (parts.length !== 2) {
       return [null, null];
     }
-    return parts.map(parseInt).map((x) => (isNaN(x) ? null : x)) as [
+    return parts
+      .map(Number.parseInt)
+      .map((x) => (Number.isNaN(x) ? null : x)) as [
       number | null,
-      number | null
+      number | null,
     ];
   }
 
   constructId(data: any): string {
-    return data.tabId + "-" + (data.frameId ? data.frameId : 0);
+    return `${data.tabId}-${data.frameId ? data.frameId : 0}`;
   }
 
   prepareDataStorage(id: string): void {
@@ -206,7 +208,7 @@ export class NavigationObserver {
 
       const event = new CustomEvent(
         NavigationObserver.EventType.NAVIGATION_COMPLETE,
-        { detail }
+        { detail },
       );
 
       this.target.dispatchEvent(event);
@@ -236,7 +238,7 @@ export class NavigationObserver {
 
       const event = new CustomEvent(
         NavigationObserver.EventType.NAVIGATION_COMPLETE,
-        { detail }
+        { detail },
       );
 
       this.target.dispatchEvent(event);
@@ -266,7 +268,7 @@ export class NavigationObserver {
 
       const event = new CustomEvent(
         NavigationObserver.EventType.NAVIGATION_COMPLETE,
-        { detail }
+        { detail },
       );
 
       delete this.pending[id];
@@ -295,7 +297,7 @@ export class NavigationObserver {
 
       const event = new CustomEvent(
         NavigationObserver.EventType.NAVIGATION_ERROR,
-        { detail }
+        { detail },
       );
 
       delete this.pending[id];
@@ -304,20 +306,20 @@ export class NavigationObserver {
   }
 
   onNavigationComplete(
-    handler: (event: NavigationObserver.NavigationEvent) => void
+    handler: (event: NavigationObserver.NavigationEvent) => void,
   ): void {
     this.target.addEventListener(
       NavigationObserver.EventType.NAVIGATION_COMPLETE,
-      (evt: any) => handler(evt as NavigationObserver.NavigationEvent)
+      (evt: any) => handler(evt as NavigationObserver.NavigationEvent),
     );
   }
 
   onNavigationError(
-    handler: (event: NavigationObserver.NavigationEvent) => void
+    handler: (event: NavigationObserver.NavigationEvent) => void,
   ): void {
     this.target.addEventListener(
       NavigationObserver.EventType.NAVIGATION_ERROR,
-      (evt: any) => handler(evt as NavigationObserver.NavigationEvent)
+      (evt: any) => handler(evt as NavigationObserver.NavigationEvent),
     );
   }
 }

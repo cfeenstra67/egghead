@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Theme } from "../../server/types";
 import { useSettingsContext } from "./SettingsContext";
 
@@ -10,24 +10,24 @@ export function useTheme(): ConcreteTheme {
   const { items } = useSettingsContext();
 
   const [isDark, setIsDark] = useState(true);
-  const windowExists = typeof window !== 'undefined';
+  const windowExists = typeof window !== "undefined";
 
   useEffect(() => {
     if (!windowExists) {
       return;
     }
 
-    const match = matchMedia('(prefers-color-scheme: dark)');
+    const match = matchMedia("(prefers-color-scheme: dark)");
     setIsDark(match.matches);
 
     const listener = (event: MediaQueryListEvent) => {
       setIsDark(event.matches);
     };
 
-    match.addEventListener('change', listener);
+    match.addEventListener("change", listener);
 
-    return () => match.removeEventListener('change', listener);
-  }, [windowExists])
+    return () => match.removeEventListener("change", listener);
+  }, [windowExists]);
 
   if (items.theme !== Theme.Auto) {
     return items.theme;

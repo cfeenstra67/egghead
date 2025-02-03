@@ -1,17 +1,17 @@
 import debounce from "lodash/debounce";
-import { useState, useEffect, useMemo, useContext, useCallback } from 'react';
-import { AppContext } from './context';
-import parentLogger from '../../logger';
-import { Aborted } from "../../server/abort";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import parentLogger from "../../logger";
 import type { QuerySessionsRequest, SessionResponse } from "../../server";
+import { Aborted } from "../../server/abort";
 import { requestsEqual } from "../../server/utils";
+import { AppContext } from "./context";
 
-const logger = parentLogger.child({ context: 'session-query' });
+const logger = parentLogger.child({ context: "session-query" });
 
 export enum SessionQueryState {
-  Loading = 'loading',
-  Loaded = 'loaded',
-  Error = 'error',
+  Loading = "loading",
+  Loaded = "loaded",
+  Error = "error",
 }
 
 export interface SessionQuery {
@@ -45,10 +45,11 @@ export function useSessionQuery({
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [currentState, setCurrentState] = useState<SessionQueryState>(
-    SessionQueryState.Loading
+    SessionQueryState.Loading,
   );
   const [results, setResults] = useState<SessionResponse[]>([]);
-  const [currentRequest, setCurrentRequest] = useState<QuerySessionsRequest | null>(null);
+  const [currentRequest, setCurrentRequest] =
+    useState<QuerySessionsRequest | null>(null);
   const [count, setCount] = useState<number>(0);
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -62,11 +63,12 @@ export function useSessionQuery({
         const newRequest = await getRequest(abortController.signal);
         if (
           !abortController.signal.aborted &&
-          (currentRequest === null || !requestsEqual(newRequest, currentRequest))
+          (currentRequest === null ||
+            !requestsEqual(newRequest, currentRequest))
         ) {
           setCurrentRequest(newRequest);
           setInitialLoadComplete(false);
-          onChange && onChange(newRequest);
+          onChange?.(newRequest);
         }
       } catch (error: any) {
         if (error instanceof Aborted) {
@@ -103,17 +105,20 @@ export function useSessionQuery({
             if (err instanceof Aborted) {
               return;
             }
-            logger.trace(`Error running request ${JSON.stringify(request)}`, err);
+            logger.trace(
+              `Error running request ${JSON.stringify(request)}`,
+              err,
+            );
             setCurrentState(SessionQueryState.Error);
             setError(err.toString());
           })
           .finally(() => {
             if (!request.abort?.aborted) {
-              callback && callback();
+              callback?.();
             }
           });
       },
-      debounceDelay
+      debounceDelay,
     );
   }, [debounceDelay, serverClientFactory]);
 
@@ -124,13 +129,16 @@ export function useSessionQuery({
 
     const abortController = new AbortController();
 
-    querySessions({
-      ...currentRequest,
-      limit: pageSize,
-      abort: abortController.signal
-    }, () => {
-      setInitialLoadComplete(true)
-    });
+    querySessions(
+      {
+        ...currentRequest,
+        limit: pageSize,
+        abort: abortController.signal,
+      },
+      () => {
+        setInitialLoadComplete(true);
+      },
+    );
 
     return () => abortController.abort();
   }, [querySessions, currentRequest, pageSize]);
@@ -140,12 +148,16 @@ export function useSessionQuery({
       return;
     }
     const abortController = new AbortController();
-    querySessions({
-      ...currentRequest,
-      limit: pageSize,
-      skip: results.length,
-      abort: abortController.signal
-    }, undefined, results);
+    querySessions(
+      {
+        ...currentRequest,
+        limit: pageSize,
+        skip: results.length,
+        abort: abortController.signal,
+      },
+      undefined,
+      results,
+    );
 
     return () => abortController.abort();
   }, [results, count, currentRequest, querySessions, pageSize]);

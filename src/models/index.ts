@@ -4,7 +4,7 @@ import {
   SessionTermIndex,
   SessionTermIndexVocab,
 } from "./session.entity";
-import { Settings } from './settings.entity';
+import { Settings } from "./settings.entity";
 
 // All entities to be queried
 export const entities = [

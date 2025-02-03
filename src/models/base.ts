@@ -1,8 +1,7 @@
-
 export interface Column {
-  type: 'varchar' | 'integer' | 'datetime';
+  type: "varchar" | "integer" | "datetime";
   nullable?: boolean;
-};
+}
 
 export interface Table {
   name: string;

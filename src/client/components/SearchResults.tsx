@@ -1,11 +1,11 @@
-import Card from "./Card";
-import SearchResultsDay from "./SearchResultsDay";
 import type { SessionResponse } from "../../server";
 import { dateFromSqliteString } from "../../server/utils";
 import styles from "../styles/SearchResults.module.css";
+import Card from "./Card";
+import SearchResultsDay from "./SearchResultsDay";
 
 function groupSessionsByDay(
-  sessions: SessionResponse[]
+  sessions: SessionResponse[],
 ): [Date, SessionResponse[]][] {
   const out: [Date, SessionResponse[]][] = [];
 
@@ -52,7 +52,7 @@ export default function SearchResults({
       ))}
       {sessions.length === 0 &&
         (isLoading ? (
-          <Card>Loading...</Card> 
+          <Card>Loading...</Card>
         ) : query !== undefined && query.trim().length < 3 ? (
           <Card>
             No Results. Try lengthening your search to at least 3 characters.

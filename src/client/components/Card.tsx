@@ -1,4 +1,4 @@
-import styles from '../styles/Card.module.css';
+import styles from "../styles/Card.module.css";
 
 export interface CardProps {
   children?: React.ReactNode;
@@ -6,9 +6,5 @@ export interface CardProps {
 }
 
 export default function Card({ children, className }: CardProps) {
-  return (
-    <div className={`${styles.card} ${className || ''}`}>
-      {children}
-    </div>
-  );
+  return <div className={`${styles.card} ${className || ""}`}>{children}</div>;
 }

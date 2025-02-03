@@ -24,7 +24,9 @@ export interface SettingsOptionStatusProps {
   state: LoadingState;
 }
 
-export default function SettingsOptionStatus({ state }: SettingsOptionStatusProps) {
+export default function SettingsOptionStatus({
+  state,
+}: SettingsOptionStatusProps) {
   const className = getOptionStatusClassName(state);
 
   return <div className={`${styles.optionStatus} ${className}`} />;

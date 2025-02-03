@@ -1,161 +1,160 @@
-
 .searchResults {
-    font-size: 14px;
-    --animate-duration: 200ms;
+  font-size: 14px;
+  --animate-duration: 200ms;
 }
 
 .searchResultsDay {
-    background-color: var(--secondary-bg-color);
-    border-radius: var(--padding);
-    margin-top: var(--padding);
-    display: flex;
-    flex-direction: column;
-    row-gap: var(--padding);
-    padding-top: var(--padding);
-    padding-bottom: var(--padding);
+  background-color: var(--secondary-bg-color);
+  border-radius: var(--padding);
+  margin-top: var(--padding);
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--padding);
+  padding-top: var(--padding);
+  padding-bottom: var(--padding);
 }
 
 .searchResultsDaySticky {
-    top: var(--navbar-height);
-    position: sticky;
-    background-color: var(--secondary-bg-color);
-    padding: calc(var(--padding) / 2) var(--padding-2);
-    box-shadow: 0 3px 1px 0 var(--bg-color);
-    z-index: 2;
+  top: var(--navbar-height);
+  position: sticky;
+  background-color: var(--secondary-bg-color);
+  padding: calc(var(--padding) / 2) var(--padding-2);
+  box-shadow: 0 3px 1px 0 var(--bg-color);
+  z-index: 2;
 }
 
 .searchResults a {
-    color: var(--primary-text-color);
-    text-decoration: none;
+  color: var(--primary-text-color);
+  text-decoration: none;
 }
 
 .searchResultsItem {
-    display: grid;
-    grid-template-columns: 12px min-content 16px auto min-content;
-    align-items: center;
-    column-gap: var(--padding-2);
-    padding: var(--padding) var(--padding-2);
+  display: grid;
+  grid-template-columns: 12px min-content 16px auto min-content;
+  align-items: center;
+  column-gap: var(--padding-2);
+  padding: var(--padding) var(--padding-2);
 }
 
 .moreDetails {
-    transform: rotate(90deg);
-    height: 16px;
-    width: 16px;
-    fill: var(--primary-text-color);
+  transform: rotate(90deg);
+  height: 16px;
+  width: 16px;
+  fill: var(--primary-text-color);
 }
 
 .moreDetails:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .expandedDetails {
-    position: absolute;
-    margin-left: -90px;
-    margin-top: 2px;
-    width: 90px;
-    background-color: var(--bg-color);
-    border-radius: var(--border-radius);
-    padding: var(--padding);
+  position: absolute;
+  margin-left: -90px;
+  margin-top: 2px;
+  width: 90px;
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius);
+  padding: var(--padding);
 }
 
 .expandedDetails a:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .searchResultsItemChild {
-    composes:  searchResultsItem;
-    margin-top: 0;
+  composes: searchResultsItem;
+  margin-top: 0;
 }
 
 .searchResultsItemContent {
-    display: flex;
-    flex-direction: column;
-    row-gap: calc(var(--padding) / 2);
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  row-gap: calc(var(--padding) / 2);
+  overflow: hidden;
 }
 
 .searchResultsItemContentInner {
-    display: flex;
-    flex-direction: row;
-    column-gap: var(--padding-2);
+  display: flex;
+  flex-direction: row;
+  column-gap: var(--padding-2);
 }
 
 /* For popups */
 @media (max-width: 500px) {
-    .searchResultsItem {
-        column-gap: calc(var(--padding) * 1.5);
-        padding: var(--padding);
-    }
+  .searchResultsItem {
+    column-gap: calc(var(--padding) * 1.5);
+    padding: var(--padding);
+  }
 
-    .searchResultsItemContentInner {
-        flex-direction: column;
-        row-gap: calc(var(--padding) / 2);
-    }
+  .searchResultsItemContentInner {
+    flex-direction: column;
+    row-gap: calc(var(--padding) / 2);
+  }
 }
 
 .searchResultsItemTime {
-    white-space: nowrap;
-    overflow: visible;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .searchResultsItemCaption {
-    font-size: 12px;
-    column-gap: var(--secondary-text-color);
-    display: grid;
-    grid-template-columns: min-content auto;
-    align-items: center;
-    margin-left: -6px;
+  font-size: 12px;
+  column-gap: var(--secondary-text-color);
+  display: grid;
+  grid-template-columns: min-content auto;
+  align-items: center;
+  margin-left: -6px;
 }
 
 .searchResultsItemCaption svg {
-    width: 16px;
-    height: 16px;
-    z-index: inherit;
-    transform: rotate(-90deg);
+  width: 16px;
+  height: 16px;
+  z-index: inherit;
+  transform: rotate(-90deg);
 }
 
 .childrenExpanded svg {
-    transform: none !important;
+  transform: none !important;
 }
 
 .searchResultsItemCaption svg:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .searchResultsItemTitle {
-    min-width: 0;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .highlighted {
-    font-weight: bolder;
-    background-color: rgba(255, 201, 51, 0.2);
+  font-weight: bolder;
+  background-color: rgba(255, 201, 51, 0.2);
 }
 
 .searchResultsItemHost {
-    font-style: italic;
-    white-space: nowrap;
-    overflow: visible;
-    color: var(--secondary-text-color);
-    padding-right: 4px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: visible;
+  color: var(--secondary-text-color);
+  padding-right: 4px;
 }
 
 .searchResultsItemDetail {
-    width: 14px;
-    height: 14px;
+  width: 14px;
+  height: 14px;
 }
 
 .searchResultsItemDetail:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .searchResultsItemContentInner img {
-    width: 16px;
-    height: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .favicon:hover {
-    cursor: pointer;
+  cursor: pointer;
 }

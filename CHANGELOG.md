@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Switched backend to use OPFS + `offscreen` API instead of the previous IndexedDB-based backend. This is a backwards-imcompontabile change but improves performance dramatically.
+
 ## [1.0.4] - 2023-07-30
 
 ### Added

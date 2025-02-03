@@ -54,6 +54,7 @@ export default function History() {
     }
     if (dateRange !== null) {
       const [start, end] = dateRange;
+      console.log('RANGE', { start: [start, dateToSqliteString(start)], end: [start, dateToSqliteString(end)] });
 
       clauses.push({
         fieldName: "startedAt",

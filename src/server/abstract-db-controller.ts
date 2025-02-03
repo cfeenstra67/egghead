@@ -30,6 +30,10 @@ export abstract class AbstractDBController {
     this.initCalled = false;
   }
 
+  async reset() {
+    console.error('not implemented');
+  }
+
   useConnection(): Promise<SQLConnection> {
     return new Promise((resolve, reject) => {
       if (this.connection !== undefined) {

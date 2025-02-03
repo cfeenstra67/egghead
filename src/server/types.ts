@@ -15,6 +15,7 @@ export enum ServerMessage {
   QuerySessionTimeline = "querySessionTimeline",
   ImportDatabase = "importDatabase",
   ExportDatabase = "exportDatabase",
+  ResetDatabase = "resetDatabase",
   RegenerateIndex = "regenerateIndex",
   GetSettings = "getSettings",
   UpdateSettings = "updateSettings",
@@ -221,6 +222,7 @@ export type ServerMessageMapping = {
   [ServerMessage.UpdateSettings]: [UpdateSettingsRequest, UpdateSettingsResponse];
   [ServerMessage.FixChromeParents]: [FixChromeParentsRequest, FixChromeParentsResponse];
   [ServerMessage.ApplyRetentionPolicy]: [ApplyRetentionPolicyRequest, ApplyRetentionPolicyResponse];
+  [ServerMessage.ResetDatabase]: [BaseRequest, {}]
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage

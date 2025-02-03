@@ -4,7 +4,7 @@ import { JobManager } from './job-manager';
 import { SQLiteWASMDBController } from './sqlite-wasm-db-controller';
 import { ServerResponseCode, WorkerMessage } from './types';
 
-const { handle: serverConnection, close: closeServer } = createBackgroundClient(new SQLiteWASMDBController('/history.db'));
+const { handle: serverConnection, close: closeServer } = createBackgroundClient(new SQLiteWASMDBController('history.db'));
 
 const jobManager = new JobManager();
 
@@ -24,7 +24,7 @@ self.onmessage = (message) => {
   });
 
   jobManager.jobPromise(requestId).then((response) => {
-    postMessage({ requestId, response: { ...response, code: ServerResponseCode.Ok } });
+    postMessage({ requestId, response });
   }).catch((error) => {
     postMessage({ requestId, response: { code: error instanceof Aborted ? ServerResponseCode.Aborted : ServerResponseCode.Error, message: error.message, stack: error.stack } });
   });

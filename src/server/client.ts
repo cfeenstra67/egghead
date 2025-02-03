@@ -115,6 +115,15 @@ export class ServerClient implements ServerInterface {
     });
   }
 
+  async resetDatabase(
+    request: {}
+  ): Promise<{}> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.ResetDatabase,
+      ...request,
+    });
+  }
+
   async regenerateIndex(
     request: RegenerateIndexRequest
   ): Promise<RegenerateIndexResponse> {

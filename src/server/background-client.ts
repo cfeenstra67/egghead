@@ -13,7 +13,7 @@ export function createBackgroundClient(
 ): BackgroundClient {
   const handle: RequestHandler = async (request) => {
     const db = await dbController.useConnection();
-    const server = new Server(db);
+    const server = new Server(db, () => dbController.reset());
     const handler = requestHandler(server);
     return await handler(request);
   };

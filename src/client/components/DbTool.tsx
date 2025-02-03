@@ -97,6 +97,38 @@ function ImportDbOption({ serverClientFactory }: OptionProps) {
   );
 }
 
+function ResetDbOption({ serverClientFactory }: OptionProps) {
+  const [state, setState] = useState(LoadingState.None);
+  const [error, setError] = useState("");
+
+  async function resetDatabase() {
+    setState(LoadingState.Loading);
+
+    try {
+      const client = await serverClientFactory();
+
+      await client.resetDatabase({});
+      setError('');
+      setState(LoadingState.Success);
+    } catch (error: any) {
+      setError(error.toString());
+      setState(LoadingState.Failed);
+    }
+  }
+
+  return (
+    <div className={styles.option}>
+      <span>Reset DB:</span>
+      <button onClick={resetDatabase}>Reset</button>
+
+      <SettingsOptionStatus state={state} />
+      {state === LoadingState.Failed && (
+        <span className={settingsStyles.errorText}>{error}</span>
+      )}
+    </div>
+  );
+}
+
 function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
   const [state, setState] = useState(LoadingState.None);
   const [error, setError] = useState("");
@@ -252,6 +284,7 @@ export default function DbTool() {
 
       <ImportDbOption serverClientFactory={serverClientFactory} />
       <ExportDbOption serverClientFactory={serverClientFactory} />
+      <ResetDbOption serverClientFactory={serverClientFactory} />
       <RefreshSearchIndexOption serverClientFactory={serverClientFactory} />
       <QueryToolOption serverClientFactory={serverClientFactory} />
     </Card>

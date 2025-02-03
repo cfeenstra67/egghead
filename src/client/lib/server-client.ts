@@ -24,7 +24,7 @@ export function serverFactory(
 
   return async () => {
     const connection = await dbController.useConnection();
-    const server = new Server(connection);
+    const server = new Server(connection, async () => {});
     let handler = jobManagerMiddleware(requestHandler(server), jobManager);
     handler = serializationMiddleware(handler);
     return new ServerClient(handler);

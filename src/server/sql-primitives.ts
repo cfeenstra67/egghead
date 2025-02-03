@@ -27,6 +27,8 @@ export type QueryBuilder = Kysely<Database>;
 export interface SQLConnection {
   <T>(query: string, parameters?: readonly unknown[]): Promise<T[]>;
   close: () => Promise<void>;
+  export?: () => Promise<Uint8Array>;
+  import?: (data: Uint8Array) => Promise<void>;
 };
 
 export function createQueryBuilder(): QueryBuilder {

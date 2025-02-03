@@ -76,11 +76,26 @@ export class SQLiteWASMDBController extends AbstractDBController {
 
     returnFunc.close = async () => { db.close() };
 
+    returnFunc.export = async () => {
+      return this.sqlite3!.capi.sqlite3_js_db_export(db);
+    };
+
+    returnFunc.import = async (data) => {
+      await this.sqlite3!.oo1.OpfsDb.importDb(this.path, data);
+    };
+
     const statements = ddl.trim().split('\n');
     for (const statement of statements) {
       await returnFunc(statement);
     }
 
     return returnFunc;
+  }
+
+  async reset(): Promise<void> {
+    const dir = await navigator.storage.getDirectory();
+    await dir.removeEntry(this.path);
+    await this.teardownDb();
+    await this.initializeDb();
   }
 }

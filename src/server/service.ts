@@ -2,8 +2,8 @@ import chunk from 'lodash/chunk';
 import { v4 as uuidv4 } from "uuid";
 import { maybeAbort } from './abort';
 import parentLogger from '../logger';
-import { Session as TypeORMSession, Settings } from "../models";
-import { SearchService } from "./search";
+import { Session as TypeORMSession, Settings, sessionIndexTable, sessionTermIndexTable } from "../models";
+import { SearchService, sessionIndexTableArgs } from "./search";
 import {
   ServerInterface,
   PingRequest,
@@ -44,6 +44,7 @@ import {
 import { cleanURL, getHost, defaultSettings } from "./utils";
 import { createQueryBuilder, executeQuery, QueryBuilder, RemoveAnnotations, RemoveRelations, SQLConnection } from './sql-primitives';
 import { Insertable } from 'kysely';
+import { createFts5IndexV2, dropFts5IndexV2 } from '../models/fts5';
 
 type Session = RemoveAnnotations<RemoveRelations<TypeORMSession>>;
 
@@ -104,6 +105,7 @@ export class Server implements ServerInterface {
 
   constructor(
     readonly connection: SQLConnection,
+    readonly reset: () => Promise<void>,
   ) {
     this.searchService = new SearchService(connection);
     this.queryBuilder = createQueryBuilder();
@@ -317,19 +319,59 @@ export class Server implements ServerInterface {
   async exportDatabase(
     request: ExportDatabaseRequest
   ): Promise<ExportDatabaseResponse> {
-    throw new Error('not implemented');
+    if (!this.connection.export) {
+      throw new Error('Export not supported');
+    }
+
+    const array = await this.connection.export();
+
+    const blob = new Blob([array], { type: 'application/x-sqlite3' });
+    const url = URL.createObjectURL(blob);
+
+    return { databaseUrl: url };
+  }
+
+  async resetDatabase(): Promise<{}> {
+    await this.reset();
+
+    return {};
   }
 
   async regenerateIndex(
     request: RegenerateIndexRequest
   ): Promise<RegenerateIndexResponse> {
-    throw new Error('not implemented');
+    const searchIndexArgs = sessionIndexTableArgs(
+      sessionIndexTable,
+      "trigram"
+    );
+    const termIndexArgs = sessionIndexTableArgs(
+      sessionTermIndexTable
+    );
+
+    for (const args of [searchIndexArgs, termIndexArgs]) {
+      await dropFts5IndexV2(args, this.connection);
+      maybeAbort(request.abort);
+      await createFts5IndexV2(args, this.connection);
+      maybeAbort(request.abort);
+    }
+
+    return {};
   }
 
   async importDatabase(
     request: ImportDatabaseRequest
   ): Promise<ImportDatabaseResponse> {
-    throw new Error('not implemented');
+    if (!this.connection.import) {
+      throw new Error('Operation not supported');
+    }
+
+    const dbRequest = await fetch(request.databaseUrl);
+
+    const result = await dbRequest.arrayBuffer();
+
+    await this.connection.import(new Uint8Array(result));
+
+    return {};
   }
 
   private async getOrCreateSettings(): Promise<Settings> {

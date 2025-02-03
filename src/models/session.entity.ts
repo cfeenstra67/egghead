@@ -26,7 +26,7 @@ export const sessionTable = {
     interactionCount: { type: 'integer' },
     lastInteractionAt: { type: 'datetime' },
     chromeVisitId: { type: 'varchar', nullable: true },
-    chromeReferringVisitIt: { type: 'varchar', nullable: true },
+    chromeReferringVisitId: { type: 'varchar', nullable: true },
     dum: { type: 'varchar', nullable: true }
   }
 } as const satisfies Table;

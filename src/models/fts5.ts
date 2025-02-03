@@ -1,4 +1,6 @@
-import type { QueryRunner } from "typeorm";
+import { QueryRunner } from "typeorm";
+import { SQLConnection } from "../server/sql-primitives";
+import { typeormRunnerAdapter } from "../server/typeorm-adapter";
 
 const dummyColumnName = "dum";
 
@@ -232,31 +234,45 @@ export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
 
 export async function createFts5Index(
   args: Fts5TableArgs,
-  runner: QueryRunner
+  runner: QueryRunner,
 ): Promise<void> {
-  await runner.query(fts5createTableSql(args));
-  await runner.query(fts5CreateVocabTableSql(args));
-  await runner.query(fts5InsertIntoIndexSql(args));
-  await runner.query(fts5InsertTriggerSql(args));
-  await runner.query(fts5UpdateTriggerSql(args));
-  await runner.query(fts5DeleteTriggerSql(args));
+  await createFts5IndexV2(args, typeormRunnerAdapter(runner));
+}
+
+export async function createFts5IndexV2(
+  args: Fts5TableArgs,
+  connection: SQLConnection
+): Promise<void> {
+  await connection(fts5createTableSql(args));
+  await connection(fts5CreateVocabTableSql(args));
+  await connection(fts5InsertIntoIndexSql(args));
+  await connection(fts5InsertTriggerSql(args));
+  await connection(fts5UpdateTriggerSql(args));
+  await connection(fts5DeleteTriggerSql(args));
 }
 
 export async function dropFts5Index(
   args: Fts5TableArgs,
-  runner: QueryRunner
+  runner: QueryRunner,
 ): Promise<void> {
-  await runner.query(
+  await dropFts5IndexV2(args, typeormRunnerAdapter(runner));
+}
+
+export async function dropFts5IndexV2(
+  args: Fts5TableArgs,
+  connection: SQLConnection,
+): Promise<void> {
+  await connection(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(insertTriggerName(args))}`
   );
-  await runner.query(
+  await connection(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(updateTriggerName(args))}`
   );
-  await runner.query(
+  await connection(
     `DROP TRIGGER IF EXISTS ${quoteDdlName(deleteTriggerName(args))}`
   );
-  await runner.query(`DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`);
-  await runner.query(
+  await connection(`DROP TABLE IF EXISTS ${fts5VocabTableName(args)}`);
+  await connection(
     `DROP TABLE IF EXISTS ${getFullTableName(args.tableName, args.schemaName)}`
   );
 }

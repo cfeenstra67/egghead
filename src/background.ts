@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
   if (request.type === 'maybeRestartCrawler') {
-    observersController.maybeRunCrawler();
+    // observersController.maybeRunCrawler();
     sendResponse('OK');
     return false;
   }

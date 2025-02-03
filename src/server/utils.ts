@@ -99,7 +99,7 @@ export function dateFromSqliteString(dateString: string): Date {
 }
 
 export function dateToSqliteString(date: Date): string {
-  return date.toISOString().replace("T", " ").replace("Z", "");
+  return date.toISOString().replace("Z", "");
 }
 
 export function defaultSettings(): SettingsItems {

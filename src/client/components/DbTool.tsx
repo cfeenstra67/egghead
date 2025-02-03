@@ -162,6 +162,36 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
   );
 }
 
+function ResetCrawlerStateOption() {
+  const [state, setState] = useState(LoadingState.None);
+
+  async function resetState() {
+    if (state === LoadingState.Loading) {
+      return;
+    }
+
+    setState(LoadingState.Loading);
+    try {
+      const resp = await chrome.runtime.sendMessage({ type: 'resetCrawlerState' });
+      if (resp === 'ERROR') {
+        throw new Error('error resetting crawler state');
+      }
+      setState(LoadingState.Success);
+    } catch (err: any) {
+      logger.trace(err);
+      setState(LoadingState.Failed);
+    }
+  }
+
+  return (
+    <div className={styles.option}>
+      <span>Reset crawler state:</span>
+      <button onClick={resetState}>Reset</button>
+      <SettingsOptionStatus state={state} />
+    </div>
+  );
+}
+
 interface QueryToolResultProps {
   results: any[];
 }
@@ -286,6 +316,7 @@ export default function DbTool() {
       <ExportDbOption serverClientFactory={serverClientFactory} />
       <ResetDbOption serverClientFactory={serverClientFactory} />
       <RefreshSearchIndexOption serverClientFactory={serverClientFactory} />
+      <ResetCrawlerStateOption />
       <QueryToolOption serverClientFactory={serverClientFactory} />
     </Card>
   );

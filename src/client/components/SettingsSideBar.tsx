@@ -68,13 +68,13 @@ export default function SettingsSideBar({ page }: SettingsSideBarProps) {
         title="About"
         selected={page === SettingsPage.About}
       />
-      {settings.items.devModeEnabled && (
+      {settings.items.devModeEnabled ? (
         <SettingsSideBarItem
           url="/settings/dev"
           title="Dev"
           selected={page === SettingsPage.Dev}
         />
-      )}
+      ) : null}
     </SideBar>
   );
 }

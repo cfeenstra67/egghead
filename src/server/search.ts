@@ -473,8 +473,6 @@ export class SearchService {
   ): Promise<QuerySessionsResponse> {
     const originalBuilder = this.searchQueryBuilder(request, request.isSearch);
 
-    console.log('RESULT', originalBuilder.compile());
-
     let builder = originalBuilder;
 
     if (request.skip) {

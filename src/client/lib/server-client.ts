@@ -1,32 +1,22 @@
-import { ServerInterface, RequestHandler } from "../../server";
-import { requestHandler, jobManagerMiddleware } from "../../server/utils";
+import { ServerInterface } from "../../server";
+import { workerRequestHandler } from "../../server/utils";
 import { ServerClient } from "../../server/client";
-import { SqlJsDBController } from "./sql-js-db-controller";
-import { JobManager } from "../../server/job-manager";
-import { Server } from "../../server/service";
-
-function serializationMiddleware(handler: RequestHandler): RequestHandler {
-  const handleRequest: RequestHandler = async (request) => {
-    const { abort, ...bareRequest } = request;
-    const serializedRequest = JSON.parse(JSON.stringify(bareRequest));
-    const result = await handler({ ...serializedRequest, abort });
-    return JSON.parse(JSON.stringify(result));
-  };
-
-  return handleRequest;
-}
+import { createWorkerClient } from "../../server/worker-client";
 
 export function serverFactory(
   existingDb: Uint8Array
 ): () => Promise<ServerInterface> {
-  const dbController = new SqlJsDBController(existingDb);
-  const jobManager = new JobManager();
+  const worker = new Worker('offscreen-worker.js');
 
   return async () => {
-    const connection = await dbController.useConnection();
-    const server = new Server(connection, async () => {});
-    let handler = jobManagerMiddleware(requestHandler(server), jobManager);
-    handler = serializationMiddleware(handler);
-    return new ServerClient(handler);
+    const workerHandler = createWorkerClient(worker);
+    const handler = workerRequestHandler(workerHandler);
+  
+    const client = new ServerClient(handler);
+
+    const url = URL.createObjectURL(new Blob([existingDb]));
+    await client.importDatabase({ databaseUrl: url });
+
+    return client;
   };
 }

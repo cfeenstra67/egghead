@@ -15,6 +15,7 @@ import type {
   ServerInterface,
   RequestHandler,
   QuerySessionsRequest,
+  WorkerHandler,
 } from "./types";
 
 const logger = parentLogger.child({ context: 'server-utils' });
@@ -107,7 +108,7 @@ export function defaultSettings(): SettingsItems {
     dataCollectionEnabled: true,
     devModeEnabled: DEV_MODE,
     theme: Theme.Auto,
-    retentionPolicyMonths: 3,
+    retentionPolicyMonths: 12,
   };
 }
 
@@ -177,5 +178,19 @@ export function logRequestMiddleware(handler: RequestHandler): RequestHandler {
         request.type, after.getTime() - before.getTime(),
       );
     }
+  };
+}
+
+export function workerRequestHandler(handler: WorkerHandler): RequestHandler {
+  return async (request) => {
+    const requestId = uuidv4();
+    const { abort, ...args } = request;
+    const response = await handler({ requestId, type: 'request', request: args });
+    if (abort) {
+      abort.addEventListener('abort', async () => {
+        await handler({ requestId, type: 'abort' });
+      });
+    }
+    return response.response as any;
   };
 }

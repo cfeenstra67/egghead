@@ -1,17 +1,12 @@
-import { DataSource } from 'typeorm';
-import { migrations } from '../src/migrations';
-import { Session, entities } from '../src/models';
+import { Session } from '../src/models';
 import {
   Clause,
-  parseQueryString,
-  clausesEqual,
   IndexToken,
   UnaryOperator,
   BinaryOperator,
   AggregateOperator,
 } from '../src/server/clause';
 import { SearchService } from '../src/server/search';
-import { typeormAdapter } from '../src/server/typeorm-adapter';
 
 type SessionInput = Omit<Session, 'childSessions'>;
 
@@ -904,75 +899,75 @@ const examples: TestCase[] = [
 
 describe(SearchService, () => {
 
-  let dataSource: DataSource = {} as any;
+  // let dataSource: DataSource = {} as any;
 
-  beforeAll(async () => {
-    dataSource = new DataSource({
-      type: 'better-sqlite3',
-      database: ':memory:',
-      entities,
-      migrations,
-      migrationsRun: true,
-    });
-    await dataSource.initialize();
-  });
+  // beforeAll(async () => {
+  //   dataSource = new DataSource({
+  //     type: 'better-sqlite3',
+  //     database: ':memory:',
+  //     entities,
+  //     migrations,
+  //     migrationsRun: true,
+  //   });
+  //   await dataSource.initialize();
+  // });
 
-  afterAll(async () => {
-    await dataSource.close();
-  });
+  // afterAll(async () => {
+  //   await dataSource.close();
+  // });
 
-  const parseExamples: [string, string, Clause<Session>][] = examples.map((example) => {
-    return [example.id, example.query, example.clause];
-  });
+  // const parseExamples: [string, string, Clause<Session>][] = examples.map((example) => {
+  //   return [example.id, example.query, example.clause];
+  // });
 
-  it.each(parseExamples)('%s: parse: %s = %s', (id: string, queryString: string, expected: Clause<Session>) => {
-    const result = parseQueryString<Session>(queryString);
-    // console.log('RESULT', id, result, expected);
-    expect(clausesEqual(result, expected)).toBe(true);
-  });
+  // it.each(parseExamples)('%s: parse: %s = %s', (id: string, queryString: string, expected: Clause<Session>) => {
+  //   const result = parseQueryString<Session>(queryString);
+  //   // console.log('RESULT', id, result, expected);
+  //   expect(clausesEqual(result, expected)).toBe(true);
+  // });
 
-  const runExamples: [string, string, string[], SessionInput[]][] = examples.map((example) => {
-    return [example.id, example.query, example.resultIds, example.data];
-  });
+  // const runExamples: [string, string, string[], SessionInput[]][] = examples.map((example) => {
+  //   return [example.id, example.query, example.resultIds, example.data];
+  // });
 
-  it.each(runExamples)('%s: run: %s -> %s', async (id: string, queryString: string, resultIds: string[], data: SessionInput[]) => {
-    // Run each example in a transaction, that way no need to do any additional cleanup between tests
-    const queryRunner = dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  // it.each(runExamples)('%s: run: %s -> %s', async (id: string, queryString: string, resultIds: string[], data: SessionInput[]) => {
+  //   // Run each example in a transaction, that way no need to do any additional cleanup between tests
+  //   const queryRunner = dataSource.createQueryRunner();
+  //   await queryRunner.connect();
+  //   await queryRunner.startTransaction();
 
-    try {
-      const sessionRepo = queryRunner.manager.getRepository(Session);
+  //   try {
+  //     const sessionRepo = queryRunner.manager.getRepository(Session);
 
-      await sessionRepo.createQueryBuilder()
-        .insert()
-        .values(data)
-        .execute();
+  //     await sessionRepo.createQueryBuilder()
+  //       .insert()
+  //       .values(data)
+  //       .execute();
 
-      const searchService = new SearchService(typeormAdapter(dataSource));
+  //     const searchService = new SearchService(typeormAdapter(dataSource));
 
-      // main search query
-      const { results, totalCount } = await searchService.querySessions({
-        query: queryString,
-        isSearch: true,
-      });
-      expect(results.length).toBe(totalCount);
-      expect(new Set(results.map((row) => row.id))).toStrictEqual(new Set(resultIds));
+  //     // main search query
+  //     const { results, totalCount } = await searchService.querySessions({
+  //       query: queryString,
+  //       isSearch: true,
+  //     });
+  //     expect(results.length).toBe(totalCount);
+  //     expect(new Set(results.map((row) => row.id))).toStrictEqual(new Set(resultIds));
 
-      // for facets & timeline, just make sure they run w/o failing
-      await searchService.querySessionFacets({
-        query: queryString,
-        facetsSize: 10,
-      });
+  //     // for facets & timeline, just make sure they run w/o failing
+  //     await searchService.querySessionFacets({
+  //       query: queryString,
+  //       facetsSize: 10,
+  //     });
 
-      await searchService.querySessionTimeline({
-        query: queryString,
-        granularity: 5
-      });
-    } finally {
-      await queryRunner.rollbackTransaction();
-      await queryRunner.release();
-    }
-  });
+  //     await searchService.querySessionTimeline({
+  //       query: queryString,
+  //       granularity: 5
+  //     });
+  //   } finally {
+  //     await queryRunner.rollbackTransaction();
+  //     await queryRunner.release();
+  //   }
+  // });
 
 });

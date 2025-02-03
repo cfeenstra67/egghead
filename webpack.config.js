@@ -31,6 +31,12 @@ function createModule({
     entry,
     devtool: devMode ? 'inline-source-map' : false,
     target: 'web',
+    devServer: {
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp'
+      }
+    },
     module: {
       rules: [
         {
@@ -164,6 +170,8 @@ module.exports = [
       'content-script': './src/content-script.ts',
       client: './src/client/chrome.tsx',
       popup: './src/client/chrome-popup.tsx',
+      offscreen: './src/offscreen.ts',
+      'offscreen-worker': './src/server/offscreen-worker.ts',
     },
     platform: 'chrome',
   }),
@@ -214,6 +222,7 @@ module.exports = [
     entry: {
       client: './src/client/demo.tsx',
       popup: './src/client/demo-popup.tsx',
+      'offscreen-worker': './src/server/offscreen-worker.ts',
     },
     platform: 'web',
   }),
@@ -229,6 +238,7 @@ module.exports = [
     entry: {
       client: './src/client/web.tsx',
       popup: './src/client/web-popup.tsx',
+      'offscreen-worker': './src/server/offscreen-worker.ts',
     },
     platform: 'web',
   }),

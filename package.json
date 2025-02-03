@@ -11,16 +11,13 @@
     "build": "webpack --config-name chrome && webpack --config-name firefox && webpack --config-name firefox-mv2 && webpack --config-name demo && zip -rj dist/chrome.zip dist/chrome && zip -rj dist/firefox.zip dist/firefox && zip -rj dist/firefox-mv2.zip dist/firefox-mv2",
     "serve": "webpack serve --config-name dev --no-client-overlay",
     "serve-demo": "webpack serve --config-name demo --no-client-overlay",
-    "typeorm": "typeorm-ts-node-commonjs",
     "ohm-generate": "npx ohm generateBundles --esm --withTypes src/**/*.ohm",
     "fmt": "eslint --fix 'src/**/*.{ts,tsx}' 'infra/**/*.ts'",
     "test": "jest"
   },
   "dependencies": {
-    "@jlongster/sql.js": "^1.6.7",
     "@sqlite.org/sqlite-wasm": "3.48.0-build4",
     "@ungap/event-target": "^0.2.3",
-    "absurd-sql": "^0.0.53",
     "animate.css": "^4.1.1",
     "chart.js": "^3.7.1",
     "css-loader": "^6.7.1",
@@ -36,9 +33,7 @@
     "react-transition-group": "^4.4.2",
     "reflect-metadata": "^0.1.13",
     "style-loader": "^3.3.1",
-    "typeorm": "https://github.com/cfeenstra67/typeorm/releases/download/0.3.7/package.tar.gz",
     "uuid": "^8.3.2",
-    "wa-sqlite": "cfeenstra67/wa-sqlite#buildless",
     "wouter": "^2.8.0-alpha.2"
   },
   "devDependencies": {
@@ -60,7 +55,6 @@
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.22.0",
-    "better-sqlite3": "^9.2.2",
     "copy-webpack-plugin": "^10.2.4",
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^8.5.0",
@@ -88,10 +82,10 @@
     "ts-node": "^10.7.0",
     "typescript": "^5.7.3",
     "url-loader": "^4.1.1",
-    "webpack": "^5.76.0",
-    "webpack-bundle-analyzer": "^4.5.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.9.0"
+    "webpack": "^5.97.1",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
   },
   "pnpm": {
     "patchedDependencies": {

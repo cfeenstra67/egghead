@@ -1,12 +1,3 @@
-import {
-  PrimaryColumn,
-  Entity,
-  Column,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  Index,
-} from "typeorm";
 import type { Table } from "./base";
 
 export const sessionTable = {
@@ -31,77 +22,77 @@ export const sessionTable = {
   }
 } as const satisfies Table;
 
-@Entity()
-@Index(["host", "startedAt"])
-@Index(["tabId", "startedAt"])
-@Index(["chromeVisitId", "startedAt", "url"])
-@Index("chromeVisitIndex", { synchronize: false })
-@Index("chromeReferringVisitIndex", { synchronize: false })
+// @Entity()
+// @Index(["host", "startedAt"])
+// @Index(["tabId", "startedAt"])
+// @Index(["chromeVisitId", "startedAt", "url"])
+// @Index("chromeVisitIndex", { synchronize: false })
+// @Index("chromeReferringVisitIndex", { synchronize: false })
 export class Session {
-  @PrimaryColumn({ unique: true })
+  // @PrimaryColumn({ unique: true })
   id!: string;
 
-  @Column()
+  // @Column()
   tabId!: number;
 
-  @Column({ type: 'varchar', nullable: true })
+  // @Column({ type: 'varchar', nullable: true })
   host!: string | null;
 
-  @Column()
+  // @Column()
   url!: string;
 
-  @Column()
+  // @Column()
   title!: string;
 
-  @Column()
+  // @Column()
   rawUrl!: string;
 
-  @Index()
-  @Column({ type: 'varchar', nullable: true })
+  // @Index()
+  // @Column({ type: 'varchar', nullable: true })
   parentSessionId!: string | null;
 
-  @ManyToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
-  parentSession!: Promise<Session | null>;
+  // @ManyToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
+  // parentSession!: Promise<Session | null>;
 
-  @OneToMany(() => Session, (session) => session.parentSession)
-  childSessions: Promise<Session[]>;
+  // @OneToMany(() => Session, (session) => session.parentSession)
+  // childSessions: Promise<Session[]>;
 
-  @Index()
-  @Column({ type: 'varchar', nullable: true })
+  // @Index()
+  // @Column({ type: 'varchar', nullable: true })
   nextSessionId!: string | null;
 
-  @OneToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
-  nextSession!: Promise<Session | null>;
+  // @OneToOne(() => Session, (session) => session.id, { onDelete: 'SET NULL' })
+  // nextSession!: Promise<Session | null>;
 
-  @Column({ type: 'varchar', nullable: true })
+  // @Column({ type: 'varchar', nullable: true })
   transitionType!: string | null;
 
-  @Column()
+  // @Column()
   startedAt!: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  // @Column({ type: 'datetime', nullable: true })
   endedAt!: Date | null;
 
-  @Column()
+  // @Column()
   interactionCount!: number;
 
-  @Column()
+  // @Column()
   lastInteractionAt!: Date;
 
-  @Column({ type: 'varchar', nullable: true })
+  // @Column({ type: 'varchar', nullable: true })
   chromeVisitId!: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  // @Column({ type: 'varchar', nullable: true })
   chromeReferringVisitId!: string | null;
 
   // Always null column used in search index as dummy
-  @Column({ type: 'varchar', nullable: true })
+  // @Column({ type: 'varchar', nullable: true })
   dum!: string | null;
 }
 
-@Entity("session_index")
+// @Entity("session_index")
 export class SessionIndex extends Session {
-  @Column()
+  // @Column()
   rowid!: number;
 }
 
@@ -110,9 +101,9 @@ export const sessionIndexTable = {
   name: 'session_index'
 } as const satisfies Table;
 
-@Entity("session_term_index")
+// @Entity("session_term_index")
 export class SessionTermIndex extends Session {
-  @Column()
+  // @Column()
   rowid!: number;
 }
 
@@ -121,14 +112,14 @@ export const sessionTermIndexTable = {
   name: 'session_term_index'
 } as const satisfies Table;
 
-@Entity("session_term_index_vocab")
+// @Entity("session_term_index_vocab")
 export class SessionTermIndexVocab {
-  @PrimaryColumn()
+  // @PrimaryColumn()
   term!: string;
-  @PrimaryColumn()
+  // @PrimaryColumn()
   doc!: number;
-  @PrimaryColumn()
+  // @PrimaryColumn()
   col!: string;
-  @PrimaryColumn()
+  // @PrimaryColumn()
   offset!: number;
 }

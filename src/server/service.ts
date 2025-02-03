@@ -395,8 +395,6 @@ export class Server implements ServerInterface {
     }
     const now = new Date();
 
-    console.log('before?');
-
     const insertBuilder = this.queryBuilder
       .insertInto('settings')
       .values({
@@ -406,8 +404,6 @@ export class Server implements ServerInterface {
         updatedAt: now,
       })
       .returningAll();
-
-    console.log('after?', insertBuilder.compile());
 
     const [newSettings] = await executeQuery(insertBuilder, this.connection);
 

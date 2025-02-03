@@ -384,10 +384,6 @@ export class HistoryCrawler {
     const now = new Date();
     const initialPercent = initialCrawlPercentDone ?? 0;
 
-    // Add interval cushion before the start timestamp
-    startTimestamp = new Date(
-      Math.max(startTimestamp.getTime() - this.interval, 0)
-    );
     logger.info('crawling from %s to %s', startTimestamp, stop);
 
     let endTimestamp = new Date(startTimestamp.getTime() + this.interval);
@@ -403,7 +399,10 @@ export class HistoryCrawler {
 
     while (endTimestamp.getTime() <= stop.getTime()) {
       total += 1;
-      const crawlPromise = this.crawlInterval(startTimestamp, endTimestamp, getVisits)
+      const cushion = 5 * 60 * 1000;
+      const startWithCushion = new Date(startTimestamp.getTime() - cushion);
+      const endWithCushion = new Date(endTimestamp.getTime() + cushion);
+      const crawlPromise = this.crawlInterval(startWithCushion, endWithCushion, getVisits)
         .then(async (result) => {
           if (upToDate) {
             return result;
@@ -486,17 +485,9 @@ export class HistoryCrawler {
 
   registerCrawler(crawlerAlarm: string): void {
     chrome.alarms.create(crawlerAlarm, { periodInMinutes: 5, delayInMinutes: 0 });
-    const resetAlarm = crawlerAlarm + '_reset';
-    chrome.alarms.create(resetAlarm, { periodInMinutes: 60 * 24 });
     chrome.alarms.onAlarm.addListener(async (alarm) => {
       if (alarm.name === crawlerAlarm) {
         await this.runCrawler();
-      } else if (alarm.name === resetAlarm) {
-        const state = await this.getState();
-        await this.setState({
-          startTimestamp: new Date(state.startTimestamp.getTime() - 24 * 60 * 60 * 1000),
-          upToDate: true,
-        });
       }
     });
   }

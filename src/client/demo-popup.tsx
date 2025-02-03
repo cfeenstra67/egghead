@@ -1,4 +1,3 @@
-import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import DemoWrapper from "./components/DemoWrapper";
 import Popup from "./Popup";

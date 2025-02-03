@@ -1,30 +1,29 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Theme } from '../server/types';
 
 export type SettingsItems = Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>;
 
-@Entity()
+// @Entity()
 export class Settings {
 
-  @PrimaryGeneratedColumn('uuid')
+  // @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  // @Column()
   dataCollectionEnabled!: boolean;
 
-  @Column()
+  // @Column()
   devModeEnabled!: boolean;
 
-  @Column()
+  // @Column()
   retentionPolicyMonths!: number;
 
-  @Column()
+  // @Column()
   theme: Theme;
 
-  @Column()
+  // @Column()
   createdAt!: Date;
 
-  @Column()
+  // @Column()
   updatedAt!: Date;
 
 }

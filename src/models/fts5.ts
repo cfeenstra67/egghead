@@ -1,6 +1,4 @@
-import { QueryRunner } from "typeorm";
 import { SQLConnection } from "../server/sql-primitives";
-import { typeormRunnerAdapter } from "../server/typeorm-adapter";
 
 const dummyColumnName = "dum";
 
@@ -232,13 +230,6 @@ export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
   return components.join(" ");
 }
 
-export async function createFts5Index(
-  args: Fts5TableArgs,
-  runner: QueryRunner,
-): Promise<void> {
-  await createFts5IndexV2(args, typeormRunnerAdapter(runner));
-}
-
 export async function createFts5IndexV2(
   args: Fts5TableArgs,
   connection: SQLConnection
@@ -249,13 +240,6 @@ export async function createFts5IndexV2(
   await connection(fts5InsertTriggerSql(args));
   await connection(fts5UpdateTriggerSql(args));
   await connection(fts5DeleteTriggerSql(args));
-}
-
-export async function dropFts5Index(
-  args: Fts5TableArgs,
-  runner: QueryRunner,
-): Promise<void> {
-  await dropFts5IndexV2(args, typeormRunnerAdapter(runner));
 }
 
 export async function dropFts5IndexV2(

@@ -45,9 +45,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
   if (request.type === 'maybeRestartCrawler') {
-    // observersController.maybeRunCrawler();
+    observersController.maybeRunCrawler();
     sendResponse('OK');
     return false;
+  }
+  if (request.type === 'resetCrawlerState') {
+    observersController.resetState().then(() => {
+      sendResponse('OK');
+    }).catch((error) => {
+      logger.error(error);
+      sendResponse('ERROR');
+    })
+    return true;
   }
   const { request: innerRequest, requestId } = request;
   jobManager.addJob(requestId, (abortSignal) => {

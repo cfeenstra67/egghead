@@ -8,7 +8,7 @@ import {
   jobManagerMiddleware,
   logRequestMiddleware,
   logJobMiddleware,
-  jobLockingMiddleware,
+  // jobLockingMiddleware,
 } from "./server/utils";
 import { setupObservers } from './extension/utils';
 
@@ -17,7 +17,7 @@ const logger = parentLogger.child({ context: 'background' });
 const serverConnection = createOffscreenClient();
 const loggingServerConnection = logRequestMiddleware(serverConnection);
 const jobManager = new JobManager({
-  middlewares: [logJobMiddleware, jobLockingMiddleware('background-jobs')]
+  middlewares: [logJobMiddleware]
 });
 const managedConnection = jobManagerMiddleware(loggingServerConnection, jobManager)
 const serverClient = new ServerClient(managedConnection);

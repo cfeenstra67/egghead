@@ -1,5 +1,12 @@
-
-
+import {
+  PrimaryColumn,
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  Index,
+} from "typeorm";
 import type { Table } from "./base";
 
 export const sessionTable = {

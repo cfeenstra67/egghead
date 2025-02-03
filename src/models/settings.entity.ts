@@ -1,3 +1,4 @@
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Theme } from '../server/types';
 
 export type SettingsItems = Omit<Settings, 'id' | 'createdAt' | 'updatedAt'>;

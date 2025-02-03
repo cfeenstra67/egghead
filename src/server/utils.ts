@@ -51,6 +51,8 @@ export function requestHandler(server: ServerInterface): RequestHandler {
       const response = await method(input as any);
       return { code: ServerResponseCode.Ok, ...response };
     } catch (err: any) {
+      console.error('ERROR', err);
+
       let message: string;
       let stack: string | undefined = undefined;
       if (err === null || err === undefined) {
@@ -89,7 +91,11 @@ export function requestsEqual(
 }
 
 export function dateFromSqliteString(dateString: string): Date {
-  return new Date(dateString.replace(" ", "T") + "Z");
+  dateString = dateString.replace(" ", "T");
+  if (!dateString.endsWith('Z')) {
+    dateString += 'Z';
+  }
+  return new Date(dateString);
 }
 
 export function dateToSqliteString(date: Date): string {

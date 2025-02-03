@@ -1,25 +1,22 @@
 import EventTarget from "@ungap/event-target";
-import { DataSource } from "typeorm";
+import { SQLConnection } from "./sql-primitives";
 
 export abstract class AbstractDBController {
   initCalled: boolean;
-  dataSource: DataSource | undefined;
+  connection?: SQLConnection;
   private dbEvents: EventTarget;
 
   constructor() {
     this.initCalled = false;
-    this.dataSource = undefined;
     this.dbEvents = new EventTarget();
   }
 
-  protected abstract createDataSource(): Promise<DataSource>;
-
-  protected abstract importDb(database: Uint8Array): Promise<void>;
+  protected abstract createConnection(): Promise<SQLConnection>;
 
   protected async initializeDb() {
     this.initCalled = true;
     try {
-      this.dataSource = await this.createDataSource();
+      this.connection = await this.createConnection();
       this.dbEvents.dispatchEvent(new CustomEvent("init"));
     } catch (error) {
       this.initCalled = false;
@@ -28,15 +25,15 @@ export abstract class AbstractDBController {
   }
 
   async teardownDb() {
-    await this.dataSource?.close();
-    this.dataSource = undefined;
+    await this.connection?.close();
+    this.connection = undefined;
     this.initCalled = false;
   }
 
-  useDataSource(): Promise<DataSource> {
+  useConnection(): Promise<SQLConnection> {
     return new Promise((resolve, reject) => {
-      if (this.dataSource !== undefined) {
-        resolve(this.dataSource);
+      if (this.connection !== undefined) {
+        resolve(this.connection);
         return;
       }
 
@@ -46,7 +43,7 @@ export abstract class AbstractDBController {
       };
 
       const handleInit = (event: Event) => {
-        resolve(this.dataSource as DataSource);
+        resolve(this.connection as SQLConnection);
         cleanUp();
       };
 

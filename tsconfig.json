@@ -24,6 +24,7 @@
         "strictPropertyInitialization": false,
         "jsx": "react-jsx",
         "allowJs": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "skipLibCheck": true
     }
 }

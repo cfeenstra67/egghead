@@ -1,7 +1,6 @@
-import { DataSource, SelectQueryBuilder } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { migrations } from '../src/migrations';
-import { Session, SessionIndex, entities } from '../src/models';
-import { getColumn } from "../src/models/fts5";
+import { Session, entities } from '../src/models';
 import {
   Clause,
   parseQueryString,
@@ -10,9 +9,9 @@ import {
   UnaryOperator,
   BinaryOperator,
   AggregateOperator,
-  renderClause,
 } from '../src/server/clause';
 import { SearchService } from '../src/server/search';
+import { typeormAdapter } from '../src/server/typeorm-adapter';
 
 type SessionInput = Omit<Session, 'childSessions'>;
 
@@ -52,12 +51,12 @@ function testSession({
     url: url ?? '',
     rawUrl: url ?? '',
     startedAt: startedAt ?? now,
-    endedAt,
+    endedAt: endedAt ?? null,
     lastInteractionAt: lastInteractionAt ?? now,
     interactionCount: interactionCount ?? 0,
     tabId: tabId ?? -1,
     host: url ? new URL(url).hostname : '',
-  };
+  } as SessionInput;
 }
 
 const examples: TestCase[] = [
@@ -950,7 +949,7 @@ describe(SearchService, () => {
         .values(data)
         .execute();
 
-      const searchService = new SearchService(dataSource, queryRunner.manager);
+      const searchService = new SearchService(typeormAdapter(dataSource));
 
       // main search query
       const { results, totalCount } = await searchService.querySessions({

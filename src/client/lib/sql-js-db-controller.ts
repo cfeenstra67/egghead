@@ -3,6 +3,8 @@ import { DataSource } from "typeorm";
 import { AbstractDBController } from '../../server/abstract-db-controller';
 import { migrations } from "../../migrations";
 import { entities } from "../../models";
+import { SQLConnection } from "../../server/sql-primitives.js";
+import { typeormAdapter } from "../../server/typeorm-adapter.js";
 
 export class SqlJsDBController extends AbstractDBController {
 
@@ -10,7 +12,7 @@ export class SqlJsDBController extends AbstractDBController {
     super();
   }
 
-  protected async createDataSource(): Promise<DataSource> {
+  protected async createConnection(): Promise<SQLConnection> {
     const SQL = await initSqlJs({ locateFile: (file: any) => file });
 
     const dataSource = new DataSource({
@@ -25,12 +27,6 @@ export class SqlJsDBController extends AbstractDBController {
 
     await dataSource.initialize();
 
-    return dataSource;
-  }
-
-  async importDb(database: Uint8Array): Promise<void> {
-    await this.teardownDb();
-    this.database = database;
-    await this.initializeDb();
+    return typeormAdapter(dataSource);
   }
 }

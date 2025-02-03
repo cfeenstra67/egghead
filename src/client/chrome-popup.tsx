@@ -3,11 +3,11 @@ import * as ReactDOM from "react-dom/client";
 import InitialCrawl from "./components/InitialCrawl";
 import Popup from "./Popup";
 import { PopupRuntime } from './lib/runtimes';
-import { ServerClient, processExtensionRequest } from "../server/client";
+import { ServerClient, createExtensionRequestProcessor } from "../server/client";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
-const serverClientFactory = async () => new ServerClient(processExtensionRequest);
+const serverClientFactory = async () => new ServerClient(createExtensionRequestProcessor('background'));
 root.render(
   <InitialCrawl
     isPopup

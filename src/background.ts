@@ -1,8 +1,7 @@
-import { setupObservers } from "./extension/utils";
 import parentLogger from './logger';
+import { createOffscreenClient } from "./server/offscreen-client";
 import { ServerResponseCode } from "./server";
 import { Aborted } from "./server/abort";
-import { createBackgroundClient } from "./server/background-client";
 import { ServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
 import {
@@ -11,10 +10,11 @@ import {
   logJobMiddleware,
   jobLockingMiddleware,
 } from "./server/utils";
+import { setupObservers } from './extension/utils';
 
 const logger = parentLogger.child({ context: 'background' });
 
-const { handle: serverConnection, close: closeServer } = createBackgroundClient();
+const serverConnection = createOffscreenClient();
 const loggingServerConnection = logRequestMiddleware(serverConnection);
 const jobManager = new JobManager({
   middlewares: [logJobMiddleware, jobLockingMiddleware('background-jobs')]
@@ -25,6 +25,10 @@ const serverClient = new ServerClient(managedConnection);
 const observersController = setupObservers(serverClient);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.target && request.target !== 'background') {
+    return;
+  }
+
   if (request.type === 'me') {
     sendResponse(sender.tab?.id);
     return false;
@@ -51,7 +55,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   });
 
   jobManager.jobPromise(requestId)
-    .then(sendResponse)
+    .then((response) => {
+      sendResponse(response);
+    })
     .catch((error) => {
       if (error instanceof Aborted) {
         sendResponse({
@@ -70,10 +76,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-chrome.runtime.onSuspend.addListener(async () => {
-  logger.debug('closing');
-  await closeServer();
-});
+// chrome.runtime.onSuspend.addListener(async () => {
+//   logger.debug('closing');
+//   await closeServer();
+// });
 
 chrome.runtime.onInstalled.addListener(async () => {
   if (DEV_MODE) {
@@ -84,7 +90,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     if (chrome.runtime.lastError) {
       throw chrome.runtime.lastError;
     }
-    tabs.forEach((tab) => {
+    for (const tab of tabs) {
       if (
         tab.id !== undefined &&
         !tab.url?.startsWith('chrome://')
@@ -102,6 +108,6 @@ chrome.runtime.onInstalled.addListener(async () => {
           }
         });
       }
-    });
+    }
   });
 });

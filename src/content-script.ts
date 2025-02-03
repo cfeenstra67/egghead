@@ -1,8 +1,8 @@
 import throttle from 'lodash/throttle';
-import { ServerClient, processExtensionRequest } from "./server/client";
+import { ServerClient, createExtensionRequestProcessor } from "./server/client";
 
 function startContentScript() {
-  const serverClient = new ServerClient(processExtensionRequest);
+  const serverClient = new ServerClient(createExtensionRequestProcessor('background'));
 
   const interactionInterval = 3000;
 

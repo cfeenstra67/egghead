@@ -1,3 +1,4 @@
+import { RawBuilder, sql } from "kysely";
 import queryStringGrammar, {
   QueryStringSemantics,
 } from "./query-string.ohm-bundle";
@@ -218,6 +219,59 @@ export function renderClause<T>({
   });
   const outSql = `(${parts.join(` ${clause.operator} `)})`;
   return [outSql, allParams, paramIndex];
+}
+
+export interface RenderClauseV2Args<T> {
+  clause: Clause<T>;
+  getFieldName?: (fieldName: Keys<T>) => string[];
+}
+
+export function renderClauseV2<T>({
+  clause,
+  getFieldName = (fieldName) => [String(fieldName)],
+}: RenderClauseV2Args<T>): RawBuilder<boolean> {
+  if (isFilter(clause)) {
+    if (clause.operator === BinaryOperator.Equals && clause.value === null) {
+      return sql`${sql.id(...getFieldName(clause.fieldName))} IS NULL`;
+    }
+    if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
+      return sql`${sql.id(...getFieldName(clause.fieldName))} IS NOT NULL`;
+    }
+
+    if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
+      return sql`${sql.id(...getFieldName(clause.fieldName))} ${sql.raw(clause.operator)} (${sql.join(clause.value as any[])})`;
+    }
+
+    return sql`${sql.id(...getFieldName(clause.fieldName))} ${sql.raw(clause.operator)} ${clause.value}`;
+  }
+  if (isUnary(clause)) {
+    const inner = renderClauseV2({
+      clause: clause.clause,
+      getFieldName,
+    });
+
+    return sql`NOT (${inner})`;
+  }
+
+  if (clause.clauses.length === 0) {
+    switch (clause.operator) {
+      case AggregateOperator.And:
+        return sql.lit(true);
+      case AggregateOperator.Or:
+        return sql.lit(false);
+    }
+  }
+
+  const parts = clause.clauses.map((subClause) => {
+    return renderClauseV2({
+      clause: subClause,
+      getFieldName,
+    });
+  });
+
+  const final = parts.reduce((a, b) => sql<boolean>`${a} ${sql.raw(clause.operator)} ${b}`)
+  
+  return sql`(${final})`;
 }
 
 export function clausesEqual<T>(

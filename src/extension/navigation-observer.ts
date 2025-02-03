@@ -24,7 +24,7 @@ export class NavigationObserver {
         saveTime: this.saveTime.getTime(),
       },
     };
-    chrome.storage.local.set(obj, callback);
+    chrome.storage.local.set(obj, callback ?? (() => {}));
   }
 
   loadState(callback: () => void) {

@@ -4,10 +4,12 @@ import { IDBVersionedVFS } from 'wa-sqlite/src/examples/IDBVersionedVFS';
 import { AbstractDBController } from './abstract-db-controller';
 import { migrations } from "../migrations";
 import { entities } from "../models";
+import { SQLConnection } from './sql-primitives';
+import { typeormAdapter } from './typeorm-adapter';
 
 export class WaSqliteDBController extends AbstractDBController {
 
-  protected async createDataSource(): Promise<DataSource> {
+  protected async createConnection(): Promise<SQLConnection> {
     const { default: moduleFactory } = await import('wa-sqlite/dist/wa-sqlite-async.mjs');
     const module = await moduleFactory();
 
@@ -31,10 +33,6 @@ export class WaSqliteDBController extends AbstractDBController {
     await dataSource.query('PRAGMA page_size=8192');
     await dataSource.runMigrations();
 
-    return dataSource;
-  }
-
-  async importDb(database: Uint8Array): Promise<void> {
-    throw new Error('not implemented');
+    return typeormAdapter(dataSource);
   }
 }

@@ -14,7 +14,8 @@
     "tabs",
     "alarms",
     "history",
-    "scripting"
+    "scripting",
+    "offscreen"
   ],
   "chrome_url_overrides": {
     "history": "history.html"

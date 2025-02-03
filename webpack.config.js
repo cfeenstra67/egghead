@@ -177,6 +177,8 @@ module.exports = [
       'content-script': './src/content-script.ts',
       client: './src/client/chrome.tsx',
       popup: './src/client/chrome-popup.tsx',
+      offscreen: './src/offscreen.ts',
+      'offscreen-worker': './src/server/offscreen-worker.ts',
     },
     platform: 'chrome'
   }),

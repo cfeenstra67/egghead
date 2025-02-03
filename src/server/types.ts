@@ -1,5 +1,6 @@
 import type { Clause } from "./clause";
 import type { Session, SettingsItems } from "../models";
+import type { RemoveAnnotations, RemoveRelations } from './sql-primitives';
 
 export enum ServerMessage {
   Ping = "ping",
@@ -106,7 +107,7 @@ export interface QuerySessionsRequest extends BaseRequest {
 }
 
 export interface SessionResponse
-  extends Omit<Session, "startedAt" | "endedAt"> {
+  extends Omit<RemoveAnnotations<RemoveRelations<Session>>, "startedAt" | "endedAt"> {
   childCount: number;
   childTransitions: Record<string, string>;
   highlightedTitle: string;
@@ -277,3 +278,7 @@ export interface WorkerResponse<T extends ServerMessage> {
   requestId: string;
   response: ServerResponseForMessageWithCode<T>;
 }
+
+export type WorkerHandler = <T extends ServerMessage>(
+  input: WorkerRequest<T> | WorkerAbortRequest
+) => Promise<WorkerResponse<T>>;

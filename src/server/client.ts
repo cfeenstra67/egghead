@@ -45,26 +45,27 @@ import type {
   ApplyRetentionPolicyResponse,
 } from "./types";
 
-// For use in a web page
-export const processExtensionRequest: RequestHandler = (request) => {
-  // Abort won't work yet :(
-  const { abort, ...baseRequest } = request;
-  const requestId = uuidv4();
-
-  abort?.addEventListener('abort', () => {
-    chrome.runtime.sendMessage({ type: 'abort', requestId });
-  });
-
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ requestId, request: baseRequest }, (response) => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(response);
-      }
+// For use in a web page or from background to offscreen communication
+export function createExtensionRequestProcessor(target: 'background' | 'offscreen'): RequestHandler {
+  return (request) => {
+    const { abort, ...baseRequest } = request;
+    const requestId = uuidv4();
+  
+    abort?.addEventListener('abort', () => {
+      chrome.runtime.sendMessage({ type: 'abort', requestId, target });
     });
-  });
-};
+  
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ requestId, request: baseRequest, target }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  };
+}
 
 export class ServerClient implements ServerInterface {
   constructor(readonly processRequest: RequestHandler) {}

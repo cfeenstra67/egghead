@@ -1,12 +1,9 @@
 import chunk from 'lodash/chunk';
-import { DataSource, Repository, IsNull, In, LessThan } from "typeorm";
-import { SqljsDriver } from "typeorm/driver/sqljs/SqljsDriver";
 import { v4 as uuidv4 } from "uuid";
 import { maybeAbort } from './abort';
 import parentLogger from '../logger';
-import { Session, SessionIndex, SessionTermIndex, Settings } from "../models";
-import { createFts5Index, dropFts5Index } from "../models/fts5";
-import { SearchService, sessionIndexTableArgs } from "./search";
+import { Session as TypeORMSession, Settings } from "../models";
+import { SearchService } from "./search";
 import {
   ServerInterface,
   PingRequest,
@@ -45,6 +42,12 @@ import {
   ApplyRetentionPolicyResponse,
 } from "./types";
 import { cleanURL, getHost, defaultSettings } from "./utils";
+import { createQueryBuilder, executeQuery, QueryBuilder, RemoveAnnotations, RemoveRelations, SQLConnection } from './sql-primitives';
+import { Insertable } from 'kysely';
+
+type Session = RemoveAnnotations<RemoveRelations<TypeORMSession>>;
+
+type InsertSession = Insertable<RemoveRelations<TypeORMSession>>;
 
 const logger = parentLogger.child({ context: 'service' });
 
@@ -96,13 +99,14 @@ function shouldIndex(url: string): boolean {
 const GhostSessionTabId = -12;
 
 export class Server implements ServerInterface {
-  private searchService: SearchService;
+  private readonly searchService: SearchService;
+  private readonly queryBuilder: QueryBuilder;
 
   constructor(
-    readonly dataSource: DataSource,
-    readonly importDb: (database: Uint8Array) => Promise<void>,
+    readonly connection: SQLConnection,
   ) {
-    this.searchService = new SearchService(dataSource);
+    this.searchService = new SearchService(connection);
+    this.queryBuilder = createQueryBuilder();
   }
 
   async ping(request: PingRequest): Promise<PingResponse> {
@@ -110,37 +114,41 @@ export class Server implements ServerInterface {
   }
 
   async runQuery(request: QueryRequest): Promise<QueryResponse> {
-    const result = await this.dataSource.manager.query(request.query);
-    return { result };
+    const result = await this.connection(request.query);
+    return { result: result as any[] };
   }
 
   private async getActiveSession(
     tabId: number,
-    repo: Repository<Session>,
     now?: Date,
   ): Promise<Session | undefined> {
     if (now === undefined) {
       now = new Date();
     }
-    const existingSessions = await repo.find({
-      where: {
-        tabId,
-        endedAt: IsNull(),
-      },
-      order: {
-        startedAt: "DESC",
-      },
-    });
+
+    const existingSessionsBuilder = this.queryBuilder
+      .selectFrom('session')
+      .selectAll()
+      .where('tabId', '=', tabId)
+      .where('endedAt', 'is', null)
+      .orderBy('startedAt desc');
+
+    const existingSessions = await executeQuery(existingSessionsBuilder, this.connection);
+
     // End any other active session(s) for the tab; data cleanup
     if (existingSessions.length > 1) {
       const urls = existingSessions.map((session) => session.url).join(", ");
       logger.warn(
         `More than one session found for tab ${tabId}; urls: ${urls}.`
       );
-      for (const session of existingSessions.slice(1)) {
-        session.endedAt = now;
-        await repo.save(session);
-      }
+      const ids = existingSessions.slice(1).map((session) => session.id);
+
+      const updateBuilder = this.queryBuilder
+        .updateTable('session')
+        .where('id', 'in', ids)
+        .set({ endedAt: now });
+
+      await executeQuery(updateBuilder, this.connection);
     }
     return existingSessions[0];
   }
@@ -151,47 +159,47 @@ export class Server implements ServerInterface {
       return {};
     }
 
-    return await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
-      const now = new Date();
-      const existingSession = await this.getActiveSession(
-        request.tabId,
-        repo,
+    // const repo = manager.getRepository(Session);
+    const now = new Date();
+    const existingSession = await this.getActiveSession(
+      request.tabId,
+      now
+    );
+    maybeAbort(request.abort);
+    let sourceSessionId: string | undefined = undefined;
+    const transitionType: string | undefined =
+      request.transitionType || "link";
+
+    if (
+      request.sourceTabId !== undefined &&
+      request.sourceTabId !== request.tabId
+    ) {
+      const sourceSession = await this.getActiveSession(
+        request.sourceTabId,
         now
       );
       maybeAbort(request.abort);
-      let sourceSessionId: string | undefined = undefined;
-      const transitionType: string | undefined =
-        request.transitionType || "link";
+      sourceSessionId = sourceSession?.id;
+    }
 
-      if (
-        request.sourceTabId !== undefined &&
-        request.sourceTabId !== request.tabId
-      ) {
-        const sourceSession = await this.getActiveSession(
-          request.sourceTabId,
-          repo,
-          now
-        );
-        maybeAbort(request.abort);
-        sourceSessionId = sourceSession?.id;
+    const existingSessionDiff: Partial<Session> = {};
+    if (existingSession) {
+      // Check if session hasn't changed.
+      const cleanUrl = cleanURL(request.url);
+      if (cleanURL(existingSession.url) === cleanUrl) {
+        return {};
       }
-
-      if (existingSession) {
-        // Check if session hasn't changed.
-        const cleanUrl = cleanURL(request.url);
-        if (cleanURL(existingSession.url) === cleanUrl) {
-          return {};
-        }
-        // Otherwise: use as source unless it's already defined
-        if (sourceSessionId === undefined) {
-          sourceSessionId = existingSession.id;
-        }
-        // either way, mark as done; we'll save it later
-        existingSession.endedAt = now;
+      // Otherwise: use as source unless it's already defined
+      if (sourceSessionId === undefined) {
+        sourceSessionId = existingSession.id;
       }
+      // either way, mark as done; we'll save it later
+      existingSessionDiff.endedAt = now;
+    }
 
-      const newSession = repo.create({
+    const insertBuilder = this.queryBuilder
+      .insertInto('session')
+      .values({
         id: uuidv4(),
         tabId: request.tabId,
         url: cleanURL(request.url),
@@ -203,73 +211,89 @@ export class Server implements ServerInterface {
         transitionType,
         interactionCount: 0,
         lastInteractionAt: now,
-      });
+      })
+      .returningAll();
 
-      await repo.save(newSession);
-      maybeAbort(request.abort);
+    insertBuilder.compile()
 
-      if (existingSession && sourceSessionId === existingSession.id) {
-        existingSession.nextSessionId = newSession.id;
-      }
-      if (existingSession) {
-        await repo.save(existingSession);
-      }
-      return {};
-    });
+    const [newSession] = await executeQuery(insertBuilder, this.connection);
+    maybeAbort(request.abort);
+
+    if (existingSession && sourceSessionId === existingSession.id) {
+      existingSessionDiff.nextSessionId = newSession.id;
+    }
+    if (existingSession && Object.keys(existingSessionDiff).length > 0) {
+      const updateBuilder = this.queryBuilder
+        .updateTable('session')
+        .where('id', '=', existingSession.id)
+        .set(existingSessionDiff);
+
+      await executeQuery(updateBuilder, this.connection);
+    }
+    return {};
   }
 
   async tabClosed(request: TabClosedRequest): Promise<TabClosedResponse> {
     const now = new Date();
-    return await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
-      const existingSession = await this.getActiveSession(
-        request.tabId,
-        repo,
-        now
-      );
-      maybeAbort(request.abort);
-      if (existingSession === undefined) {
-        logger.warn(`No active session exists for tab ${request.tabId}`);
-        return {};
-      }
-      existingSession.endedAt = now;
-      await repo.save(existingSession);
+
+    const existingSession = await this.getActiveSession(
+      request.tabId,
+      now
+    );
+    maybeAbort(request.abort);
+    if (existingSession === undefined) {
+      logger.warn(`No active session exists for tab ${request.tabId}`);
       return {};
-    });
+    }
+
+    const updateBuilder = this.queryBuilder
+      .updateTable('session')
+      .where('id', '=', existingSession.id)
+      .set({ endedAt: now });
+
+    await executeQuery(updateBuilder, this.connection);
+
+    return {};
   }
 
   async tabInteraction(
     request: TabInteractionRequest
   ): Promise<TabInteractionResponse> {
     const now = new Date();
-    return await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
-      const existingSession = await this.getActiveSession(
-        request.tabId,
-        repo,
-        now
-      );
-      maybeAbort(request.abort);
-      if (existingSession === undefined) {
-        logger.warn(`No active session exists for tab ${request.tabId}`);
-        return {};
-      }
-      if (!request.url || cleanURL(request.url) !== existingSession.url) {
-        logger.warn(`Invalid URL for tab ${request.tabId}.`);
-        return {};
-      }
 
-      existingSession.interactionCount += 1;
-      existingSession.lastInteractionAt = now;
-      if (request.title) {
-        existingSession.title = request.title;
-      }
-      if (request.url) {
-        existingSession.rawUrl = request.url;
-      }
-      await manager.save(existingSession);
-      return {}
-    });
+    const existingSession = await this.getActiveSession(
+      request.tabId,
+      now
+    );
+    maybeAbort(request.abort);
+    if (existingSession === undefined) {
+      logger.warn(`No active session exists for tab ${request.tabId}`);
+      return {};
+    }
+    if (!request.url || cleanURL(request.url) !== existingSession.url) {
+      logger.warn(`Invalid URL for tab ${request.tabId}.`);
+      return {};
+    }
+
+    const diff: Partial<Session> = {
+      interactionCount: existingSession.interactionCount + 1,
+      lastInteractionAt: now,
+    }
+    if (request.title) {
+      diff.title = request.title;
+    }
+    if (request.url) {
+      diff.rawUrl = request.url;
+    }
+
+    const updateBuilder = this.queryBuilder
+      .updateTable('session')
+      .where('id', '=', existingSession.id)
+      .set(diff);
+
+    await executeQuery(updateBuilder, this.connection);
+
+    return {};
   }
 
   async querySessions(
@@ -293,215 +317,224 @@ export class Server implements ServerInterface {
   async exportDatabase(
     request: ExportDatabaseRequest
   ): Promise<ExportDatabaseResponse> {
-    const driver = this.dataSource.driver as SqljsDriver;
-    const database = new Blob([driver.export()]);
-    const databaseUrl = URL.createObjectURL(database);
-    return {
-      databaseUrl,
-    };
+    throw new Error('not implemented');
   }
 
   async regenerateIndex(
     request: RegenerateIndexRequest
   ): Promise<RegenerateIndexResponse> {
-    const searchIndexArgs = sessionIndexTableArgs(
-      this.dataSource,
-      SessionIndex,
-      "trigram"
-    );
-    const termIndexArgs = sessionIndexTableArgs(
-      this.dataSource,
-      SessionTermIndex
-    );
-
-    const runner = this.dataSource.createQueryRunner();
-    await runner.startTransaction();
-
-    for (const args of [searchIndexArgs, termIndexArgs]) {
-      await dropFts5Index(args, runner);
-      maybeAbort(request.abort);
-      await createFts5Index(args, runner);
-      maybeAbort(request.abort);
-    }
-
-    await runner.commitTransaction();
-    return {};
-  }
-
-  private async getOrCreateSettings(repo: Repository<Settings>): Promise<Settings> {
-    const allItems = await repo.find();
-    if (allItems.length > 1) {
-      logger.warn(`Found ${allItems.length} settings items, expecting one. Deleting other.`);
-      for (const item of allItems.slice(1)) {
-        await repo.delete(item);
-      }
-    }
-    if (allItems.length !== 0) {
-      return allItems[0];
-    }
-    const now = new Date();
-    const settings = repo.create({
-      ...defaultSettings(),
-      createdAt: now,
-      updatedAt: now,
-    });
-    await repo.save(settings);
-    return settings;
-  }
-
-  async getSettings(
-    request: GetSettingsRequest
-  ): Promise<GetSettingsResponse> {
-    const repo = this.dataSource.getRepository(Settings);
-    return { settings: await this.getOrCreateSettings(repo) };
-  }
-
-  async updateSettings(
-    request: UpdateSettingsRequest
-  ): Promise<UpdateSettingsResponse> {
-    const repo = this.dataSource.getRepository(Settings);
-    const settings = await this.getOrCreateSettings(repo);
-    maybeAbort(request.abort);
-    Object.assign(settings, request.settings);
-    settings.updatedAt = new Date();
-    await repo.save(settings);
-    return { settings };
+    throw new Error('not implemented');
   }
 
   async importDatabase(
     request: ImportDatabaseRequest
   ): Promise<ImportDatabaseResponse> {
-    const blob = dataURItoBlob(request.databaseUrl);
-    const array = new Uint8Array(await blob.arrayBuffer());
-    await this.importDb(array);
-    return {};
+    throw new Error('not implemented');
+  }
+
+  private async getOrCreateSettings(): Promise<Settings> {
+    const existingBuilder = this.queryBuilder
+      .selectFrom('settings')
+      .selectAll();
+
+    const allItems = await executeQuery(existingBuilder, this.connection);
+    if (allItems.length > 1) {
+      logger.warn(`Found ${allItems.length} settings items, expecting one. Deleting other.`);
+      const ids = allItems.slice(1).map((item) => item.id);
+
+      const deleteBuilder = this.queryBuilder
+        .deleteFrom('settings')
+        .where('id', 'in', ids);
+
+      await executeQuery(deleteBuilder, this.connection);
+    }
+    if (allItems.length !== 0) {
+      return allItems[0];
+    }
+    const now = new Date();
+
+    console.log('before?');
+
+    const insertBuilder = this.queryBuilder
+      .insertInto('settings')
+      .values({
+        id: uuidv4(),
+        ...defaultSettings(),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returningAll();
+
+    console.log('after?', insertBuilder.compile());
+
+    const [newSettings] = await executeQuery(insertBuilder, this.connection);
+
+    return newSettings;
+  }
+
+  async getSettings(
+    request: GetSettingsRequest
+  ): Promise<GetSettingsResponse> {
+    return { settings: await this.getOrCreateSettings() };
+  }
+
+  async updateSettings(
+    request: UpdateSettingsRequest
+  ): Promise<UpdateSettingsResponse> {
+    const settings = await this.getOrCreateSettings();
+    maybeAbort(request.abort);
+
+    const updateBuilder = this.queryBuilder
+      .updateTable('settings')
+      .where('id', '=', settings.id)
+      .set({ ...request.settings, updatedAt: new Date() })
+      .returningAll();
+    
+    const [newSettings] = await executeQuery(updateBuilder, this.connection);
+
+    return { settings: newSettings };
   }
 
   async correlateChromeVisit(
     request: CorrelateChromeVisitRequest
   ): Promise<CorrelateChromeVisitResponse> {
-    return await this.dataSource.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
-      const existingSession = await repo.findOne({
-        where: { id: request.sessionId },
-      });
-      maybeAbort(request.abort);
-      if (existingSession === null) {
-        logger.warn(`No session found: ${request.sessionId}`);
-        return {};
-      }
-      if (existingSession.chromeVisitId) {
-        if (existingSession.chromeVisitId !== request.visitId) {
-          logger.warn(`Session already had a visit id: ${request.sessionId}`);
-        }
-        return {};
-      }
-      existingSession.chromeVisitId = request.visitId;
-      existingSession.chromeReferringVisitId = request.referringVisitId;
-      if (request.referringVisitId) {
-        existingSession.transitionType = request.transition ?? 'link';
-      }
-      await manager.save(existingSession);
-      maybeAbort(request.abort);
-      // Delete any associated ghost session(s) when we correlate a visit
-      // should only be 1, but making this robust to duplicates
-      const ghostSessions = await repo.find({
-        where: {
-          chromeVisitId: request.visitId,
-          tabId: GhostSessionTabId,
-        }
-      });
-      maybeAbort(request.abort);
-      for (const session of ghostSessions) {
-        await manager.remove(session);
-        maybeAbort(request.abort);
+    const existingSessionBuilder = this.queryBuilder
+      .selectFrom('session')
+      .selectAll()
+      .where('id', '=', request.sessionId);
+
+    const [existingSession] = await executeQuery(existingSessionBuilder, this.connection);
+    maybeAbort(request.abort);
+    if (!existingSession) {
+      logger.warn(`No session found: ${request.sessionId}`);
+      return {};
+    }
+    if (existingSession.chromeVisitId) {
+      if (existingSession.chromeVisitId !== request.visitId) {
+        logger.warn(`Session already had a visit id: ${request.sessionId}`);
       }
       return {};
-    });
+    }
+
+    const diff: Partial<Session> = {};
+    diff.chromeVisitId = request.visitId;
+    diff.chromeReferringVisitId = request.referringVisitId ?? null;
+    if (request.referringVisitId) {
+      diff.transitionType = request.transition ?? 'link';
+    }
+
+    const updateBuilder = this.queryBuilder
+      .updateTable('session')
+      .where('id', '=', existingSession.id)
+      .set(diff)
+
+    await executeQuery(updateBuilder, this.connection);
+    maybeAbort(request.abort);
+    // Delete any associated ghost session(s) when we correlate a visit
+    // should only be 1, but making this robust to duplicates
+    const ghostSessionBuilder = this.queryBuilder
+      .selectFrom('session')
+      .where('chromeVisitId', '=', request.visitId)
+      .where('tabId', '=', GhostSessionTabId)
+      .select('id');
+
+    const ghostSessions = await executeQuery(ghostSessionBuilder, this.connection);
+    maybeAbort(request.abort);
+
+    const ids = ghostSessions.map((session) => session.id);
+    const deleteBuilder = this.queryBuilder
+      .deleteFrom('session')
+      .where('id', 'in', ids);
+
+    await executeQuery(deleteBuilder, this.connection);
+    return {};
   }
 
   async createGhostSessions(
     request: CreateGhostSessionsRequest
   ): Promise<CreateGhostSessionsResponse> {
-    return await this.dataSource.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(Session);
+    const visitIds = request.sessions.map((session) => session.visitId);
+    const referringVisitIds = request.sessions.flatMap((session) => {
+      if (session.referringVisitId && session.referringVisitId !== '0') {
+        return [session.referringVisitId];
+      }
+      return [];
+    });
 
-      const visitIds = request.sessions.map((session) => session.visitId);
-      const referringVisitIds = request.sessions.flatMap((session) => {
-        if (session.referringVisitId && session.referringVisitId !== '0') {
-          return [session.referringVisitId];
-        }
+    const existingSessionsBuilder = this.queryBuilder
+      .selectFrom('session')
+      .selectAll()
+      .where('chromeVisitId', 'in', visitIds.concat(referringVisitIds))
+      .where('tabId', '=', GhostSessionTabId);
+
+    const existingSessions = await executeQuery(existingSessionsBuilder, this.connection);
+    maybeAbort(request.abort);
+
+    const existingSessionMap = Object.fromEntries(existingSessions.map((session) => {
+      return [session.chromeVisitId, session];
+    }));
+
+    const newSessions = request.sessions.flatMap((session) => {
+      if (!shouldIndex(session.url)) {
+        logger.debug(`Not indexing url: ${session.url}`);
         return [];
-      });
-
-      const existingSessions = await repo.find({
-        where: {
-          chromeVisitId: In(visitIds.concat(referringVisitIds)),
-          tabId: GhostSessionTabId,
-        }
-      });
-      maybeAbort(request.abort);
-
-      const existingSessionMap = Object.fromEntries(existingSessions.map((session) => {
-        return [session.chromeVisitId, session];
-      }));
-
-      const newSessions = request.sessions.flatMap((session) => {
-        if (!shouldIndex(session.url)) {
-          logger.debug(`Not indexing url: ${session.url}`);
-          return [];
-        }
-
-        const existingSession = existingSessionMap[session.visitId];
-        if (existingSession) {
-          const isGhostSession = existingSession.tabId === GhostSessionTabId;
-          logger.debug(
-            `Session already exists for ${session.visitId}: ` +
-            `${existingSession.id}. Ghost: ${isGhostSession}`
-          );
-          return [];
-        }
-
-        let referringSessionId: string | undefined = undefined;
-        let referringSessionTransition: string | undefined = undefined;
-        if (session.referringVisitId && session.referringVisitId !== '0') {
-          referringSessionTransition = session.transition ?? 'link';
-          const referringSession = existingSessionMap[session.referringVisitId];
-          if (referringSession) {
-            referringSessionId = referringSession.id;
-          } else {
-            logger.debug(`No session found for visit: ${session.referringVisitId}`);
-          }
-        }
-
-        const visitDate = new Date(session.visitTime);
-        const newSession = repo.create({
-          id: uuidv4(),
-          tabId: GhostSessionTabId,
-          url: cleanURL(session.url),
-          rawUrl: session.url,
-          host: getHost(session.url),
-          title: session.title,
-          startedAt: visitDate,
-          endedAt: visitDate,
-          parentSessionId: referringSessionId,
-          transitionType: referringSessionTransition,
-          interactionCount: 0,
-          lastInteractionAt: visitDate,
-          chromeVisitId: session.visitId,
-          chromeReferringVisitId: session.referringVisitId,
-        });
-        return [newSession];
-      });
-
-      logger.debug(`Saving ${newSessions.length} sessions`);
-      const chunkSize = 100;
-      for (const sessions of chunk(newSessions, chunkSize)) {
-        await manager.save(sessions);
       }
 
-      return {};
+      const existingSession = existingSessionMap[session.visitId];
+      if (existingSession) {
+        const isGhostSession = existingSession.tabId === GhostSessionTabId;
+        logger.debug(
+          `Session already exists for ${session.visitId}: ` +
+          `${existingSession.id}. Ghost: ${isGhostSession}`
+        );
+        return [];
+      }
+
+      let referringSessionId: string | undefined = undefined;
+      let referringSessionTransition: string | undefined = undefined;
+      if (session.referringVisitId && session.referringVisitId !== '0') {
+        referringSessionTransition = session.transition ?? 'link';
+        const referringSession = existingSessionMap[session.referringVisitId];
+        if (referringSession) {
+          referringSessionId = referringSession.id;
+        } else {
+          logger.debug(`No session found for visit: ${session.referringVisitId}`);
+        }
+      }
+
+      const visitDate = new Date(session.visitTime);
+
+      const newSession: InsertSession = {
+        id: uuidv4(),
+        tabId: GhostSessionTabId,
+        url: cleanURL(session.url),
+        rawUrl: session.url,
+        host: getHost(session.url),
+        title: session.title,
+        startedAt: visitDate,
+        endedAt: visitDate,
+        parentSessionId: referringSessionId,
+        transitionType: referringSessionTransition,
+        interactionCount: 0,
+        lastInteractionAt: visitDate,
+        chromeVisitId: session.visitId,
+        chromeReferringVisitId: session.referringVisitId,
+      };
+
+      return [newSession];
     });
+
+    logger.debug(`Saving ${newSessions.length} sessions`);
+    const chunkSize = 100;
+    for (const sessions of chunk(newSessions, chunkSize)) {
+      const insertBuilder = this.queryBuilder
+        .insertInto('session')
+        .values(sessions);
+
+      await executeQuery(insertBuilder, this.connection);
+    }
+
+    return {};
   }
 
   async fixChromeParents(
@@ -535,7 +568,7 @@ export class Server implements ServerInterface {
     let done = false;
     let total = 0;
     while (!done) {
-      const results = await this.dataSource.query(query);
+      const results = await this.connection(query);
       logger.debug(`Fixed ${results.length} chrome parents`);
       total += results.length;
       done = results.length < limit;
@@ -548,19 +581,19 @@ export class Server implements ServerInterface {
   }
 
   async applyRetentionPolicy(request: ApplyRetentionPolicyRequest): Promise<ApplyRetentionPolicyResponse> {
-    return await this.dataSource.manager.transaction(async (manager) => {
-      const settingsRepo = manager.getRepository(Settings);
-      const settings = await this.getOrCreateSettings(settingsRepo);
+    const settings = await this.getOrCreateSettings();
 
-      const now = new Date();
-      const interval = settings.retentionPolicyMonths * 30 * 24 * 60 * 60 * 1000;
-      const policyStart = new Date(now.getTime() - interval);
+    const now = new Date();
+    const interval = settings.retentionPolicyMonths * 30 * 24 * 60 * 60 * 1000;
+    const policyStart = new Date(now.getTime() - interval);
 
-      const sessionRepo = manager.getRepository(Session);
-      await sessionRepo.delete({ startedAt: LessThan(policyStart) });
+    const deleteBuilder = this.queryBuilder
+      .deleteFrom('session')
+      .where('startedAt', '<', policyStart);
 
-      return {};
-    });
+    await executeQuery(deleteBuilder, this.connection);
+
+    return {};
   }
 
 }

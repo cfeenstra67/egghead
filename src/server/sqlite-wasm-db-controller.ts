@@ -1,6 +1,7 @@
 import sqlite3InitModule, {
   type OpfsDatabase,
   type Sqlite3Static,
+  type Database,
 } from "@sqlite.org/sqlite-wasm";
 import { executeDdl } from "../models/ddl";
 import { AbstractDBController } from "./abstract-db-controller";
@@ -11,6 +12,26 @@ type OPFSBackend = { type: "opfs"; path: string };
 type InMemoryBackend = { type: "memory" };
 
 type Backend = OPFSBackend | InMemoryBackend;
+
+function loadInMemoryDb(
+  sqlite3: Sqlite3Static,
+  db: Database,
+  array: Uint8Array,
+): void {
+  const p = sqlite3.wasm.allocFromTypedArray(array);
+  const flags =
+    sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE |
+    sqlite3.capi.SQLITE_DESERIALIZE_RESIZEABLE;
+  const rc = sqlite3.capi.sqlite3_deserialize(
+    db.pointer!,
+    "main",
+    p,
+    array.byteLength,
+    array.byteLength,
+    flags,
+  );
+  db.checkRc(rc);
+}
 
 export class SQLiteWASMDBController extends AbstractDBController {
   private sqlite3: Sqlite3Static | null = null;
@@ -27,7 +48,7 @@ export class SQLiteWASMDBController extends AbstractDBController {
 
     let db: OpfsDatabase;
     if (this.backend.type === "memory") {
-      db = new this.sqlite3.oo1.DB();
+      db = new this.sqlite3.oo1.DB({ filename: ":memory:" });
     } else {
       db = new this.sqlite3.oo1.OpfsDb(this.backend.path);
     }
@@ -70,10 +91,16 @@ export class SQLiteWASMDBController extends AbstractDBController {
     };
 
     returnFunc.import = async (data) => {
-      if (this.backend.type !== "opfs") {
-        throw new Error("Not implemented");
+      if (this.backend.type === "opfs") {
+        await this.sqlite3!.oo1.OpfsDb.importDb(this.backend.path, data);
+        return;
       }
-      await this.sqlite3!.oo1.OpfsDb.importDb(this.backend.path, data);
+      if (this.backend.type === "memory") {
+        loadInMemoryDb(this.sqlite3!, db, data);
+        return;
+      }
+      const _: never = this.backend;
+      throw new Error("not implemented");
     };
 
     await executeDdl(returnFunc);

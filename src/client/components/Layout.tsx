@@ -1,35 +1,29 @@
-import { useMemo } from "react";
-import { useTheme } from "../lib/theme";
-import styles from "../styles/Layout.module.css";
-import themes from "../styles/themes.module.css";
+import { Toaster } from "../components-v2/ui/toaster";
+import { TooltipProvider } from "../components-v2/ui/tooltip";
+import { themeClasses, useTheme } from "../lib/theme";
+import { cn } from "../lib/utils";
 import NavBar from "./NavBar";
 
 export interface LayoutProps {
-  full?: boolean;
   children: React.ReactNode | React.ReactNode[];
+  searchDisabled?: boolean;
 }
 
-export function useLayoutClassNames(): string[] {
+export default function Layout({ children, searchDisabled }: LayoutProps) {
   const theme = useTheme();
 
-  return useMemo(() => {
-    const result = themes[theme];
-    return [styles.layout, result ?? themes.dark];
-  }, [theme]);
-}
-
-export default function Layout({ children, full }: LayoutProps) {
-  const layoutClassNames = useLayoutClassNames();
-
-  const contentClassNames = [
-    styles.content,
-    full ? styles.contentFull : styles.contentWithSidebar,
-  ];
-
   return (
-    <div className={layoutClassNames.join(" ")}>
-      <NavBar />
-      <div className={contentClassNames.join(" ")}>{children}</div>
-    </div>
+    <TooltipProvider>
+      <div
+        className={cn(
+          "flex min-h-screen flex-col bg-background text-foreground dark text-base",
+          themeClasses[theme],
+        )}
+      >
+        <NavBar searchDisabled={searchDisabled} />
+        <div className="flex flex-1 overflow-hidden h-full">{children}</div>
+        <Toaster />
+      </div>
+    </TooltipProvider>
   );
 }

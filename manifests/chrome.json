@@ -26,9 +26,15 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Y"
+        "default": "Ctrl+E"
       },
       "description": "Open popup"
+    },
+    "open-history": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E"
+      },
+      "description": "Open history"
     }
   }
 }

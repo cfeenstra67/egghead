@@ -67,7 +67,7 @@ export class TabObserver {
           transitionType: event.detail.transitionType,
         }),
       );
-      logger.info("Tab changed %s", response);
+      logger.info("Tab %s changed; response: %s", tab, response);
     });
   }
 
@@ -76,7 +76,7 @@ export class TabObserver {
     removeInfo: chrome.tabs.TabRemoveInfo,
   ): Promise<void> {
     const response = await this.server.tabClosed({ tabId });
-    logger.info("Tab closed %s", response);
+    logger.info("Tab %s closed; response: %s", tabId, response);
   }
 
   async cleanupSessions(): Promise<void> {

@@ -21,6 +21,7 @@ export enum ServerMessage {
   UpdateSettings = "updateSettings",
   FixChromeParents = "fixChromeParents",
   ApplyRetentionPolicy = "applyRetentionPolicy",
+  DeleteSessions = "deleteSessions",
 }
 
 export enum ServerResponseCode {
@@ -102,6 +103,7 @@ export type CreateGhostSessionsResponse = {};
 export interface QuerySessionsRequest extends BaseRequest {
   query?: string;
   filter?: Clause<Session>;
+  childFilter?: Clause<Session>;
   skip?: number;
   limit?: number;
   isSearch?: boolean;
@@ -195,6 +197,16 @@ export interface ApplyRetentionPolicyRequest extends BaseRequest {}
 
 export type ApplyRetentionPolicyResponse = {};
 
+export interface DeleteSessionsRequest extends BaseRequest {
+  query?: string;
+  filter?: Clause<Session>;
+  deleteCorrespondingChromeHistory?: boolean;
+}
+
+export interface DeleteSessionsResponse extends BaseRequest {
+  deletedSessionIds: string[];
+}
+
 export type ServerMessageMapping = {
   [ServerMessage.Ping]: [PingRequest, PingResponse];
   [ServerMessage.Query]: [QueryRequest, QueryResponse];
@@ -247,6 +259,10 @@ export type ServerMessageMapping = {
     ApplyRetentionPolicyResponse,
   ];
   [ServerMessage.ResetDatabase]: [BaseRequest, {}];
+  [ServerMessage.DeleteSessions]: [
+    DeleteSessionsRequest,
+    DeleteSessionsResponse,
+  ];
 };
 
 export type ServerRequestForMessage<T> = T extends ServerMessage

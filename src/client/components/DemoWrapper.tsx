@@ -1,7 +1,5 @@
 import { useState } from "react";
-import styles from "../styles/DemoWrapper.module.css";
 import InitialLoad from "./InitialLoad";
-import { useLayoutClassNames } from "./Layout";
 import RadioSelect from "./RadioSelect";
 
 export interface DemoWrapperProps {
@@ -12,18 +10,14 @@ export interface DemoWrapperProps {
 export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
   const [currentValue, setCurrentValue] = useState<string | null>(null);
 
-  const layoutClassNames = useLayoutClassNames();
-
   return currentValue === "demo-full" ? (
     <InitialLoad dbUrl="demo.db" getApp={getApp} isPopup={isPopup} />
   ) : currentValue === "demo-small" ? (
     <InitialLoad dbUrl="demo-small.db" getApp={getApp} isPopup={isPopup} />
   ) : (
-    <div className={layoutClassNames.join(" ")}>
-      <div className={styles.content}>
-        <div className={styles.title}>
-          <h1>Welcome!</h1>
-        </div>
+    <main className="flex-1 overflow-hidden min-h-full p-4 max-w-[700px] mx-auto">
+      <div className="rounded-xl border shadow p-6 flex flex-col gap-4 gap-y-6 mt-4">
+        <h1 className="text-2xl font-semibold">Welcome!</h1>
         <p>
           This is a live demo for the Egghead history extension. Since this is
           just a regular web page and can{"'"}t access your <i>actual</i>{" "}
@@ -56,6 +50,7 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
             href="https://docs.egghead.camfeenstra.com"
             target="_blank"
             rel="noreferrer"
+            className="underline"
           >
             documentation
           </a>{" "}
@@ -64,6 +59,7 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
             href="https://github.com/cfeenstra67/egghead"
             target="_blank"
             rel="noreferrer"
+            className="underline"
           >
             github repo
           </a>
@@ -76,12 +72,13 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
             href="https://www.camfeenstra.com"
             target="_blank"
             rel="noreferrer"
+            className="underline"
           >
             my personal website
           </a>
           .
         </p>
-        <div className={styles.badges}>
+        <div className="flex gap-4 items-center mx-auto">
           <a
             href="https://chrome.google.com/webstore/detail/egghead-history/gnbambehlmjiemgkmekipjgooacicknb"
             target="_blank"
@@ -98,6 +95,6 @@ export default function DemoWrapper({ getApp, isPopup }: DemoWrapperProps) {
           </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

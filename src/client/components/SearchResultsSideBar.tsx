@@ -1,55 +1,26 @@
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
+import { ChevronUp, Globe, Hash, Search } from "lucide-react";
+import { useCallback, useContext, useState } from "react";
 import type {
   QuerySessionFacetsFacetValue,
   QuerySessionsRequest,
 } from "../../server";
-import CloseCircle from "../icons/close-circle.svg";
-import DropdownIcon from "../icons/dropdown.svg";
+import { Badge } from "../components-v2/ui/badge";
+import { Button } from "../components-v2/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../components-v2/ui/collapsible";
+import { Input } from "../components-v2/ui/input";
+import { ScrollArea } from "../components-v2/ui/scroll-area";
+import { Spinner } from "../components-v2/ui/spinner";
 import { AppContext } from "../lib";
-import styles from "../styles/SideBar.module.css";
-import SideBar, { SideBarComponent } from "./SideBar";
-import Spinner from "./Spinner";
-import Word from "./Word";
-
-interface CollapsibleComponentProps {
-  title: React.ReactNode;
-  clearable?: boolean;
-  onClear?: () => void;
-  children?: React.ReactNode;
-}
-
-function CollapsibleComponent({
-  title,
-  children,
-  clearable,
-  onClear,
-}: CollapsibleComponentProps) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  return (
-    <SideBarComponent>
-      <div
-        className={`${styles.collapsibleSideBarTitle} ${
-          collapsed ? styles.collapsed : ""
-        }`}
-      >
-        <DropdownIcon
-          onClick={() => setCollapsed(!collapsed)}
-          className={styles.icon}
-        />
-        <span>{title}</span>
-        {clearable && (
-          <CloseCircle className={styles.icon} onClick={() => onClear?.()} />
-        )}
-      </div>
-      <div className={styles.collapsibleSideBarContent}>
-        {!collapsed && children}
-      </div>
-    </SideBarComponent>
-  );
-}
+import { cn } from "../lib/utils";
 
 interface HostsComponentProps {
+  disabled?: boolean;
   loading?: boolean;
   hosts: QuerySessionFacetsFacetValue[];
   partialCount?: number;
@@ -58,6 +29,7 @@ interface HostsComponentProps {
 }
 
 function HostsComponent({
+  disabled,
   loading,
   hosts,
   selectedHosts,
@@ -66,10 +38,20 @@ function HostsComponent({
 }: HostsComponentProps) {
   const [partialExpanded, setPartialExpanded] = useState<boolean>(false);
   const selectedHostsSet = new Set(selectedHosts);
+  const [hostFilter, setHostFilter] = useState("");
 
   const partial = partialCount ?? 5;
-  const head = partialExpanded ? hosts : hosts.slice(0, partial);
-  const tail = partialExpanded ? [] : hosts.slice(partial);
+
+  const filteredHosts = hostFilter
+    ? hosts.filter((h) =>
+        h.value.toLowerCase().includes(hostFilter.toLowerCase()),
+      )
+    : hosts;
+
+  const head = partialExpanded
+    ? filteredHosts
+    : filteredHosts.slice(0, partial);
+  const tail = partialExpanded ? [] : filteredHosts.slice(partial);
 
   const handleHostClick = useCallback(
     (host: string) => {
@@ -82,34 +64,68 @@ function HostsComponent({
     [selectedHosts, setSelectedHosts],
   );
 
+  const [open, setOpen] = useState(true);
+
   return (
-    <CollapsibleComponent
-      title={<>Websites {loading && <Spinner />}</>}
-      clearable={selectedHosts.length > 0}
-      onClear={() => setSelectedHosts([])}
-    >
-      {head.map((obj) => (
-        <div key={obj.value}>
-          <Word
-            {...obj}
-            onClick={() => handleHostClick(obj.value)}
-            selected={selectedHostsSet.has(obj.value)}
+    <Collapsible open={open} onOpenChange={(o) => setOpen(o)}>
+      <CollapsibleTrigger
+        className="flex items-center justify-between w-full gap-2"
+        disabled={disabled}
+      >
+        <div className="flex items-center space-x-2 flex-grow">
+          <Globe className="w-4 h-4" />
+          <div className="text-sm font-semibold flex items-center justify-between flex-grow">
+            <span>Hosts</span>
+            {loading && <Spinner size="sm" color="muted" />}
+          </div>
+        </div>
+        <ChevronUp
+          className={cn("w-4 h-4 transition-transform duration-200", {
+            "rotate-180": open,
+          })}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2 space-y-1 transition-all">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Filter hosts..."
+            className="pl-8 h-8 text-sm"
+            value={hostFilter}
+            onChange={(e) => setHostFilter(e.target.value)}
+            disabled={disabled}
           />
         </div>
-      ))}
-      <div
-        onClick={() => setPartialExpanded(!partialExpanded)}
-        className={styles.seeMore}
-      >
-        {partialExpanded
-          ? hosts.length > partial && "See less..."
-          : tail.length > 0 && "See more..."}
-      </div>
-    </CollapsibleComponent>
+        {head.map((site) => (
+          <Button
+            key={site.value}
+            variant={selectedHosts.includes(site.value) ? "secondary" : "ghost"}
+            className="w-full justify-between font-normal h-8 px-2 text-sm"
+            onClick={() => handleHostClick(site.value)}
+            disabled={disabled}
+          >
+            <span className="truncate">{site.value}</span>
+            <span className="text-muted-foreground">{site.count}</span>
+          </Button>
+        ))}
+        {!partialExpanded && tail.length > 0 && (
+          <Button
+            variant="ghost"
+            className="w-full justify-center h-8 text-sm font-normal"
+            onClick={() => setPartialExpanded(true)}
+            disabled={disabled}
+          >
+            Show more
+          </Button>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
 interface TermsComponentProps {
+  disabled?: boolean;
   loading?: boolean;
   terms: QuerySessionFacetsFacetValue[];
   selectedTerms: string[];
@@ -118,6 +134,7 @@ interface TermsComponentProps {
 }
 
 function TermsComponent({
+  disabled,
   loading,
   terms,
   selectedTerms,
@@ -126,11 +143,20 @@ function TermsComponent({
 }: TermsComponentProps) {
   const [partialExpanded, setPartialExpanded] = useState<boolean>(false);
   const selectedTermsSet = new Set(selectedTerms);
+  const [wordFilter, setWordFilter] = useState("");
 
   const partial = partialCount ?? 10;
 
-  const head = partialExpanded ? terms : terms.slice(0, partial);
-  const tail = partialExpanded ? [] : terms.slice(partial);
+  const filteredTerms = wordFilter
+    ? terms.filter((t) =>
+        t.value.toLowerCase().includes(wordFilter.toLowerCase()),
+      )
+    : terms;
+
+  const head = partialExpanded
+    ? filteredTerms
+    : filteredTerms.slice(0, partial);
+  const tail = partialExpanded ? [] : filteredTerms.slice(partial);
 
   const handleWordClick = useCallback(
     (word: string) => {
@@ -143,111 +169,142 @@ function TermsComponent({
     [selectedTerms, setSelectedTerms],
   );
 
+  const [open, setOpen] = useState(true);
+
   return (
-    <CollapsibleComponent
-      title={<>Words {loading && <Spinner />}</>}
-      clearable={selectedTerms.length > 0}
-      onClear={() => setSelectedTerms([])}
-    >
-      {head.map((obj) => (
-        <Word
-          {...obj}
-          key={obj.value}
-          onClick={() => handleWordClick(obj.value)}
-          selected={selectedTermsSet.has(obj.value)}
-        />
-      ))}
-      <div
-        onClick={() => setPartialExpanded(!partialExpanded)}
-        className={styles.seeMore}
+    <Collapsible open={open} onOpenChange={(o) => setOpen(o)}>
+      <CollapsibleTrigger
+        className="flex items-center justify-between w-full gap-2"
+        disabled={disabled}
       >
-        {partialExpanded
-          ? terms.length > partial && "See less..."
-          : tail.length > 0 && "See more..."}
-      </div>
-    </CollapsibleComponent>
+        <div className="flex items-center space-x-2 flex-grow">
+          <Hash className="w-4 h-4" />
+          <div className="text-sm font-semibold flex items-center justify-between flex-grow">
+            <span>Words</span>
+            {loading && <Spinner size="sm" color="muted" />}
+          </div>
+        </div>
+        <ChevronUp
+          className={clsx("w-4 h-4 transition-transform duration-200", {
+            "rotate-180": open,
+          })}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2 space-y-2 transition-all">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Filter words..."
+            className="pl-8 h-8 text-sm"
+            value={wordFilter}
+            onChange={(e) => setWordFilter(e.target.value)}
+            disabled={disabled}
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {head.map((word) => (
+            <Badge
+              key={word.value}
+              variant={
+                selectedTerms.includes(word.value) ? "default" : "outline"
+              }
+              className={cn(
+                "cursor-pointer transition-colors hover:bg-primary hover:text-primary-foreground text-xs",
+                {
+                  "cursor-not-allowed text-muted-foreground hover:bg-inherit hover:text-muted-foreground":
+                    disabled,
+                },
+              )}
+              onClick={() => {
+                if (disabled) {
+                  return;
+                }
+                handleWordClick(word.value);
+              }}
+            >
+              {word.value}
+              <span className="ml-1 opacity-70">{word.count}</span>
+            </Badge>
+          ))}
+        </div>
+        {!partialExpanded && tail.length > 0 && (
+          <Button
+            variant="ghost"
+            className="w-full justify-center h-8 text-sm font-normal"
+            onClick={() => setPartialExpanded(true)}
+            disabled={disabled}
+          >
+            Show more
+          </Button>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
 interface SearchSideBarProps {
+  disabled?: boolean;
   request: QuerySessionsRequest;
   selectedHosts: string[];
-  ready?: boolean;
-  loading?: boolean;
-  onLoadComplete?: () => void;
   setSelectedHosts: (hosts: string[]) => void;
   selectedTerms: string[];
   setSelectedTerms: (terms: string[]) => void;
 }
 
 export default function SearchSideBar({
+  disabled,
   request,
   selectedHosts,
   setSelectedHosts,
   selectedTerms,
   setSelectedTerms,
-  ready,
-  loading,
-  onLoadComplete,
 }: SearchSideBarProps) {
-  const [hosts, setHosts] = useState<QuerySessionFacetsFacetValue[]>([]);
-  const [terms, setTerms] = useState<QuerySessionFacetsFacetValue[]>([]);
-
   const { serverClientFactory } = useContext(AppContext);
 
-  useMemo(() => {
-    if (!ready) {
-      return;
+  const facets = useQuery({
+    queryKey: ["history", request, "facets"],
+    enabled: !disabled,
+    queryFn: async () => {
+      const client = await serverClientFactory();
+      return await client.querySessionFacets(request);
+    },
+  });
+
+  const allHosts = facets.data?.host ?? [];
+  const visibleHosts = allHosts.filter((h) => selectedHosts.includes(h.value));
+  const nonVisibleHosts = allHosts.filter(
+    (h) => !selectedHosts.includes(h.value),
+  );
+  while (visibleHosts.length < 5 && nonVisibleHosts.length > 0) {
+    const item = nonVisibleHosts.shift();
+    if (item === undefined) {
+      break;
     }
-
-    const abortController = new AbortController();
-
-    async function load() {
-      try {
-        const client = await serverClientFactory();
-        const facets = await client.querySessionFacets({
-          ...request,
-          abort: abortController.signal,
-        });
-        const hostValues = new Set(facets.host.map((host) => host.value));
-        selectedHosts.forEach((host) => {
-          if (!hostValues.has(host)) {
-            facets.host.splice(0, 0, { value: host, count: 0 });
-          }
-        });
-        const termValues = new Set(facets.term.map((term) => term.value));
-        selectedTerms.forEach((term) => {
-          if (!termValues.has(term)) {
-            facets.term.splice(0, 0, { value: term, count: 0 });
-          }
-        });
-
-        setHosts(facets.host);
-        setTerms(facets.term);
-      } finally {
-        onLoadComplete?.();
-      }
-    }
-
-    load();
-    return () => abortController.abort();
-  }, [ready, request]);
+    visibleHosts.push(item);
+  }
 
   return (
-    <SideBar>
-      <HostsComponent
-        loading={loading}
-        hosts={hosts}
-        selectedHosts={selectedHosts}
-        setSelectedHosts={setSelectedHosts}
-      />
+    <aside className="w-64 border-r bg-background">
+      <ScrollArea className="h-[calc(100vh-3.5rem)]">
+        <div className="p-4 space-y-6">
+          <HostsComponent
+            loading={facets.status === "pending"}
+            hosts={facets.data?.host ?? []}
+            selectedHosts={selectedHosts}
+            setSelectedHosts={setSelectedHosts}
+            disabled={disabled}
+          />
 
-      <TermsComponent
-        loading={loading}
-        terms={terms}
-        selectedTerms={selectedTerms}
-        setSelectedTerms={setSelectedTerms}
-      />
-    </SideBar>
+          <TermsComponent
+            loading={facets.status === "pending"}
+            terms={facets.data?.term ?? []}
+            selectedTerms={selectedTerms}
+            setSelectedTerms={setSelectedTerms}
+            disabled={disabled}
+          />
+        </div>
+      </ScrollArea>
+    </aside>
   );
 }

@@ -1,6 +1,5 @@
-import styles from "../styles/SearchResults.module.css";
-
-export default function Highlighted({ title }: { title: string }) {
+export default function Highlighted({ title }: { title?: string }) {
+  title ??= "";
   const findPattern = /(\{~\{~\{.+?\}~\}~\})/g;
   const components: React.ReactNode[] = [];
   let match = findPattern.exec(title);
@@ -13,7 +12,11 @@ export default function Highlighted({ title }: { title: string }) {
       "{~{~{".length,
       match[0].length - "}~}~}".length,
     );
-    components.push(<span className={styles.highlighted}>{inner}</span>);
+    components.push(
+      <span key={lastIndex} className="font-bold bg-[rgba(255,201,51,0.2)]">
+        {inner}
+      </span>,
+    );
     lastIndex = match.index + match[0].length;
     match = findPattern.exec(title);
   }

@@ -1,13 +1,14 @@
+import { useMutation } from "@tanstack/react-query";
 import hljs from "highlight.js/lib/core";
 import sqlLang from "highlight.js/lib/languages/sql";
-import { createRef, useCallback, useContext, useState } from "react";
+import { ChevronsLeftRight, ChevronsRightLeft, Play } from "lucide-react";
+import { useContext, useState } from "react";
 import Editor from "react-simple-code-editor";
 import parentLogger from "../../logger";
-import type { ErrorResponse, ServerInterface } from "../../server";
-import { AppContext, cleanupUrl, downloadUrl } from "../lib";
+import type { ServerInterface } from "../../server";
+import { Button } from "../components-v2/ui/button";
+import { AppContext } from "../lib";
 import styles from "../styles/DbTool.module.css";
-import settingsStyles from "../styles/Settings.module.css";
-import Card from "./Card";
 import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
 
 hljs.registerLanguage("sql", sqlLang);
@@ -16,89 +17,6 @@ const logger = parentLogger.child({ context: "DbTool" });
 
 interface OptionProps {
   serverClientFactory: () => Promise<ServerInterface>;
-}
-
-function ExportDbOption({ serverClientFactory }: OptionProps) {
-  const [state, setState] = useState(LoadingState.None);
-  const [error, setError] = useState("");
-
-  async function downloadDb() {
-    if (state === LoadingState.Loading) {
-      return;
-    }
-
-    setState(LoadingState.Loading);
-    try {
-      const client = await serverClientFactory();
-      const { databaseUrl } = await client.exportDatabase({});
-      downloadUrl(databaseUrl, "history.db");
-      cleanupUrl(databaseUrl);
-      setState(LoadingState.Success);
-    } catch (err: any) {
-      logger.trace(err);
-      setState(LoadingState.Failed);
-      setError(err.toString());
-    }
-  }
-
-  return (
-    <div className={styles.option}>
-      <span>Export DB:</span>
-      <button onClick={downloadDb}>Export</button>
-      <SettingsOptionStatus state={state} />
-      {state === LoadingState.Failed && (
-        <span className={settingsStyles.errorText}>{error}</span>
-      )}
-    </div>
-  );
-}
-
-function ImportDbOption({ serverClientFactory }: OptionProps) {
-  const [state, setState] = useState(LoadingState.None);
-  const [error, setError] = useState("");
-
-  const fileRef = createRef<HTMLInputElement>();
-
-  async function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const client = await serverClientFactory();
-    const file = event.target.files?.[0];
-    const reader = new FileReader();
-
-    setState(LoadingState.Loading);
-
-    reader.addEventListener(
-      "load",
-      async () => {
-        try {
-          await client.importDatabase({
-            databaseUrl: reader.result as string,
-          });
-          setError("");
-          setState(LoadingState.Success);
-        } catch (error: any) {
-          setError(error.toString());
-          setState(LoadingState.Failed);
-        }
-      },
-      false,
-    );
-
-    if (file) {
-      reader.readAsDataURL(file);
-    }
-  }
-
-  return (
-    <div className={styles.option}>
-      <span>Import DB:</span>
-      <input ref={fileRef} type="file" onChange={handleChange} />
-
-      <SettingsOptionStatus state={state} />
-      {state === LoadingState.Failed && (
-        <span className={settingsStyles.errorText}>{error}</span>
-      )}
-    </div>
-  );
 }
 
 function ResetDbOption({ serverClientFactory }: OptionProps) {
@@ -121,15 +39,19 @@ function ResetDbOption({ serverClientFactory }: OptionProps) {
   }
 
   return (
-    <div className={styles.option}>
-      <span>Reset DB:</span>
-      <button onClick={resetDatabase}>Reset</button>
+    <>
+      <div className="flex gap-6">
+        <span>Reset DB:</span>
 
-      <SettingsOptionStatus state={state} />
-      {state === LoadingState.Failed && (
-        <span className={settingsStyles.errorText}>{error}</span>
-      )}
-    </div>
+        <SettingsOptionStatus state={state} />
+        {state === LoadingState.Failed && (
+          <span className="text-destructive">{error}</span>
+        )}
+      </div>
+      <div>
+        <Button onClick={resetDatabase}>Reset</Button>
+      </div>
+    </>
   );
 }
 
@@ -155,14 +77,18 @@ function RefreshSearchIndexOption({ serverClientFactory }: OptionProps) {
   }
 
   return (
-    <div className={styles.option}>
-      <span>Regenerate Index:</span>
-      <button onClick={regenerateIndex}>Regenerate</button>
-      <SettingsOptionStatus state={state} />
-      {state === LoadingState.Failed && (
-        <span className={settingsStyles.errorText}>{error}</span>
-      )}
-    </div>
+    <>
+      <div className="flex gap-6">
+        <span>Regenerate Index:</span>
+        <SettingsOptionStatus state={state} />
+        {state === LoadingState.Failed && (
+          <span className="text-destructive">{error}</span>
+        )}
+      </div>
+      <div>
+        <Button onClick={regenerateIndex}>Regenerate</Button>
+      </div>
+    </>
   );
 }
 
@@ -190,11 +116,15 @@ function ResetCrawlerStateOption() {
   }
 
   return (
-    <div className={styles.option}>
-      <span>Reset crawler state:</span>
-      <button onClick={resetState}>Reset</button>
-      <SettingsOptionStatus state={state} />
-    </div>
+    <>
+      <div className="flex gap-6">
+        <span>Reset crawler state:</span>
+        <SettingsOptionStatus state={state} />
+      </div>
+      <div>
+        <Button onClick={resetState}>Reset</Button>
+      </div>
+    </>
   );
 }
 
@@ -213,9 +143,7 @@ function QueryToolResult({ results }: QueryToolResultProps) {
   const isMore = results.length > limit;
 
   return (
-    <div className={styles.resultTable}>
-      <span>Results:</span>
-
+    <div className="font-code overflow-x-scroll">
       <table>
         <thead>
           {columns.map((colName, idx) => (
@@ -245,32 +173,25 @@ function QueryToolResult({ results }: QueryToolResultProps) {
   );
 }
 
-function QueryToolOption({ serverClientFactory }: OptionProps) {
-  const [code, setCode] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-  const [loadTime, setLoadTime] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface QueryToolOptionProps extends OptionProps {
+  expanded?: boolean;
+  setExpanded?: (expanded: boolean) => void;
+}
 
-  const runQuery = useCallback(async () => {
-    setLoading(true);
-    try {
+function QueryToolOption({
+  serverClientFactory,
+  expanded,
+  setExpanded,
+}: QueryToolOptionProps) {
+  const [code, setCode] = useState("");
+
+  const query = useMutation({
+    mutationKey: ["query", code],
+    mutationFn: async () => {
       const client = await serverClientFactory();
-      const before = new Date();
-      const result = await client.runQuery({ query: code });
-      const after = new Date();
-      setLoadTime(after.getTime() - before.getTime());
-      setResults(result.result);
-      setError(null);
-    } catch (error: any) {
-      const errorResp = error as ErrorResponse;
-      setResults([]);
-      setError(errorResp.message);
-      setLoadTime(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [code]);
+      return await client.runQuery({ query: code });
+    },
+  });
 
   function handleKeyDown(
     evt: React.KeyboardEvent<HTMLTextAreaElement | HTMLDivElement>,
@@ -278,54 +199,85 @@ function QueryToolOption({ serverClientFactory }: OptionProps) {
     // Cmd + return for submit
     if (evt.keyCode === 13 && evt.metaKey) {
       evt.preventDefault();
-      runQuery();
+      query.mutate();
     }
   }
 
   return (
-    <div className={styles.queryTool}>
-      <span>Query Editor:</span>
+    <>
+      <div className="flex gap-6">
+        <span>Query Editor:</span>
+        <SettingsOptionStatus
+          state={
+            query.status === "error"
+              ? LoadingState.Failed
+              : query.status === "pending"
+                ? LoadingState.Loading
+                : query.status === "idle"
+                  ? LoadingState.None
+                  : LoadingState.Success
+          }
+        />
+      </div>
+      <div />
 
-      <Editor
-        value={code}
-        onValueChange={(code) => setCode(code)}
-        highlight={(code) => hljs.highlight(code, { language: "sql" }).value}
-        padding={10}
-        className={styles.editor}
-        textareaClassName={styles.editorTextArea}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="col-span-2 flex flex-col gap-8">
+        <Editor
+          value={code}
+          onValueChange={(code) => setCode(code)}
+          highlight={(code) => hljs.highlight(code, { language: "sql" }).value}
+          padding={10}
+          className="border-secondary border font-code"
+          textareaClassName={styles.editorTextArea}
+          onKeyDown={handleKeyDown}
+        />
 
-      <button onClick={runQuery} {...(loading && { disabled: true })}>
-        Run query
-      </button>
+        <div className="flex gap-4">
+          <Button onClick={() => query.mutate()} disabled={query.isPending}>
+            <Play />
+            Run query (⌘↵)
+          </Button>
+          {expanded ? (
+            <Button onClick={() => setExpanded?.(false)}>
+              <ChevronsRightLeft />
+              Contract
+            </Button>
+          ) : (
+            <Button onClick={() => setExpanded?.(true)}>
+              <ChevronsLeftRight />
+              Expand
+            </Button>
+          )}
+        </div>
 
-      {error ? (
-        <span>Error: {error}</span>
-      ) : loadTime !== null ? (
-        <span>Execution time: {loadTime}ms</span>
-      ) : (
-        <></>
-      )}
+        {query.error ? <span>Error: {String(query.error)}</span> : null}
 
-      <QueryToolResult results={results} />
-    </div>
+        {query.status === "success" ? (
+          <QueryToolResult results={query.data.result} />
+        ) : null}
+      </div>
+    </>
   );
 }
 
-export default function DbTool() {
+export interface DbToolProps {
+  expanded?: boolean;
+  setExpanded?: (expanded: boolean) => void;
+}
+
+export default function DbTool({ expanded, setExpanded }: DbToolProps) {
   const { serverClientFactory } = useContext(AppContext);
 
   return (
-    <Card>
-      <h2>DB Tool</h2>
-
-      <ImportDbOption serverClientFactory={serverClientFactory} />
-      <ExportDbOption serverClientFactory={serverClientFactory} />
+    <div className="grid grid-cols-2 gap-4 gap-y-8">
       <ResetDbOption serverClientFactory={serverClientFactory} />
       <RefreshSearchIndexOption serverClientFactory={serverClientFactory} />
       <ResetCrawlerStateOption />
-      <QueryToolOption serverClientFactory={serverClientFactory} />
-    </Card>
+      <QueryToolOption
+        serverClientFactory={serverClientFactory}
+        expanded={expanded}
+        setExpanded={setExpanded}
+      />
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-body {
+/* body {
   margin: 0;
   padding: 0;
   --width: 400px;
@@ -15,4 +15,4 @@ body {
   position: absolute;
   width: var(--width);
   min-height: var(--height);
-}
+} */

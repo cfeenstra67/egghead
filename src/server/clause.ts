@@ -1,4 +1,4 @@
-import { type RawBuilder, sql } from "kysely";
+import { sessionIndexTable } from "../models";
 import queryStringGrammar, {
   type QueryStringSemantics,
 } from "./query-string.ohm-bundle";
@@ -39,7 +39,7 @@ export type FilterValue<
         ? string
         : T;
 
-type Keys<T> = keyof T | typeof IndexToken;
+export type Keys<T> = keyof T | typeof IndexToken;
 
 export interface Filter<T, O extends BinaryOperator, K extends Keys<T>> {
   fieldName: K;
@@ -149,137 +149,6 @@ export function dslToClause<T>(dsl: ClauseDsl<T>): Clause<T> {
   };
 }
 
-export interface RenderClauseArgs<T> {
-  clause: Clause<T>;
-  getFieldName?: (fieldName: Keys<T>) => string;
-  paramStartIndex?: number;
-}
-
-export function renderClause<T>({
-  clause,
-  getFieldName = (fieldName) => `"${String(fieldName)}"`,
-  paramStartIndex = 0,
-}: RenderClauseArgs<T>): [string, Record<string, any>, number] {
-  let paramIndex = paramStartIndex;
-  function getParamName(fieldName: string): string {
-    paramIndex += 1;
-    return `param${fieldName}${paramIndex}`;
-  }
-
-  if (isFilter(clause)) {
-    if (clause.operator === BinaryOperator.Equals && clause.value === null) {
-      return [`${getFieldName(clause.fieldName)} IS NULL`, {}, paramIndex];
-    }
-    if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
-      return [`${getFieldName(clause.fieldName)} IS NOT NULL`, {}, paramIndex];
-    }
-
-    const paramName = getParamName(clause.fieldName as string);
-    if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
-      return [
-        `${getFieldName(clause.fieldName)} ${
-          clause.operator
-        } (:...${paramName})`,
-        { [paramName]: clause.value },
-        paramIndex,
-      ];
-    }
-
-    return [
-      `${getFieldName(clause.fieldName)} ${clause.operator} :${paramName}`,
-      { [paramName]: clause.value },
-      paramIndex,
-    ];
-  }
-  if (isUnary(clause)) {
-    const [sql, params, newParamIndex] = renderClause({
-      clause: clause.clause,
-      paramStartIndex: paramIndex,
-      getFieldName,
-    });
-    return [`NOT (${sql})`, params, newParamIndex];
-  }
-
-  if (clause.clauses.length === 0) {
-    switch (clause.operator) {
-      case AggregateOperator.And:
-        return ["TRUE", {}, paramIndex];
-      case AggregateOperator.Or:
-        return ["FALSE", {}, paramIndex];
-    }
-  }
-
-  const parts: string[] = [];
-  const allParams: Record<string, any> = {};
-  clause.clauses.forEach((subClause) => {
-    const [sql, params, newParamIndex] = renderClause({
-      clause: subClause,
-      paramStartIndex: paramIndex,
-      getFieldName,
-    });
-    paramIndex = newParamIndex;
-    parts.push(sql);
-    Object.assign(allParams, params);
-  });
-  const outSql = `(${parts.join(` ${clause.operator} `)})`;
-  return [outSql, allParams, paramIndex];
-}
-
-export interface RenderClauseV2Args<T> {
-  clause: Clause<T>;
-  getFieldName?: (fieldName: Keys<T>) => string[];
-}
-
-export function renderClauseV2<T>({
-  clause,
-  getFieldName = (fieldName) => [String(fieldName)],
-}: RenderClauseV2Args<T>): RawBuilder<boolean> {
-  if (isFilter(clause)) {
-    if (clause.operator === BinaryOperator.Equals && clause.value === null) {
-      return sql`${sql.id(...getFieldName(clause.fieldName))} IS NULL`;
-    }
-    if (clause.operator === BinaryOperator.NotEquals && clause.value === null) {
-      return sql`${sql.id(...getFieldName(clause.fieldName))} IS NOT NULL`;
-    }
-
-    if ([BinaryOperator.In, BinaryOperator.NotIn].includes(clause.operator)) {
-      return sql`${sql.id(...getFieldName(clause.fieldName))} ${sql.raw(clause.operator)} (${sql.join(clause.value as any[])})`;
-    }
-
-    return sql`${sql.id(...getFieldName(clause.fieldName))} ${sql.raw(clause.operator)} ${clause.value}`;
-  }
-  if (isUnary(clause)) {
-    const inner = renderClauseV2({
-      clause: clause.clause,
-      getFieldName,
-    });
-
-    return sql`NOT (${inner})`;
-  }
-
-  if (clause.clauses.length === 0) {
-    switch (clause.operator) {
-      case AggregateOperator.And:
-        return sql.lit(true);
-      case AggregateOperator.Or:
-        return sql.lit(false);
-    }
-  }
-
-  const parts = clause.clauses.map((subClause) => {
-    return renderClauseV2({
-      clause: subClause,
-      getFieldName,
-    });
-  });
-
-  const final = parts.reduce(
-    (a, b) => sql<boolean>`${a} ${sql.raw(clause.operator)} ${b}`,
-  );
-
-  return sql`(${final})`;
-}
-
 export function clausesEqual<T>(
   clause1: Clause<T>,
   clause2: Clause<T>,
@@ -368,9 +237,26 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
         value: getSearchString(value.sourceString.replace(/\\"/g, '"')),
       };
     },
-    columnQuery: (col, _1, operator, _2, value) => {
+    columnQuery: (col, colon1, operator, colon2, value) => {
       let term = value.clause().value;
       term = term?.slice(1, term.length - 1)?.replace('""', '"') ?? null;
+
+      const fieldName = col.sourceString.trim().toLowerCase();
+      if (!Object.keys(sessionIndexTable.columns).includes(fieldName)) {
+        return {
+          operator: BinaryOperator.Match,
+          fieldName: IndexToken,
+          value: getSearchString(
+            [
+              col.sourceString,
+              colon1.sourceString,
+              operator.sourceString,
+              colon2.sourceString,
+              value.sourceString,
+            ].join(""),
+          ),
+        };
+      }
 
       let outOp: BinaryOperator | undefined = undefined;
       const op = operator.sourceString.slice(
@@ -393,7 +279,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
 
       return {
         operator: outOp,
-        fieldName: col.sourceString as Keys<T>,
+        fieldName: fieldName as Keys<T>,
         value: term,
       };
     },

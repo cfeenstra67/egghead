@@ -1,20 +1,31 @@
+import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
+import { Info, Link2, MoreVertical, Send, Trash2 } from "lucide-react";
 import { type RefObject, useContext, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import parentLogger from "../../logger";
 import type { Session } from "../../models";
 import type { SessionResponse } from "../../server";
-import { dslToClause } from "../../server/clause";
+import { BinaryOperator, dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
-import EllipsisIcon from "../icons/ellipsis.svg";
+import { Button } from "../components-v2/ui/button";
+import { Checkbox } from "../components-v2/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components-v2/ui/dropdown-menu";
+import { Separator } from "../components-v2/ui/separator";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
-import styles from "../styles/SearchResults.module.css";
+import { cn } from "../lib/utils";
+import { DeleteSessionModal } from "./DeleteSessionModal";
 import ExternalLink, { useExternalLinkOpener } from "./ExternalLink";
 import Highlighted from "./Highlighted";
-import ItemStatus from "./ItemStatus";
-import Word from "./Word";
 
 const logger = parentLogger.child({ context: "SearchResultsItem" });
 
@@ -30,19 +41,6 @@ function getTimeString(date: string): string {
     .split(" ");
   const timeString = time.split(":").slice(0, 2).join(":");
   return `${timeString} ${amPm}`;
-}
-
-function DetailsDropdown({ session }: { session: SessionResponse }) {
-  const [_1, setLocation] = useLocation();
-
-  return (
-    <div>
-      <EllipsisIcon
-        className={styles.moreDetails}
-        onClick={() => setLocation(`/session/${session.id}`)}
-      />
-    </div>
-  );
 }
 
 enum ChildType {
@@ -97,7 +95,9 @@ export function groupSessions(
   });
 }
 
-function getAggSession(session: SessionResponse): SingleAggregatedSession {
+export function getAggSession(
+  session: SessionResponse,
+): SingleAggregatedSession {
   return {
     type: "single",
     session,
@@ -142,40 +142,6 @@ function processChildTransitions(
   return out;
 }
 
-interface ChildTypeBubbleProps {
-  childType: ChildType;
-  count: number;
-  selected?: boolean;
-  onClick?: () => void;
-}
-
-function ChildTypeBubble({
-  childType,
-  count,
-  selected,
-  onClick,
-}: ChildTypeBubbleProps) {
-  let text: string;
-  switch (childType) {
-    case ChildType.Duplicate:
-      text = "Other sessions";
-      break;
-    case ChildType.Link:
-      text = "Links opened";
-      break;
-    case ChildType.FormSubmit:
-      text = "Forms submitted";
-      break;
-    case ChildType.Typed:
-      text = "New Searches";
-      break;
-  }
-
-  return (
-    <Word count={count} value={text} selected={selected} onClick={onClick} />
-  );
-}
-
 interface SingleAggregatedSearchResultsItemProps {
   aggSession: SingleAggregatedSession;
   isLast?: boolean;
@@ -184,10 +150,16 @@ interface SingleAggregatedSearchResultsItemProps {
   hideChildTypes?: boolean;
   childTypesExpanded: ChildType[];
   setChildTypesExpanded: (types: ChildType[]) => void;
+  showControls?: boolean;
+  showChildren?: "short" | "full";
+  animate?: boolean;
   childrenSessions: Record<
     string,
     Record<ChildType, SingleAggregatedSession[]>
   >;
+  showChecks?: boolean;
+  checked?: (id: string) => boolean;
+  setChecked?: (ids: string[], checked: boolean) => void;
 }
 
 function SingleAggregatedSearchResultsItem({
@@ -199,9 +171,16 @@ function SingleAggregatedSearchResultsItem({
   isLast,
   onEndReached,
   indent,
+  showControls,
+  showChildren,
+  animate,
+  showChecks,
+  checked,
+  setChecked,
   ...transitionProps
 }: SingleAggregatedSearchResultsItemProps) {
-  const [isInView, setIsInView] = useState<boolean>(false);
+  const [isInView, setIsInView] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const session = aggSession.session;
   const url = new URL(session.url);
   const { ref, inView } = useInView({
@@ -228,19 +207,24 @@ function SingleAggregatedSearchResultsItem({
     }
   }, [inView, isInView, setIsInView]);
 
-  const classNames = [
-    (indent || 0) > 0
-      ? styles.searchResultsItemChild
-      : styles.searchResultsItem,
-    "animate__animated",
-    "animate__fadeInRight",
-  ];
-
   const openLink = useExternalLinkOpener(true);
   const tabId = session.endedAt ? undefined : session.tabId;
 
   return (
     <>
+      <DeleteSessionModal
+        request={{
+          isSearch: true,
+          filter: {
+            operator: BinaryOperator.In,
+            fieldName: "id",
+            value: aggSession.allSessionIds,
+          },
+        }}
+        open={showDelete}
+        onOpenChanged={setShowDelete}
+        onDelete={() => setShowDelete(false)}
+      />
       <CSSTransition
         {...transitionProps}
         key={`${indent ?? 0} ${session.id}`}
@@ -249,123 +233,272 @@ function SingleAggregatedSearchResultsItem({
       >
         <div
           data-session-id={session.id}
-          className={classNames.join(" ")}
+          className={cn(
+            "flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50 group",
+            { "animate__animated animate__fadeInRight": animate },
+          )}
           ref={ref}
-          style={{ marginLeft: `${24 * (indent || 0)}px` }}
+          style={
+            {
+              marginLeft: `${3 * (indent || 0)}rem`,
+              "--animate-duration": "200ms",
+            } as React.CSSProperties
+          }
         >
-          <ItemStatus active={!session.endedAt} />
-          <div className={styles.searchResultsItemTime}>
-            <span
-              title={dateFromSqliteString(session.startedAt).toLocaleString()}
-            >
-              {getTimeString(session.startedAt)}
-            </span>
-          </div>
-          <img
-            src={getFaviconUrlPublicApi(url.hostname, 16)}
-            className={styles.favicon}
-            onClick={(evt) => openLink(session.rawUrl, tabId)}
-          />
-          <div className={styles.searchResultsItemContent}>
-            <div className={styles.searchResultsItemContentInner}>
-              <div className={styles.searchResultsItemTitle}>
-                <ExternalLink
-                  href={session.rawUrl}
-                  newTab={true}
-                  rel="noreferrer"
-                  tabId={tabId}
-                >
-                  <span title={session.title}>
-                    <Highlighted title={session.highlightedTitle} />
-                  </span>
-                </ExternalLink>
-              </div>
-              <div className={styles.searchResultsItemHost}>
-                <span title={session.rawUrl}>
-                  <Highlighted
-                    title={session.highlightedHost ?? url.hostname}
-                  />
-                </span>
-              </div>
-            </div>
-            {!hideChildTypes && (
+          <div
+            className={cn(
+              "w-6 h-6 flex-shrink-0 flex items-center justify-center text-primary text-xs",
+              { "rounded-full bg-primary/10": !showChecks },
+            )}
+          >
+            {showChecks ? (
               <div>
-                {Object.entries(childTypeCounts).map(
-                  ([childType, count]) =>
-                    count > 0 && (
-                      <ChildTypeBubble
-                        childType={childType as ChildType}
-                        count={count}
-                        selected={childTypesExpanded.includes(
-                          childType as ChildType,
-                        )}
-                        onClick={() => {
-                          const type = childType as ChildType;
-                          if (childTypesExpanded.includes(type)) {
-                            setChildTypesExpanded(
-                              childTypesExpanded.filter((x) => x !== type),
-                            );
-                          } else {
-                            setChildTypesExpanded(
-                              childTypesExpanded.concat([type]),
-                            );
-                          }
-                        }}
-                      />
-                    ),
-                )}
+                <Checkbox
+                  checked={checked?.(session.id)}
+                  onCheckedChange={(state) => {
+                    if (state === "indeterminate") {
+                      return;
+                    }
+                    setChecked?.(aggSession.allSessionIds, state);
+                  }}
+                />
               </div>
+            ) : (
+              <img
+                src={getFaviconUrlPublicApi(url.hostname, 16)}
+                alt={`Favicon for ${url.hostname}`}
+                onClick={(evt) => openLink(session.rawUrl, tabId)}
+              />
             )}
           </div>
-          <DetailsDropdown session={session} />
+          <ExternalLink
+            newTab
+            className="flex-grow min-w-0"
+            href={session.rawUrl}
+            tabId={session.endedAt ? undefined : session.tabId}
+            rel="noreferrer"
+          >
+            <div className="text-sm font-medium leading-none truncate block md:max-w-[85%] lg:max-w-[90%]">
+              <span title={session.title}>
+                <Highlighted title={session.highlightedTitle} />
+              </span>
+            </div>
+            <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground max-w-[60%]">
+              <span className="truncate block" title={session.rawUrl}>
+                <Highlighted title={session.highlightedHost} />
+              </span>
+              <Separator className="h-3 flex-shrink-0" orientation="vertical" />
+              <span
+                className="flex-shrink-0"
+                title={dateFromSqliteString(session.startedAt).toLocaleString()}
+              >
+                {getTimeString(session.startedAt)}
+              </span>
+            </div>
+          </ExternalLink>
+          <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+            {childTypeCounts.FORM_SUBMIT > 0 &&
+            !hideChildTypes &&
+            showChildren ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={clsx({
+                  "text-xs flex items-center whitespace-nowrap": true,
+                  "bg-muted text-accent-foreground":
+                    childTypesExpanded.includes(ChildType.FormSubmit),
+                })}
+                onClick={() => {
+                  if (childTypesExpanded.includes(ChildType.FormSubmit)) {
+                    setChildTypesExpanded(
+                      childTypesExpanded.filter(
+                        (t) => t !== ChildType.FormSubmit,
+                      ),
+                    );
+                  } else {
+                    setChildTypesExpanded(
+                      childTypesExpanded.concat(ChildType.FormSubmit),
+                    );
+                  }
+                }}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                {showChildren === "full" ? (
+                  <span>
+                    {childTypeCounts.FORM_SUBMIT} form
+                    {childTypeCounts.FORM_SUBMIT > 1 ? "s" : ""}
+                  </span>
+                ) : (
+                  <span>{childTypeCounts.FORM_SUBMIT}</span>
+                )}
+              </Button>
+            ) : null}
+            {childTypeCounts.LINK > 0 && !hideChildTypes && showChildren ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn("text-xs flex items-center whitespace-nowrap", {
+                  "bg-muted text-accent-foreground":
+                    childTypesExpanded.includes(ChildType.Link),
+                })}
+                onClick={() => {
+                  if (childTypesExpanded.includes(ChildType.Link)) {
+                    setChildTypesExpanded(
+                      childTypesExpanded.filter((t) => t !== ChildType.Link),
+                    );
+                  } else {
+                    setChildTypesExpanded(
+                      childTypesExpanded.concat(ChildType.Link),
+                    );
+                  }
+                }}
+              >
+                <Link2 className="h-4 w-4 mr-1" />
+                {showChildren === "full" ? (
+                  <span>
+                    {childTypeCounts.LINK} link
+                    {childTypeCounts.LINK > 1 ? "s" : ""}
+                  </span>
+                ) : (
+                  <span>{childTypeCounts.LINK}</span>
+                )}
+              </Button>
+            ) : null}
+            {showControls && showChildren === "short" ? (
+              <Link href={`/session/${aggSession.session.id}`}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("h-8 w-8 opacity-0 group-hover:opacity-100", {
+                    "w-4": showChildren === "short",
+                  })}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </Link>
+            ) : showControls ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn("h-8 w-8 opacity-0 group-hover:opacity-100", {
+                      "w-4": showChildren === "short",
+                    })}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <Link href={`/session/${aggSession.session.id}`}>
+                      <Info /> <span>Details</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={(evt) => {
+                      setShowDelete(true);
+                      evt.preventDefault();
+                    }}
+                  >
+                    <Trash2 /> <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
+          <AnimatePresence>
+            {false && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="ml-8 pl-4 border-l border-muted"
+              >
+                {/* Placeholder for child items */}
+                <div className="p-2 rounded-lg hover:bg-muted/50">
+                  <h4 className="text-sm font-medium">Child Link 1</h4>
+                  <p className="text-xs text-muted-foreground">
+                    https://example.com/child1
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg hover:bg-muted/50">
+                  <h4 className="text-sm font-medium">Child Link 2</h4>
+                  <p className="text-xs text-muted-foreground">
+                    https://example.com/child2
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg hover:bg-muted/50">
+                  <h4 className="text-sm font-medium">Child Link 3</h4>
+                  <p className="text-xs text-muted-foreground">
+                    https://example.com/child3
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </CSSTransition>
       <TransitionGroup component={null}>
         {Object.values(ChildType).map((childType) =>
-          (transitionProps as any).in ? (
-            childrenSessions[aggSession.session.id]?.[childType]?.map(
-              (aggSession2) => {
-                if (childType === ChildType.Duplicate) {
-                  const sessionChildren = childTypesExpanded.flatMap((type) => {
-                    return (
-                      childrenSessions[aggSession2.session.id]?.[type] ?? []
+          (transitionProps as any).in
+            ? childrenSessions[aggSession.session.id]?.[childType]?.map(
+                (aggSession2) => {
+                  if (childType === ChildType.Duplicate) {
+                    const sessionChildren = childTypesExpanded.flatMap(
+                      (type) => {
+                        return (
+                          childrenSessions[aggSession2.session.id]?.[type] ?? []
+                        );
+                      },
                     );
-                  });
-                  if (
-                    childTypesExpanded.includes(childType) ||
-                    sessionChildren.length > 0
-                  ) {
-                    const newChildren = {
-                      [aggSession2.session.id]:
-                        childrenSessions[aggSession2.session.id],
-                    };
+                    if (
+                      childTypesExpanded.includes(childType) ||
+                      sessionChildren.length > 0
+                    ) {
+                      const newChildren = {
+                        [aggSession2.session.id]:
+                          childrenSessions[aggSession2.session.id],
+                      };
+                      return (
+                        <SingleAggregatedSearchResultsItem
+                          animate={animate}
+                          showChildren={showChildren}
+                          showControls={showControls}
+                          key={aggSession2.session.id}
+                          aggSession={aggSession2}
+                          childTypesExpanded={childTypesExpanded}
+                          setChildTypesExpanded={setChildTypesExpanded}
+                          hideChildTypes
+                          childrenSessions={newChildren}
+                          indent={(indent || 0) + 1}
+                          showChecks={showChecks}
+                          checked={checked}
+                          setChecked={setChecked}
+                        />
+                      );
+                    }
+                  } else if (childTypesExpanded.includes(childType)) {
                     return (
-                      <SingleAggregatedSearchResultsItem
+                      <SearchResultsItem
+                        animate={animate}
+                        showChildren={showChildren}
+                        showControls={showControls}
                         key={aggSession2.session.id}
                         aggSession={aggSession2}
-                        childTypesExpanded={childTypesExpanded}
-                        setChildTypesExpanded={setChildTypesExpanded}
-                        hideChildTypes
-                        childrenSessions={newChildren}
                         indent={(indent || 0) + 1}
+                        showChecks={showChecks}
+                        checked={checked}
+                        setChecked={setChecked}
                       />
                     );
                   }
-                } else if (childTypesExpanded.includes(childType)) {
-                  return (
-                    <SearchResultsItem
-                      key={aggSession2.session.id}
-                      aggSession={aggSession2}
-                      indent={(indent || 0) + 1}
-                    />
-                  );
-                }
-                return <></>;
-              },
-            )
-          ) : (
-            <></>
-          ),
+                  return null;
+                },
+              )
+            : null,
         )}
       </TransitionGroup>
     </>
@@ -378,6 +511,12 @@ export interface SearchResultsItemProps {
   isLast?: boolean;
   onEndReached?: () => void;
   indent?: number;
+  showControls?: boolean;
+  showChildren?: "short" | "full";
+  animate?: boolean;
+  showChecks?: boolean;
+  checked?: (id: string) => boolean;
+  setChecked?: (ids: string[], checked: boolean) => void;
 }
 
 export default function SearchResultsItem({
@@ -385,40 +524,50 @@ export default function SearchResultsItem({
   isLast,
   onEndReached,
   indent,
+  showControls,
+  showChildren,
+  animate,
+  showChecks,
+  checked,
+  setChecked,
   ...transitionProps
 }: SearchResultsItemProps) {
   const [childTypesExpanded, setChildTypesExpanded] = useState<ChildType[]>([]);
 
-  const [childrenFetched, setChildrenFetched] = useState(false);
+  // const [childrenFetched, setChildrenFetched] = useState(false);
   type ChildrenType = Record<
     string,
     Record<ChildType, SingleAggregatedSession[]>
   >;
-  const [children, setChildren] = useState<ChildrenType>({});
+  // const [children, setChildren] = useState<ChildrenType>({});
 
   const { serverClientFactory } = useContext(AppContext);
 
-  useEffect(() => {
-    if (childrenFetched) {
-      return;
-    }
-    const containsOther = childTypesExpanded.some((item) => {
-      return item !== ChildType.Duplicate;
-    });
-    if (!containsOther) {
-      setChildren({
-        ...children,
-        [aggSession.session.id]: {
-          [ChildType.Duplicate]:
-            aggSession.duplicateSessions.map(getAggSession),
-          [ChildType.Link]: [],
-          [ChildType.FormSubmit]: [],
-          [ChildType.Typed]: [],
-        },
+  const childrenQuery = useQuery({
+    queryKey: [
+      "history",
+      aggSession.session.id,
+      "children",
+      childTypesExpanded,
+    ],
+    queryFn: async () => {
+      const containsOther = childTypesExpanded.some((item) => {
+        return item !== ChildType.Duplicate;
       });
-      return;
-    }
-    serverClientFactory().then(async (client) => {
+      if (!containsOther) {
+        return {
+          [aggSession.session.id]: {
+            [ChildType.Duplicate]:
+              aggSession.duplicateSessions.map(getAggSession),
+            [ChildType.Link]: [],
+            [ChildType.FormSubmit]: [],
+            [ChildType.Typed]: [],
+          },
+        };
+      }
+
+      const client = await serverClientFactory();
+
       const sessionIds = [
         aggSession.session.id,
         ...aggSession.duplicateSessions.map((session) => session.id),
@@ -489,21 +638,27 @@ export default function SearchResultsItem({
           ];
         }),
       ) as ChildrenType;
-      setChildren(final);
-      setChildrenFetched(true);
-    });
-  }, [childTypesExpanded, aggSession, setChildrenFetched, childrenFetched]);
+
+      return final;
+    },
+  });
 
   return (
     <SingleAggregatedSearchResultsItem
       {...transitionProps}
+      animate={animate}
+      showControls={showControls}
+      showChildren={showChildren}
       aggSession={aggSession}
       isLast={isLast}
       onEndReached={onEndReached}
       indent={indent}
-      childrenSessions={children}
+      childrenSessions={childrenQuery.data ?? {}}
       childTypesExpanded={childTypesExpanded}
       setChildTypesExpanded={setChildTypesExpanded}
+      showChecks={showChecks}
+      checked={checked}
+      setChecked={setChecked}
     />
   );
 }

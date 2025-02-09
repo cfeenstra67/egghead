@@ -1,13 +1,22 @@
 import { TransitionGroup } from "react-transition-group";
 import type { SessionResponse } from "../../server";
-import styles from "../styles/SearchResults.module.css";
-import SearchResultsItem, { groupSessions } from "./SearchResultsItem";
+import SearchResultsItem, {
+  getAggSession,
+  groupSessions,
+} from "./SearchResultsItem";
 
 interface SearchResultsDayProps {
   date: Date;
   sessions: SessionResponse[];
   onEndReached?: () => void;
   isLast: boolean;
+  showChecks?: boolean;
+  checked?: (id: string) => boolean;
+  setChecked?: (ids: string[], checked: boolean) => void;
+  animate?: boolean;
+  showChildren?: "short" | "full";
+  showControls?: boolean;
+  aggregate?: boolean;
 }
 
 function dateString(date: Date): string {
@@ -42,23 +51,40 @@ export default function SearchResultsDay({
   sessions,
   isLast,
   onEndReached,
+  showChecks,
+  setChecked,
+  checked,
+  animate,
+  showChildren,
+  showControls,
+  aggregate,
 }: SearchResultsDayProps) {
-  const groupedSessions = groupSessions(sessions);
+  const groupedSessions = aggregate
+    ? groupSessions(sessions)
+    : sessions.map((s) => getAggSession(s));
   return (
-    <div className={styles.searchResultsDay}>
-      <div className={styles.searchResultsDaySticky}>
-        <h3>{dateString(date)}</h3>
+    <div className="w-full">
+      <h2 className="text-sm font-medium text-muted-foreground mb-2">
+        {dateString(date)}
+      </h2>
+      <div className="flex flex-col gap-2">
+        <TransitionGroup component={null}>
+          {groupedSessions.flatMap((session, idx) => (
+            <SearchResultsItem
+              key={session.session.id}
+              showChildren={showChecks ? undefined : showChildren}
+              showControls={!showChecks && showControls}
+              animate={animate}
+              aggSession={session}
+              isLast={isLast && idx === groupedSessions.length - 1}
+              onEndReached={onEndReached}
+              showChecks={showChecks}
+              checked={checked}
+              setChecked={setChecked}
+            />
+          ))}
+        </TransitionGroup>
       </div>
-      <TransitionGroup component={null}>
-        {groupedSessions.flatMap((session, idx) => (
-          <SearchResultsItem
-            aggSession={session}
-            key={session.session.id}
-            isLast={isLast && idx === groupedSessions.length - 1}
-            onEndReached={onEndReached}
-          />
-        ))}
-      </TransitionGroup>
     </div>
   );
 }

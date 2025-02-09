@@ -16,7 +16,8 @@
 				"useButtonType": "off",
 				"useAltText": "warn",
 				"noAutofocus": "off",
-				"noSvgWithoutTitle": "off"
+				"noSvgWithoutTitle": "off",
+				"useSemanticElements": "off"
 			},
 			"complexity": {
 				"noForEach": "off",

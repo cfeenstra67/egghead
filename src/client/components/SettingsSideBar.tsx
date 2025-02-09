@@ -1,12 +1,12 @@
+import clsx from "clsx";
+import { SquareArrowOutUpRight } from "lucide-react";
 import { Link } from "wouter";
 import { useSettingsContext } from "../lib/SettingsContext";
-import styles from "../styles/SettingsSideBar.module.css";
 import ExternalLink from "./ExternalLink";
-import SideBar from "./SideBar";
 
 export enum SettingsPage {
   General = "General",
-  ClearBrowsingData = "ClearBrowsingData",
+  ImportExport = "ImportExport",
   Data = "Data",
   Dev = "Dev",
   Docs = "Docs",
@@ -16,19 +16,16 @@ export enum SettingsPage {
 interface SettingsSideBarItemProps {
   url: string;
   title: string;
-  selected?: boolean;
+  className?: string;
 }
 
 function SettingsSideBarItem({
   url,
   title,
-  selected,
+  className,
 }: SettingsSideBarItemProps) {
   return (
-    <Link
-      href={url}
-      className={`${styles.item} ${selected ? styles.activeItem : ""}`}
-    >
+    <Link href={url} className={className}>
       {title}
     </Link>
   );
@@ -37,15 +34,12 @@ function SettingsSideBarItem({
 function ExternalSettingsSideBarItem({
   url,
   title,
-  selected,
+  className,
 }: SettingsSideBarItemProps) {
   return (
-    <ExternalLink
-      href={url}
-      newTab
-      className={`${styles.item} ${selected ? styles.activeItem : ""}`}
-    >
-      {title}
+    <ExternalLink href={url} newTab className={className}>
+      <span>{title}</span>
+      <SquareArrowOutUpRight className="h-4 w-4" />
     </ExternalLink>
   );
 }
@@ -57,35 +51,36 @@ export interface SettingsSideBarProps {
 export default function SettingsSideBar({ page }: SettingsSideBarProps) {
   const settings = useSettingsContext();
 
+  const className = (selected: boolean) =>
+    clsx(
+      "flex m-0 justify-start gap-3 items-center hover:bg-accent hover:text-accent-foreground p-2 rounded",
+      { "bg-muted text-accent-foreground": selected },
+    );
+
   return (
-    <SideBar>
+    <aside className="w-64 border-r bg-background p-4 space-y-2">
       <SettingsSideBarItem
         url="/settings"
         title="General"
-        selected={page === SettingsPage.General}
+        className={className(page === SettingsPage.General)}
       />
-      <ExternalSettingsSideBarItem
-        url="chrome://settings/clearBrowserData"
-        title="Clear Browsing Data"
-        selected={page === SettingsPage.ClearBrowsingData}
-      />
-      <ExternalSettingsSideBarItem
-        url="https://docs.egghead.camfeenstra.com"
-        title="Docs"
-        selected={page === SettingsPage.Docs}
+      <SettingsSideBarItem
+        url="/settings/import-export"
+        title="Data Import / Export"
+        className={className(page === SettingsPage.ImportExport)}
       />
       <SettingsSideBarItem
         url="/about"
         title="About"
-        selected={page === SettingsPage.About}
+        className={className(page === SettingsPage.About)}
       />
       {settings.items.devModeEnabled ? (
         <SettingsSideBarItem
           url="/settings/dev"
-          title="Dev"
-          selected={page === SettingsPage.Dev}
+          title="Dev Tools"
+          className={className(page === SettingsPage.Dev)}
         />
       ) : null}
-    </SideBar>
+    </aside>
   );
 }

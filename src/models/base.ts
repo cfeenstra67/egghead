@@ -1,6 +1,7 @@
 export interface Column {
   type: "varchar" | "integer" | "datetime";
   nullable?: boolean;
+  indexed?: boolean;
 }
 
 export interface Table {

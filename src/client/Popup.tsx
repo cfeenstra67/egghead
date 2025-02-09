@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Router } from "wouter";
 import type { ServerInterface } from "../server";
@@ -8,12 +9,16 @@ import type { RuntimeInterface } from "./lib/runtimes";
 
 // Global CSS
 import "animate.css";
+import "./styles/styles.css";
 import "./styles/Popup.css";
+import { ThemeContextProvider } from "./lib/theme";
 
 export interface PopupProps {
   serverClientFactory: () => Promise<ServerInterface>;
   runtime: RuntimeInterface;
 }
+
+const queryClient = new QueryClient();
 
 export default function Popup({ runtime, serverClientFactory }: PopupProps) {
   const [query, setQuery] = useState("");
@@ -29,7 +34,11 @@ export default function Popup({ runtime, serverClientFactory }: PopupProps) {
     <Router hook={runtime.routerHook}>
       <AppContext.Provider value={ctx}>
         <SettingsContextProvider>
-          <PopupComponent />
+          <ThemeContextProvider>
+            <QueryClientProvider client={queryClient}>
+              <PopupComponent />
+            </QueryClientProvider>
+          </ThemeContextProvider>
         </SettingsContextProvider>
       </AppContext.Provider>
     </Router>

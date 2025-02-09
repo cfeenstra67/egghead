@@ -1,140 +1,141 @@
-import { useCallback, useContext, useState } from "react";
-import type { Session } from "../../models";
-import type { QuerySessionsRequest } from "../../server";
-import { Aborted } from "../../server/abort";
-import {
-  AggregateOperator,
-  BinaryOperator,
-  type Clause,
-} from "../../server/clause";
-import { dateToSqliteString } from "../../server/utils";
-import Card from "../components/Card";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useContext } from "react";
+import { BinaryOperator } from "../../server/clause";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SessionCard from "../components/SessionCard";
-import Timeline from "../components/Timeline";
 import { AppContext } from "../lib";
-import { SessionQueryState, useSessionQuery } from "../lib/session-query";
-import utilStyles from "../styles/utils.module.css";
 
 export interface SessionDetailProps {
   sessionId: string;
 }
 
 export default function SessionDetail({ sessionId }: SessionDetailProps) {
-  const { runtime } = useContext(AppContext);
+  const { serverClientFactory } = useContext(AppContext);
 
-  const getSessionRequest = useCallback(async () => {
-    return {
-      filter: {
-        operator: BinaryOperator.Equals,
-        fieldName: "id" as const,
-        value: sessionId,
-      },
-    };
-  }, [sessionId]);
+  const pageSize = 200;
 
-  const {
-    results: sessionResults,
-    state: sessionQueryState,
-    error: sessionQueryError,
-  } = useSessionQuery({
-    getRequest: getSessionRequest,
+  const sessionQuery = useQuery({
+    queryKey: ["session", sessionId],
+    queryFn: async () => {
+      const client = await serverClientFactory();
+      return await client.querySessions({
+        filter: {
+          operator: BinaryOperator.Equals,
+          fieldName: "id" as const,
+          value: sessionId,
+        },
+      });
+    },
   });
-  const session = sessionResults[0];
 
-  const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
+  const session = sessionQuery.data?.results[0];
 
-  const getOtherSessionsRequest = useCallback(async () => {
-    if (!session) {
-      throw new Aborted();
-    }
-
-    const newRequest: QuerySessionsRequest = {
-      isSearch: true,
-    };
-
-    const clauses: Clause<Session>[] = [
-      {
-        operator: BinaryOperator.Equals,
-        fieldName: "url",
-        value: session.url,
-      },
-    ];
-
-    if (dateRange !== null) {
-      const [start, end] = dateRange;
-
-      clauses.push({
-        fieldName: "startedAt",
-        operator: BinaryOperator.LessThan,
-        value: dateToSqliteString(end),
+  const parentSessions = useInfiniteQuery({
+    queryKey: ["history", sessionId, "parents", session?.url],
+    enabled: !!session,
+    queryFn: async ({ pageParam }) => {
+      const client = await serverClientFactory();
+      return await client.querySessions({
+        isSearch: true,
+        childFilter: {
+          operator: BinaryOperator.Equals,
+          fieldName: "url",
+          value: session!.url,
+        },
+        skip: pageParam,
+        limit: pageSize,
       });
-      clauses.push({
-        fieldName: "startedAt",
-        operator: BinaryOperator.GreaterThanOrEqualTo,
-        value: dateToSqliteString(start),
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _, lastPageParam) => {
+      if (lastPage.results.length === 0) {
+        return null;
+      }
+      return lastPageParam + pageSize;
+    },
+  });
+
+  const sessionsQuery = useInfiniteQuery({
+    queryKey: ["history", session?.url],
+    enabled: !!session,
+    queryFn: async ({ pageParam }) => {
+      const client = await serverClientFactory();
+      return await client.querySessions({
+        isSearch: true,
+        filter: {
+          operator: BinaryOperator.Equals,
+          fieldName: "url",
+          value: session!.url,
+        },
+        skip: pageParam,
+        limit: pageSize,
       });
-    }
-
-    if (clauses.length === 1) {
-      newRequest.filter = clauses[0];
-    }
-    if (clauses.length > 1) {
-      newRequest.filter = {
-        operator: AggregateOperator.And,
-        clauses,
-      };
-    }
-
-    return newRequest;
-  }, [session, dateRange]);
-
-  const {
-    results: otherSessionsResults,
-    state: otherSessionsState,
-    loadNextPage: otherSessionsLoadNextPage,
-    initialLoadComplete: otherSessionsInitialLoadComplete,
-    request: otherSessionsRequest,
-  } = useSessionQuery({
-    getRequest: getOtherSessionsRequest,
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _, lastPageParam) => {
+      if (lastPage.results.length === 0) {
+        return null;
+      }
+      return lastPageParam + pageSize;
+    },
   });
 
   return (
-    <Layout full>
-      <div className={utilStyles.row}>
-        <button className={utilStyles.button} onClick={() => runtime.goBack()}>
-          Back
-        </button>
-        <h1 className={utilStyles.marginLeft3}>Session Detail</h1>
-      </div>
-      {session ? (
-        <SessionCard session={session} />
-      ) : sessionQueryState === SessionQueryState.Loading ? (
-        <Card>Loading session...</Card>
-      ) : sessionQueryError ? (
-        <Card>Error loading session: {sessionQueryError}.</Card>
-      ) : (
-        <Card>Session not found.</Card>
-      )}
-      <div className={utilStyles.marginTop2}>
-        <Timeline
-          ready={otherSessionsInitialLoadComplete}
-          request={otherSessionsRequest}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-        />
-      </div>
-      <div className={utilStyles.marginTop2}>
-        {otherSessionsState === SessionQueryState.Error ? (
-          <p>An error occurred while loading other sessions.</p>
-        ) : (
-          <SearchResults
-            sessions={otherSessionsResults}
-            isLoading={otherSessionsState === SessionQueryState.Loading}
-            onEndReached={otherSessionsLoadNextPage}
-          />
-        )}
+    <Layout>
+      <div className="flex flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden min-h-full p-4 max-w-[800px] mx-auto">
+          <div className="rounded-xl border shadow p-6  flex flex-col gap-4 gap-y-6 mt-4">
+            {session ? (
+              <SessionCard session={session} />
+            ) : sessionQuery.status === "pending" ? (
+              <div>Loading session...</div>
+            ) : sessionQuery.status === "error" ? (
+              <div>Error loading session: {sessionQuery.error.message}.</div>
+            ) : (
+              <div>Session not found.</div>
+            )}
+            <div className="flex flex-col gap-4">
+              {parentSessions.status === "error" ? (
+                <p>An error occurred while loading source sessions.</p>
+              ) : parentSessions.status === "success" &&
+                parentSessions.data.pages[0].totalCount > 0 ? (
+                <>
+                  <h2 className="text-lg">Source sessions:</h2>
+                  <SearchResults
+                    showChildren="full"
+                    showControls
+                    aggregate
+                    animate
+                    sessions={parentSessions.data.pages.flatMap(
+                      (page) => page.results,
+                    )}
+                    onEndReached={() => parentSessions.fetchNextPage()}
+                  />
+                </>
+              ) : null}
+            </div>
+            <div className="flex flex-col gap-4">
+              {sessionsQuery.status === "error" ? (
+                <p>An error occurred while loading sessions.</p>
+              ) : sessionsQuery.status === "success" &&
+                sessionsQuery.data.pages[0].totalCount > 0 ? (
+                <>
+                  <h2 className="text-lg">Sessions:</h2>
+                  <SearchResults
+                    showChildren="full"
+                    showControls
+                    animate
+                    sessions={sessionsQuery.data.pages.flatMap(
+                      (page) => page.results,
+                    )}
+                    onEndReached={() => sessionsQuery.fetchNextPage()}
+                  />
+                </>
+              ) : null}
+            </div>
+          </div>
+        </main>
       </div>
     </Layout>
   );

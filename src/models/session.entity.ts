@@ -109,8 +109,22 @@ export class SessionTermIndex extends Session {
 
 export const sessionTermIndexTable = {
   ...sessionTable,
+  columns: {
+    ...sessionTable.columns,
+    host: { ...sessionTable.columns.host, indexed: true },
+    url: { ...sessionTable.columns.url, indexed: true },
+    title: { ...sessionTable.columns.title, indexed: true },
+    rawUrl: { ...sessionTable.columns.rawUrl, indexed: true },
+    dum: { ...sessionTable.columns.dum, indexed: true },
+  },
   name: "session_term_index",
 } as const satisfies Table;
+
+export const indexedColumns = new Set(
+  Object.entries((sessionTermIndexTable as Table).columns).flatMap(
+    ([key, value]) => (value.indexed ? [key] : []),
+  ),
+);
 
 // @Entity("session_term_index_vocab")
 export class SessionTermIndexVocab {

@@ -6,7 +6,7 @@ interface BubbleProps {
   onClick?: () => void;
 }
 
-export default function Bubble({ children, onClick, selected }: BubbleProps) {
+export function Bubble({ children, onClick, selected }: BubbleProps) {
   return (
     <div
       className={`${styles.bubble} ${selected ? styles.selectedBubble : ""}`}

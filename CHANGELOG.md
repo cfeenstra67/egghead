@@ -4,11 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2025-02-08
+
+### Added
+
+- Added the ability to delete history, both from Egghead and chrome.
+
+- Added import/export for databases, which are just sqlite databases that can be used w/ other SQLite tooling.
+
+- Added ability to see "source sessions" in the session detail page.
 
 ### Changed
 
-- Switched backend to use OPFS + `offscreen` API instead of the previous IndexedDB-based backend. This is a backwards-imcompontabile change but improves performance dramatically.
+- Switched backend to use OPFS + `offscreen` API instead of the previous IndexedDB-based backend. This is a backwards-imcompontabile change but improves search performance dramatically.
+
+- Redesigned UI w/ shadcn
+
+### Fixed
+
+- Fixed reliability issues around capturing link opens, including new tabs.
+
+- Fixed reliability issues around link opening from the history page.
 
 ## [1.0.4] - 2023-07-30
 

@@ -41,6 +41,7 @@ import type {
   UpdateSettingsRequest,
   UpdateSettingsResponse,
 } from "./types";
+import type * as dto from "./types";
 
 // For use in a web page or from background to offscreen communication
 export function createExtensionRequestProcessor(
@@ -231,6 +232,15 @@ export class ServerClient implements ServerInterface {
   ): Promise<ApplyRetentionPolicyResponse> {
     return await this.sendRequestAndRaiseForError({
       type: ServerMessage.ApplyRetentionPolicy,
+      ...request,
+    });
+  }
+
+  async deleteSessions(
+    request: dto.DeleteSessionsRequest,
+  ): Promise<dto.DeleteSessionsResponse> {
+    return await this.sendRequestAndRaiseForError({
+      type: ServerMessage.DeleteSessions,
       ...request,
     });
   }

@@ -107,6 +107,7 @@ export class NavigationObserver {
       const toDelete: string[] = [];
       Object.entries(this.pending).map(([key, value]) => {
         if (!value.start) {
+          logger.error("value does not have start");
           return;
         }
 
@@ -139,7 +140,7 @@ export class NavigationObserver {
   }
 
   constructId(data: any): string {
-    return `${data.tabId}-${data.frameId ? data.frameId : 0}`;
+    return `${data.tabId}-${data.frameId ?? 0}`;
   }
 
   prepareDataStorage(id: string): void {
@@ -155,7 +156,9 @@ export class NavigationObserver {
     };
   }
 
-  onCreatedNavigationTargetListener(data: any): void {
+  onCreatedNavigationTargetListener(
+    data: chrome.webNavigation.WebNavigationSourceCallbackDetails,
+  ): void {
     const id = this.constructId(data);
     const patch = (existing: NavigationObserver.PendingRequest) => {
       existing.openedInNewTab = !!data.tabId;
@@ -219,9 +222,17 @@ export class NavigationObserver {
     }
   }
 
-  onHistoryStateUpdatedListener(data: any): void {
+  onHistoryStateUpdatedListener(
+    data: chrome.webNavigation.WebNavigationTransitionCallbackDetails,
+  ): void {
     const id = this.constructId(data);
     if (!this.pending[id]) {
+      logger.debug(
+        "errorHistoryStateUpdatedWithoutPending %s %s",
+        data.url,
+        data,
+      );
+    } else {
       const detail: NavigationObserver.Request = {
         duration: 0,
         openedInNewTab: false,
@@ -229,8 +240,10 @@ export class NavigationObserver {
           frameId: null,
           tabId: null,
         },
-        transitionQualifiers: data.transitionQualifiers,
-        transitionType: data.transitionType,
+        transitionQualifiers:
+          data.transitionQualifiers as NavigationObserver.NavigationQualifier[],
+        transitionType:
+          data.transitionType as NavigationObserver.NavigationType,
         url: data.url,
         tabId: data.tabId,
         frameId: data.frameId,
@@ -242,10 +255,6 @@ export class NavigationObserver {
       );
 
       this.target.dispatchEvent(event);
-    } else {
-      this.prepareDataStorage(id);
-      this.pending[id].transitionType = data.transitionType;
-      this.pending[id].transitionQualifiers = data.transitionQualifiers;
     }
   }
 

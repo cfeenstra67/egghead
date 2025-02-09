@@ -59,7 +59,7 @@ This is all of the setup needed to be able to develop the app. The app is built 
 
 * ``demo`` - a slightly modified version of the ``dev`` app that includes a wrapper for choosing which demo database to download before loading the actual app. This is what's hosted at `egghead.camfeenstra.com <https://egghead.camfeenstra.com>`_.
 
-  * development command - ``pnpm webpack server --config-name demo --no-client-overlay``. You can access the app at ``http://localhost:8080/history.html``.
+  * development command - ``pnpm webpack serve --config-name demo --no-client-overlay``. You can access the app at ``http://localhost:8080/history.html``.
   
   * build command - ``pnpm webpack --config-name demo``. You can then access the app by opening the ``dist/demo/history.html`` file in your browser.
 

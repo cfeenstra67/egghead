@@ -1,7 +1,5 @@
 import type { SessionResponse } from "../../server";
 import { dateFromSqliteString } from "../../server/utils";
-import styles from "../styles/SearchResults.module.css";
-import Card from "./Card";
 import SearchResultsDay from "./SearchResultsDay";
 
 function groupSessionsByDay(
@@ -25,10 +23,17 @@ function groupSessionsByDay(
 }
 
 export interface SearchResultsProps {
+  animate?: boolean;
   sessions: SessionResponse[];
   isLoading?: boolean;
   onEndReached?: () => void;
   query?: string;
+  showChecks?: boolean;
+  checked?: (id: string) => boolean;
+  setChecked?: (ids: string[], checked: boolean) => void;
+  showChildren?: "short" | "full";
+  showControls?: boolean;
+  aggregate?: boolean;
 }
 
 export default function SearchResults({
@@ -36,30 +41,44 @@ export default function SearchResults({
   isLoading,
   onEndReached,
   query,
+  showChecks,
+  checked,
+  setChecked,
+  showChildren,
+  showControls,
+  aggregate,
+  animate,
 }: SearchResultsProps) {
   const groupedSessions = groupSessionsByDay(sessions);
 
   return (
-    <div className={styles.searchResults}>
+    <>
       {groupedSessions.map(([date, daySessions], idx) => (
         <SearchResultsDay
+          animate={animate}
           key={date.toString()}
           sessions={daySessions}
           date={date}
           onEndReached={onEndReached}
           isLast={idx === groupedSessions.length - 1}
+          showChecks={showChecks}
+          checked={checked}
+          setChecked={setChecked}
+          showChildren={showChildren}
+          showControls={showControls}
+          aggregate={aggregate}
         />
       ))}
       {sessions.length === 0 &&
         (isLoading ? (
-          <Card>Loading...</Card>
+          <h1>Loading...</h1>
         ) : query !== undefined && query.trim().length < 3 ? (
-          <Card>
+          <h1>
             No Results. Try lengthening your search to at least 3 characters.
-          </Card>
+          </h1>
         ) : (
-          <Card>No Results.</Card>
+          <h1>No Results.</h1>
         ))}
-    </div>
+    </>
   );
 }

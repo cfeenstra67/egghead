@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useContext } from "react";
 import { AppContext } from "../lib/context";
 
@@ -14,14 +15,25 @@ export function useExternalLinkOpener(
   newTab?: boolean,
 ): (url: string, tabId?: number) => void {
   const { runtime } = useContext(AppContext);
+  const queryClient = useQueryClient();
 
   return useCallback(
-    (url, tabId) => {
+    async (url, tabId) => {
+      let opened = false;
       if (newTab && tabId && runtime.openTabId) {
-        runtime.openTabId(tabId);
-      } else {
-        runtime.openUrl(url, newTab);
+        try {
+          await runtime.openTabId(tabId);
+          opened = true;
+        } catch (error) {
+          console.error("Error opening tab", error);
+        }
       }
+      if (!opened) {
+        await runtime.openUrl(url, newTab);
+      }
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["history"] });
+      }, 1000);
     },
     [runtime, newTab],
   );

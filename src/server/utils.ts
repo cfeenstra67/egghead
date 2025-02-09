@@ -2,10 +2,12 @@ import { v4 as uuidv4 } from "uuid";
 import parentLogger from "../logger";
 import type { SettingsItems } from "../models";
 import { Aborted } from "./abort";
-import { clausesEqual } from "./clause";
+import { BinaryOperator, clausesEqual } from "./clause";
 import type { JobManager, JobManagerMiddleware } from "./job-manager";
 import { ServerMessage, ServerResponseCode, Theme } from "./types";
 import type {
+  DeleteSessionsRequest,
+  DeleteSessionsResponse,
   ErrorResponse,
   QuerySessionsRequest,
   RequestHandler,
@@ -25,12 +27,7 @@ export function cleanURL(uri: string): string {
 
 export function getHost(uri: string): string {
   const urlObj = new URL(uri);
-  const hostname = urlObj.hostname;
-  // For www domains, use the root host
-  if (hostname.startsWith("www.")) {
-    return hostname.slice(4);
-  }
-  return hostname;
+  return urlObj.hostname;
 }
 
 export function requestHandler(server: ServerInterface): RequestHandler {
@@ -48,8 +45,6 @@ export function requestHandler(server: ServerInterface): RequestHandler {
       const response = await method(input as any);
       return { code: ServerResponseCode.Ok, ...response };
     } catch (err: any) {
-      console.error("ERROR", err);
-
       let message: string;
       let stack: string | undefined = undefined;
       if (err === null || err === undefined) {
@@ -96,7 +91,7 @@ export function dateFromSqliteString(dateString: string): Date {
 }
 
 export function dateToSqliteString(date: Date): string {
-  return date.toISOString().replace("Z", "");
+  return date.toISOString();
 }
 
 export function defaultSettings(): SettingsItems {
@@ -200,4 +195,83 @@ export function workerRequestHandler(handler: WorkerHandler): RequestHandler {
     }
     return response.response as any;
   };
+}
+
+export async function* iterateSessions(
+  service: ServerInterface,
+  request: Omit<QuerySessionsRequest, "skip" | "limit"> & {
+    chunkSize?: number;
+  },
+) {
+  let { chunkSize, ...args } = request;
+  chunkSize ??= 1000;
+  const resp = await service.querySessions({
+    ...args,
+    limit: chunkSize,
+  });
+
+  for (const session of resp.results) {
+    yield session;
+  }
+
+  const pages = Math.ceil(resp.totalCount / chunkSize);
+  let page = 1;
+  while (page < pages) {
+    const resp = await service.querySessions({
+      ...args,
+      skip: chunkSize * page,
+      limit: chunkSize,
+    });
+
+    for (const session of resp.results) {
+      yield session;
+    }
+
+    page++;
+  }
+}
+
+export async function deleteSessions(
+  service: ServerInterface,
+  { deleteCorrespondingChromeHistory, ...request }: DeleteSessionsRequest,
+): Promise<DeleteSessionsResponse> {
+  if (!deleteCorrespondingChromeHistory) {
+    return await service.deleteSessions(request);
+  }
+
+  let ids: string[] = [];
+  let urls = new Set<string>();
+  const deletedSessionIds: string[] = [];
+
+  const deleteIds = async () => {
+    if (ids.length === 0) {
+      return;
+    }
+    await Promise.all(
+      Array.from(urls).map((url) => chrome.history.deleteUrl({ url })),
+    );
+    const { deletedSessionIds: outIds } = await service.deleteSessions({
+      filter: {
+        operator: BinaryOperator.In,
+        fieldName: "id",
+        value: ids,
+      },
+    });
+    deletedSessionIds.push(...outIds);
+    ids = [];
+    urls = new Set();
+  };
+
+  for await (const session of iterateSessions(service, request)) {
+    ids.push(session.id);
+    urls.add(session.url);
+    urls.add(session.rawUrl);
+    if (ids.length > 100) {
+      await deleteIds();
+    }
+  }
+
+  await deleteIds();
+
+  return { deletedSessionIds };
 }

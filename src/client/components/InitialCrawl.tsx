@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { historyCrawlerFactory } from "../../extension/utils";
 import type { ServerInterface } from "../../server";
-import Card from "./Card";
 import Layout from "./Layout";
 import PopupLayout from "./PopupLayout";
 
@@ -12,33 +11,42 @@ interface LoadingStateProps {
 }
 
 function LoadingState({ isPopup, percentDone, lastError }: LoadingStateProps) {
-  const UseLayout = isPopup ? PopupLayout : Layout;
+  const UseLayout = isPopup
+    ? PopupLayout
+    : ({ children }: PropsWithChildren) => (
+        <Layout searchDisabled>{children}</Layout>
+      );
 
   return (
     <UseLayout>
-      {!isPopup && <h1>History</h1>}
-      <Card>
-        {lastError === undefined ? (
-          <>
-            <p>
-              Loading your existing browsing history for searching (this only
-              happens once). This should only take a minute or two...
-            </p>
-            <p>Percent done: {percentDone.toFixed(0)}%</p>
-          </>
-        ) : (
-          <>
-            <p>
-              Unfortunately the app encountered an unrecoverable error while
-              ingesting your existing browsing history. You{"'"}ll need to
-              reinstall the extension to fix the issue. If you continue to
-              experience issues, please report the following error to the
-              developer at me@camfeenstra.com:
-            </p>
-            <p>{lastError}</p>
-          </>
-        )}
-      </Card>
+      <div className="flex flex-1 overflow-hidden">
+        {isPopup ? null : <div className="w-64 border-r bg-background" />}
+        <main className="flex-1 overflow-hidden min-h-full p-4 space-y-4 text-base">
+          {!isPopup && <h1 className="text-2xl font-semibold">Activity</h1>}
+          {lastError === undefined ? (
+            <>
+              <p>
+                Loading your existing browsing history for searching (this only
+                happens once). This should only take a minute or two...
+              </p>
+              <p className="font-semibold text-lg">
+                Percent done: {percentDone.toFixed(0)}%
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                Unfortunately the app encountered an unrecoverable error while
+                ingesting your existing browsing history. You{"'"}ll need to
+                reinstall the extension to fix the issue. If you continue to
+                experience issues, please report the following error to the
+                developer at me@camfeenstra.com:
+              </p>
+              <p>{lastError}</p>
+            </>
+          )}
+        </main>
+      </div>
     </UseLayout>
   );
 }

@@ -6,10 +6,10 @@ import { ServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
 import { createOffscreenClient } from "./server/offscreen-client";
 import {
+  deleteSessions,
   jobManagerMiddleware,
   logJobMiddleware,
   logRequestMiddleware,
-  // jobLockingMiddleware,
 } from "./server/utils";
 
 const logger = parentLogger.child({ context: "background" });
@@ -64,38 +64,74 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     return true;
   }
+
+  const handleError = (error: any) => {
+    if (error instanceof Aborted) {
+      sendResponse({
+        code: ServerResponseCode.Aborted,
+        message: "Aborted",
+      });
+      return;
+    }
+    logger.trace("Error handling extension request.", error);
+    sendResponse({
+      code: ServerResponseCode.Error,
+      message: error.toString(),
+      stack: error.stack,
+    });
+  };
+
   const { request: innerRequest, requestId } = request;
+
+  // Need to intercept this to implement the chrome deletion part
+  // since we cannot acccess chrome APIs in the worker.
+  if (innerRequest.type === "deleteSessions") {
+    const { type, ...args } = innerRequest;
+    deleteSessions(serverClient, args)
+      .then((response) =>
+        sendResponse({
+          code: ServerResponseCode.Ok,
+          ...response,
+        }),
+      )
+      .catch(handleError);
+
+    return true;
+  }
+
   jobManager.addJob(requestId, (abortSignal) => {
     return loggingServerConnection({ ...innerRequest, abort: abortSignal });
   });
 
   jobManager
     .jobPromise(requestId)
-    .then((response) => {
-      sendResponse(response);
-    })
-    .catch((error) => {
-      if (error instanceof Aborted) {
-        sendResponse({
-          code: ServerResponseCode.Aborted,
-          message: "Aborted",
-        });
-        return;
-      }
-      logger.trace("Error handling extension request.", error);
-      sendResponse({
-        code: ServerResponseCode.Error,
-        message: error.toString(),
-        stack: error.stack,
-      });
-    });
+    .then((response) => sendResponse(response))
+    .catch(handleError);
+
   return true;
 });
 
-// chrome.runtime.onSuspend.addListener(async () => {
-//   logger.debug('closing');
-//   await closeServer();
-// });
+chrome.commands.onCommand.addListener((cmd, tab) => {
+  if (cmd !== "open-history") {
+    return;
+  }
+  const urls = ["chrome://history", "brave://history"];
+  chrome.tabs
+    .query({})
+    .then(async (tabs) => {
+      const tabsWithIds = tabs.filter(
+        (t) => !!t.id && t.url && urls.some((u) => t.url!.startsWith(u)),
+      );
+      console.log("tags", tabs, tabsWithIds);
+      if (tabsWithIds.length === 0) {
+        await chrome.tabs.create({ url: "chrome://history" });
+        return;
+      }
+
+      await chrome.tabs.update(tabsWithIds[0].id!, { active: true });
+    })
+    .catch(console.error);
+});
 
 chrome.runtime.onInstalled.addListener(async () => {
   if (DEV_MODE) {

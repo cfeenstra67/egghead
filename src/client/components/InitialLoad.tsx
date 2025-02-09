@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import Card from "./Card";
 import Layout from "./Layout";
 import PopupLayout from "./PopupLayout";
 
@@ -14,9 +13,9 @@ function LoadingState({ isPopup, progress }: LoadingStateProps) {
   return (
     <UseLayout>
       {!isPopup && <h1>History</h1>}
-      <Card>
+      <div>
         <p>Loading database: {(progress * 100).toFixed(1)}%.</p>
-      </Card>
+      </div>
     </UseLayout>
   );
 }
@@ -32,14 +31,14 @@ function ErrorState({ isPopup, error }: ErrorStateProps) {
   return (
     <UseLayout>
       {!isPopup && <h1>History</h1>}
-      <Card>
+      <div>
         <p>An error occurred while loading the database: {error}.</p>
         <p>
           {"Unfortunately this app isn't usable in this state, try reloading "}
           {"the page or contacting me at me@camfeenstra.com for help if the "}
           {"issue persists."}
         </p>
-      </Card>
+      </div>
     </UseLayout>
   );
 }

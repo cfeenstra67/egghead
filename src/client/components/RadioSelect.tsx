@@ -1,5 +1,3 @@
-import styles from "../styles/RadioSelect.module.css";
-
 export interface RadioSelectOption {
   value: string;
   description: string;
@@ -20,7 +18,7 @@ export default function RadioSelect({
   return (
     <>
       {options.map((option) => (
-        <div className={styles.option} key={option.value}>
+        <div className="flex gap-4" key={option.value}>
           <input
             id={option.value}
             type="radio"

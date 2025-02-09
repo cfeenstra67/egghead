@@ -1,5 +1,10 @@
 import { sql } from "kysely";
-import { type Session, sessionIndexTable, sessionTable } from "../models";
+import {
+  type Session,
+  indexedColumns,
+  sessionIndexTable,
+  sessionTable,
+} from "../models";
 import type { Table } from "../models/base";
 import { type Fts5TableArgs, getColumn } from "../models/fts5";
 import { maybeAbort } from "./abort";
@@ -14,8 +19,8 @@ import {
   isUnary,
   mapClauses,
   parseQueryString,
-  renderClauseV2,
 } from "./clause";
+import { renderClause } from "./render-clause";
 import {
   type Database,
   type QueryBuilder,
@@ -26,6 +31,7 @@ import {
 } from "./sql-primitives";
 import stopwordsTxt from "./stopwords.txt";
 import type {
+  DeleteSessionsRequest,
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
@@ -57,15 +63,13 @@ export function sessionIndexTableArgs(
 ): Fts5TableArgs {
   const srcTable = sessionTable;
 
-  const indexedColumns = ["host", "url", "title", "rawUrl", "dum"];
-
   return {
     tableName: table.name,
     contentTableName: srcTable.name,
     columns: Object.keys(sessionTable.columns).flatMap((name) => {
       return ["rowid", "dum"].includes(name)
         ? []
-        : [[name, indexedColumns.includes(name)]];
+        : [[name, indexedColumns.has(name)]];
     }),
     tokenize: tokenize ?? "unicode61",
   };
@@ -219,26 +223,12 @@ export class SearchService {
       clauses.push(request.filter);
     }
 
-    const fullClause: Clause<Session> = {
+    let fullClause: Clause<Session> = {
       operator: AggregateOperator.And,
       clauses,
     };
-
-    const getFieldName = (fieldName: string) => {
-      if (fieldName === IndexToken) {
-        return ["session_index"];
-      }
-      return ["s", fieldName];
-    };
-
-    const whereClause = renderClauseV2({
-      clause: fullClause,
-      getFieldName,
-    });
-
-    builder = builder.where(whereClause);
-
     if (isSearch) {
+      fullClause = prepareClauseForSearch(fullClause);
       builder = builder.select(({ eb }) => [
         eb
           .fn("highlight", [
@@ -257,6 +247,44 @@ export class SearchService {
           ])
           .as("highlightedHost"),
       ]);
+    }
+
+    const getFieldName = (fieldName: string) => {
+      if (fieldName === IndexToken) {
+        return ["session_index"];
+      }
+      return ["s", fieldName];
+    };
+
+    const whereClause = renderClause({
+      clause: fullClause,
+      getFieldName,
+    });
+
+    builder = builder.where(whereClause);
+
+    if (request.childFilter) {
+      const childClause = renderClause({
+        clause: {
+          operator: AggregateOperator.And,
+          clauses: [
+            request.childFilter,
+            {
+              operator: BinaryOperator.NotEquals,
+              fieldName: "parentSessionId",
+              value: null,
+            },
+          ],
+        },
+        getFieldName,
+      });
+
+      const childBuilder = this.queryBuilder
+        .selectFrom("session as s")
+        .select("parentSessionId")
+        .where(childClause);
+
+      builder = builder.where("id", "in", childBuilder);
     }
 
     return builder;
@@ -588,5 +616,20 @@ export class SearchService {
     const rowIdBuilder = this.rowIdQueryBuilder(builder);
 
     return await this.getTimeline(rowIdBuilder, request.granularity);
+  }
+
+  async deleteSessions(
+    request: Omit<DeleteSessionsRequest, "deleteCorrespondingChromeHistory">,
+  ): Promise<string[]> {
+    const queryBuilder = this.searchQueryBuilder(request);
+    const rowIdBuilder = this.rowIdQueryBuilder(queryBuilder);
+    const deleteQuery = this.queryBuilder
+      .deleteFrom("session")
+      .where("session.rowid", "in", rowIdBuilder)
+      .returning("id");
+
+    const results = await executeQuery(deleteQuery, this.connection);
+
+    return results.map((row) => row.id);
   }
 }

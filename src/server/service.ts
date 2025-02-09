@@ -26,6 +26,8 @@ import type {
   CorrelateChromeVisitResponse,
   CreateGhostSessionsRequest,
   CreateGhostSessionsResponse,
+  DeleteSessionsRequest,
+  DeleteSessionsResponse,
   ExportDatabaseRequest,
   ExportDatabaseResponse,
   FixChromeParentsRequest,
@@ -63,31 +65,6 @@ type Session = RemoveAnnotations<RemoveRelations<TypeORMSession>>;
 type InsertSession = Insertable<RemoveRelations<TypeORMSession>>;
 
 const logger = parentLogger.child({ context: "service" });
-
-// Source: https://www.codegrepper.com/code-examples/javascript/how+to+convert+data+uri+in+array+buffer
-function dataURItoBlob(dataURI: string): Blob {
-  // convert base64 to raw binary data held in a string
-  // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-  const byteString = atob(dataURI.split(",")[1]);
-
-  // separate out the mime component
-  const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-
-  // write the bytes of the string to an ArrayBuffer
-  const ab = new ArrayBuffer(byteString.length);
-
-  // create a view into the buffer
-  const ia = new Uint8Array(ab);
-
-  // set the bytes of the buffer to the correct values
-  for (let i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.charCodeAt(i);
-  }
-
-  // write the ArrayBuffer to a blob, and you're done
-  const blob = new Blob([ab], { type: mimeString });
-  return blob;
-}
 
 const stopHosts = new Set(["localhost"]);
 const stopProtocols = new Set([
@@ -171,7 +148,6 @@ export class Server implements ServerInterface {
       return {};
     }
 
-    // const repo = manager.getRepository(Session);
     const now = new Date();
     const existingSession = await this.getActiveSession(request.tabId, now);
     maybeAbort(request.abort);
@@ -190,15 +166,41 @@ export class Server implements ServerInterface {
       sourceSessionId = sourceSession?.id;
     }
 
-    const existingSessionDiff: Partial<Session> = {};
-    if (existingSession) {
-      // Check if session hasn't changed.
-      const cleanUrl = cleanURL(request.url);
-      if (cleanURL(existingSession.url) === cleanUrl) {
+    if (
+      existingSession &&
+      cleanURL(request.url) === cleanURL(existingSession.url)
+    ) {
+      const existingSessionDiff: Partial<Session> = {};
+      if (existingSession.title !== request.title) {
+        existingSessionDiff.title = existingSession.title;
+      }
+      if (existingSession.rawUrl !== request.url) {
+        existingSessionDiff.url = request.url;
+      }
+      if (!existingSessionDiff.parentSessionId && sourceSessionId) {
+        existingSessionDiff.parentSessionId = sourceSessionId;
+      }
+      if (!existingSessionDiff.transitionType && transitionType) {
+        existingSessionDiff.transitionType = transitionType;
+      }
+      if (Object.keys(existingSessionDiff).length === 0) {
         return {};
       }
+
+      const updateBuilder = this.queryBuilder
+        .updateTable("session")
+        .where("id", "=", existingSession.id)
+        .set(existingSessionDiff);
+
+      await executeQuery(updateBuilder, this.connection);
+
+      return {};
+    }
+
+    const existingSessionDiff: Partial<Session> = {};
+    if (existingSession) {
       // Otherwise: use as source unless it's already defined
-      if (sourceSessionId === undefined) {
+      if (!sourceSessionId) {
         sourceSessionId = existingSession.id;
       }
       // either way, mark as done; we'll save it later
@@ -642,5 +644,16 @@ export class Server implements ServerInterface {
     await executeQuery(deleteBuilder, this.connection);
 
     return {};
+  }
+
+  async deleteSessions(
+    request: DeleteSessionsRequest,
+  ): Promise<DeleteSessionsResponse> {
+    if (request.deleteCorrespondingChromeHistory) {
+      throw new Error("Chrome APIs can not be used here");
+    }
+
+    const ids = await this.searchService.deleteSessions(request);
+    return { deletedSessionIds: ids };
   }
 }

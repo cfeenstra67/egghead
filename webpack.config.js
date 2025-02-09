@@ -3,7 +3,8 @@ const MergeJsonWebpackPlugin = require("merge-jsons-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 // Hack to avoid issues in a service worker
 // See https://github.com/webpack/webpack/blob/main/lib/web/JsonpChunkLoadingRuntimeModule.js
@@ -55,7 +56,8 @@ function createModule({
                   localIdentName: '[name]__[local]--[hash:base64:5]'
                 },
               }
-            }
+            },
+            'postcss-loader'
           ],
           include: /\.module\.css$/
         },
@@ -63,7 +65,8 @@ function createModule({
           test: /\.css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            'css-loader'
+            'css-loader',
+            'postcss-loader'
           ],
           exclude: /\.module\.css$/
         },
@@ -141,7 +144,8 @@ function createModule({
         path: false,
         os: false,
         crypto: false,
-      }
+      },
+      plugins: [new TsconfigPathsPlugin()]
     },
     output: {
       filename: '[name].js',
@@ -177,7 +181,7 @@ module.exports = [
   }),
   createModule({
     name: 'chrome-dev',
-    logLevel: 'debug',
+    logLevel: 'info',
     devMode: true,
     ignoreAssets: nonDemoIgnores,
     entry: {

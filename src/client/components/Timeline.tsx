@@ -1,5 +1,6 @@
 import "chart.js/auto";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useContext, useState } from "react";
 import { Chart } from "react-chartjs-2";
 import type {
   QuerySessionTimelineRequest,
@@ -7,16 +8,13 @@ import type {
   QuerySessionsRequest,
 } from "../../server";
 import { Theme } from "../../server/types";
+import { Badge } from "../components-v2/ui/badge";
 import { AppContext } from "../lib";
 import { useTheme } from "../lib/theme";
-import styles from "../styles/Timeline.module.css";
-import Bubble from "./Bubble";
 
 export interface TimelineProps {
   request: QuerySessionsRequest;
   dateRange: [Date, Date] | null;
-  ready?: boolean;
-  onLoadComplete?: () => void;
   setDateRange: (range: [Date, Date] | null) => void;
 }
 
@@ -120,7 +118,7 @@ function fillMissingLabels(
   )[1];
 
   function twoDigit(num: number): string {
-    return `00${num}`.slice(-2);
+    return ("00" + num).slice(-2);
   }
 
   let getNext: (d: Date) => Date;
@@ -214,14 +212,8 @@ export default function Timeline({
   request,
   dateRange,
   setDateRange,
-  ready,
-  onLoadComplete,
 }: TimelineProps) {
   const { serverClientFactory } = useContext(AppContext);
-  const [timeline, setTimeline] = useState<QuerySessionTimelineResponse>({
-    granularity: "day",
-    timeline: [],
-  });
   const [dateRangeStack, setDateRangeStack] = useState<[Date, Date][]>([]);
 
   const pushDateStack = useCallback(
@@ -242,64 +234,43 @@ export default function Timeline({
     }
   }, [dateRangeStack, setDateRangeStack]);
 
-  useEffect(() => {
-    if (!ready) {
-      return;
-    }
-
-    const abortController = new AbortController();
-
-    async function load() {
-      try {
-        const client = await serverClientFactory();
-        const timelineResp = await client.querySessionTimeline({
-          ...request,
-          granularity: 24,
-          abort: abortController.signal,
-        });
-        setTimeline({
-          granularity: timelineResp.granularity,
-          timeline: fillMissingLabels(
-            timelineResp.granularity,
-            timelineResp.timeline,
-          ),
-        });
-      } finally {
-        onLoadComplete?.();
-      }
-    }
-
-    load();
-    return () => abortController.abort();
-  }, [ready, request, setTimeline]);
-
-  const labels = timeline.timeline.map((x) => {
-    return dateStringToLabel(timeline.granularity, x.dateString);
+  const response = useQuery({
+    queryKey: ["history", request, "timeline"],
+    queryFn: async () => {
+      const client = await serverClientFactory();
+      return await client.querySessionTimeline({
+        ...request,
+        granularity: 24,
+      });
+    },
   });
-  const dataPoints = timeline.timeline.map((x) => x.count);
 
   const theme = useTheme();
+
   const backgroundColor =
-    theme === Theme.Light ? "#535453" : "rgba(255, 255, 255, 0.2)";
+    theme === Theme.Light ? "hsl(215.4 16.3% 46.9%)" : "hsl(215.4 16.3% 56.9%)";
 
   return (
     <>
       {dateRange !== null && (
-        <Bubble selected onClick={() => popDateStack()}>
+        <Badge onClick={() => popDateStack()} className="cursor-pointer">
           {dateRangeToLabel(...dateRange)}
-        </Bubble>
+        </Badge>
       )}
-      {timeline.timeline.length > 0 && (
-        <div className={styles.chartContainer}>
+      <div className="relative w-full h-36 mt-1">
+        {response.status === "success" && response.data.timeline.length > 0 ? (
           <Chart
             type="bar"
             data={{
-              labels,
+              labels: response.data.timeline.map((x) =>
+                dateStringToLabel(response.data.granularity, x.dateString),
+              ),
               datasets: [
                 {
                   label: "Count",
-                  data: dataPoints,
+                  data: response.data.timeline.map((x) => x.count),
                   backgroundColor,
+                  borderRadius: 8,
                 },
               ],
             }}
@@ -318,9 +289,9 @@ export default function Timeline({
                   return;
                 }
                 const selectedLabel =
-                  timeline.timeline[elements[0].index].dateString;
+                  response.data.timeline[elements[0].index].dateString;
                 const range = dateStringToDateRange(
-                  timeline.granularity,
+                  response.data.granularity,
                   selectedLabel,
                 );
                 const currentRange = dateRangeStack[dateRangeStack.length - 1];
@@ -359,8 +330,8 @@ export default function Timeline({
               },
             }}
           />
-        </div>
-      )}
+        ) : null}
+      </div>
     </>
   );
 }

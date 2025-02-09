@@ -1,7 +1,7 @@
 @import "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap";
 
 .layout {
-  --navbar-height: 52px;
+  /* --navbar-height: 52px;
   --sidebar-width: 216px;
   --padding: 8px;
   --padding-2: calc(var(--padding) * 2);
@@ -11,7 +11,7 @@
   --heading-2-font-size: 28px;
   --heading-3-font-size: 22px;
   --paragraph-font-size: 14px;
-  --small-font-size: 12px;
+  --small-font-size: 12px; */
   width: 100%;
   min-height: 100%;
   top: 0;

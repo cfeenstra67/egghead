@@ -8,7 +8,7 @@ import {
 export interface RuntimeInterface {
   routerHook: RouterHook;
 
-  openHistory(): Promise<void>;
+  openHistory(relativeUrl?: string): Promise<void>;
 
   getCurrentUrl(): Promise<string>;
 
@@ -22,8 +22,12 @@ export interface RuntimeInterface {
 export class WebRuntime implements RuntimeInterface {
   routerHook = useHashLocation;
 
-  async openHistory() {
-    window.open("http://localhost:8080/history.html");
+  async openHistory(relativeUrl?: string) {
+    const url = new URL("http://localhost:8080/history.html");
+    if (relativeUrl) {
+      url.hash = relativeUrl;
+    }
+    window.open(url.href);
   }
 
   async getCurrentUrl() {
@@ -60,9 +64,11 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
     });
   }
 
-  openHistory() {
+  openHistory(relativeUrl?: string) {
+    const base = "chrome://history";
+    const url = relativeUrl ? new URL(relativeUrl, base).href : base;
     return new Promise<void>((resolve, reject) => {
-      chrome.tabs.create({ url: "chrome://history" }, () => {
+      chrome.tabs.create({ url }, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
         } else {
@@ -116,7 +122,7 @@ export class ChromeEmbeddedRuntime implements RuntimeInterface {
   }
 
   async openTabId(tabId: number) {
-    chrome.tabs.update(tabId, { active: true });
+    await chrome.tabs.update(tabId, { active: true });
   }
 
   async goBack() {
@@ -131,9 +137,12 @@ export class PopupRuntime implements RuntimeInterface {
     this.routerHook = popupLocationHook(this, historyUrl);
   }
 
-  openHistory() {
+  openHistory(relativeUrl?: string) {
+    const url = relativeUrl
+      ? new URL(relativeUrl, this.historyUrl).href
+      : this.historyUrl;
     return new Promise<void>((resolve, reject) => {
-      chrome.tabs.create({ url: this.historyUrl }, () => {
+      chrome.tabs.create({ url }, () => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
         } else {
@@ -201,7 +210,7 @@ export class PopupRuntime implements RuntimeInterface {
   }
 
   async openTabId(tabId: number) {
-    chrome.tabs.update(tabId, { active: true });
+    await chrome.tabs.update(tabId, { active: true });
   }
 
   async goBack() {

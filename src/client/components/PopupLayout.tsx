@@ -1,7 +1,5 @@
-import { useMemo } from "react";
-import { useTheme } from "../lib/theme";
-import styles from "../styles/PopupLayout.module.css";
-import themes from "../styles/themes.module.css";
+import { themeClasses, useTheme } from "../lib/theme";
+import { cn } from "../lib/utils";
 
 export interface PopupLayoutProps {
   children?: React.ReactNode;
@@ -10,14 +8,14 @@ export interface PopupLayoutProps {
 export default function PopupLayout({ children }: PopupLayoutProps) {
   const theme = useTheme();
 
-  const layoutClassNames = useMemo(() => {
-    const result = themes[theme];
-    return [styles.layout, result ?? themes.dark];
-  }, [theme]);
-
   return (
-    <div className={layoutClassNames.join(" ")}>
-      <div className={styles.content}>{children}</div>
+    <div
+      className={cn(
+        "flex w-[400px] h-[600px] flex-col bg-background text-foreground dark text-base",
+        themeClasses[theme],
+      )}
+    >
+      {children}
     </div>
   );
 }

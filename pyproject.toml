@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "egghead"
-version = "2.0.0"
+version = "2.0.1"
 description = "Browser history replacement that doesn't suck eggs."
 authors = ["cfeenstra67 <cameron.l.feenstra@gmail.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.8"

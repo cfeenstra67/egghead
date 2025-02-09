@@ -35,10 +35,10 @@ runs:
         mkdir -p data/demo
         curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db
         curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
-        npx webpack --config-name demo
+        pnpm webpack --config-name demo
         make html
         for config in chrome firefox firefox-mv2; do
-          npx webpack --config-name $config
+          pnpm webpack --config-name $config
           zip -rj dist/$config.zip dist/$config
         done
     - name: Configure AWS Credentials

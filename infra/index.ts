@@ -215,8 +215,8 @@ function githubRolePolicy(bucketArns: string[]): string {
       {
         Sid: "DeployActions",
         Effect: "Allow",
-        Resource: bucketArns.flatMap((arn) => [arn, arn + "/*"]),
-        Action: ["s3:PutObject*"],
+        Resource: bucketArns.flatMap((arn) => [arn, `${arn}/*`]),
+        Action: ["s3:PutObject*", "s3:DeleteObject"],
       },
     ],
   });

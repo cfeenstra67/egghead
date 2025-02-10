@@ -5,7 +5,7 @@ import { SQLiteWASMDBController } from "./sqlite-wasm-db-controller";
 import { ServerResponseCode, type WorkerMessage } from "./types";
 
 const { handle: serverConnection, close: closeServer } = createBackgroundClient(
-  new SQLiteWASMDBController({ type: "opfs", path: "history.db" }),
+  new SQLiteWASMDBController("history.db"),
 );
 
 const jobManager = new JobManager();

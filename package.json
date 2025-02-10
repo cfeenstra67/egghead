@@ -53,9 +53,9 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@ohm-js/cli": "^1.1.0",
-    "@pulumi/aws": "^5.10.0",
+    "@pulumi/aws": "^6.68.0",
     "@pulumi/awsx": "^0.40.0",
-    "@pulumi/pulumi": "^3.35.3",
+    "@pulumi/pulumi": "^3.149.0",
     "@svgr/webpack": "^6.2.1",
     "@types/chrome": "^0.0.300",
     "@types/jest": "^28.1.5",

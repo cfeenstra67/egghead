@@ -29,18 +29,9 @@ runs:
     - name: Set up Python Dependencies
       shell: bash
       run: poetry install
-    - name: Build Demo 
+    - name: Build 
       shell: bash
-      run: |
-        mkdir -p data/demo
-        curl https://egghead.camfeenstra.com/demo.db -o data/demo/demo.db
-        curl https://egghead.camfeenstra.com/demo-small.db -o data/demo/demo-small.db
-        pnpm webpack --config-name demo
-        make html
-        for config in chrome firefox firefox-mv2; do
-          pnpm webpack --config-name $config
-          zip -rj dist/$config.zip dist/$config
-        done
+      run: build.sh
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:

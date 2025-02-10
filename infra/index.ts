@@ -11,6 +11,7 @@ interface StaticWebsiteArgs {
   dnsName: string;
   indexDocument: string;
   logsBucket: aws.s3.GetBucketResult;
+  headers?: Record<string, string>;
   tags: Record<string, string>;
 }
 
@@ -21,6 +22,7 @@ async function staticWebsite({
   dnsName,
   indexDocument,
   logsBucket,
+  headers,
   tags,
 }: StaticWebsiteArgs) {
   const rootDomain = dnsName.split(".").slice(-2).join(".");
@@ -104,6 +106,20 @@ async function staticWebsite({
     });
   }
 
+  let headersPolicyId: pulumi.Output<string> | undefined = undefined;
+  if (headers) {
+    const headersPolicy = new aws.cloudfront.ResponseHeadersPolicy(`${idPrefix}headers-policy`, {
+      customHeadersConfig: {
+        items: Object.entries(headers).map(([key, value]) => ({
+          header: key,
+          override: true,
+          value
+        }))
+      }
+    });
+    headersPolicyId = headersPolicy.id;
+  }
+
   const distribution = new aws.cloudfront.Distribution(
     `${idPrefix}distribution`,
     {
@@ -133,6 +149,7 @@ async function staticWebsite({
         minTtl: 0,
         defaultTtl: 600,
         maxTtl: 600,
+        responseHeadersPolicyId: headersPolicyId
       },
       priceClass: "PriceClass_100",
       restrictions: { geoRestriction: { restrictionType: "none" } },
@@ -245,6 +262,10 @@ export = async () => {
     dnsName,
     indexDocument: "demo-history.html",
     logsBucket,
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp"
+    },
     tags,
   });
 

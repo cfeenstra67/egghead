@@ -76,13 +76,13 @@ To build all production assets (the ``chrome``, ``firefox``, ``firefox-mv2``, an
 Documentation
 ##################
 
-The documentation is built using Sphinx. As this comes from the world of Python and uses Python to run, you'll need Python in order to build the documentation. Also, you'll need to install Poetry. The documentation & installation instructions for Poetry can be found `here <https://python-poetry.org/docs/>`_. 
+The documentation is built using Sphinx. As this comes from the world of Python and uses Python to run, you'll need Python in order to build the documentation. Also, you'll need to `install uv <https://docs.astral.sh/uv/getting-started/installation/>`.
 
-Once you have poetry installed, you can install the Python dependencies by running:
+Once you have `uv` installed, you can install the Python dependencies by running:
 
 .. code-block:: bash
 
-   $ poetry install
+   $ uv sync
 
 You can then edit the documentation pages found in the `docs <https://github.com/cfeenstra67/egghead/tree/main/docs>`_ directory of the project. To generate the documentation, run:
 

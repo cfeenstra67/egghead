@@ -33,7 +33,7 @@ runs:
       run: uv sync
     - name: Build 
       shell: bash
-      run: build.sh
+      run: ./build.sh
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:

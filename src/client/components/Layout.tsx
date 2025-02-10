@@ -1,5 +1,5 @@
-import { Toaster } from "../components-v2/ui/toaster";
-import { TooltipProvider } from "../components-v2/ui/tooltip";
+import { Toaster } from "./ui/toaster";
+import { TooltipProvider } from "./ui/tooltip";
 import { themeClasses, useTheme } from "../lib/theme";
 import { cn } from "../lib/utils";
 import NavBar from "./NavBar";

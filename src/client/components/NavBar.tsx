@@ -1,13 +1,13 @@
 import { Book, Search, Settings2 } from "lucide-react";
 import { useContext } from "react";
 import { Link } from "wouter";
-import { Button } from "../components-v2/ui/button";
-import { Input } from "../components-v2/ui/input";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../components-v2/ui/tooltip";
+} from "./ui/tooltip";
 import EggheadIcon from "../icons/egghead.svg";
 import { AppContext } from "../lib";
 

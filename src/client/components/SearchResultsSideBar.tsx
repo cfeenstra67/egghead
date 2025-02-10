@@ -6,16 +6,16 @@ import type {
   QuerySessionFacetsFacetValue,
   QuerySessionsRequest,
 } from "../../server";
-import { Badge } from "../components-v2/ui/badge";
-import { Button } from "../components-v2/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "../components-v2/ui/collapsible";
-import { Input } from "../components-v2/ui/input";
-import { ScrollArea } from "../components-v2/ui/scroll-area";
-import { Spinner } from "../components-v2/ui/spinner";
+} from "./ui/collapsible";
+import { Input } from "./ui/input";
+import { ScrollArea } from "./ui/scroll-area";
+import { Spinner } from "./ui/spinner";
 import { AppContext } from "../lib";
 import { cn } from "../lib/utils";
 

@@ -10,14 +10,14 @@ import {
   IndexToken,
 } from "../../server/clause";
 import { dateToSqliteString } from "../../server/utils";
-import { Button } from "../components-v2/ui/button";
+import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components-v2/ui/dropdown-menu";
-import { ScrollArea } from "../components-v2/ui/scroll-area";
+} from "../components/ui/dropdown-menu";
+import { ScrollArea } from "../components/ui/scroll-area";
 import { DeleteSessionModal } from "../components/DeleteSessionModal";
 import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";

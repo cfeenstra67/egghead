@@ -11,15 +11,15 @@ import type { Session } from "../../models";
 import type { SessionResponse } from "../../server";
 import { BinaryOperator, dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
-import { Button } from "../components-v2/ui/button";
-import { Checkbox } from "../components-v2/ui/checkbox";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components-v2/ui/dropdown-menu";
-import { Separator } from "../components-v2/ui/separator";
+} from "./ui/dropdown-menu";
+import { Separator } from "./ui/separator";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
 import { cn } from "../lib/utils";

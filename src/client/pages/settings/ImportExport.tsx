@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { useContext, useRef } from "react";
-import { Button } from "../../components-v2/ui/button";
-import { Input } from "../../components-v2/ui/input";
-import { Label } from "../../components-v2/ui/label";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import Layout from "../../components/Layout";
 import SettingsOptionStatus, {
   LoadingState,

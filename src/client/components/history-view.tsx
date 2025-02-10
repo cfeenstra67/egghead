@@ -1,12 +1,12 @@
-import { Button } from "@/src/client/components-v2/ui/button";
-import { ChartContainer } from "@/src/client/components-v2/ui/chart";
+import { Button } from "@/src/client/components/ui/button";
+import { ChartContainer } from "@/src/client/components/ui/chart";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/src/client/components-v2/ui/dropdown-menu";
-import { ScrollArea } from "@/src/client/components-v2/ui/scroll-area";
+} from "@/src/client/components/ui/dropdown-menu";
+import { ScrollArea } from "@/src/client/components/ui/scroll-area";
 import { ChevronDown, Download, Share2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";

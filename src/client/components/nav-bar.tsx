@@ -1,5 +1,5 @@
-import { Button } from "@/src/client/components-v2/ui/button";
-import { Input } from "@/src/client/components-v2/ui/input";
+import { Button } from "@/src/client/components/ui/button";
+import { Input } from "@/src/client/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,

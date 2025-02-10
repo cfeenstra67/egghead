@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "@/src/client/components-v2/ui/badge";
-import { Button } from "@/src/client/components-v2/ui/button";
+import { Badge } from "@/src/client/components/ui/badge";
+import { Button } from "@/src/client/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/src/client/components-v2/ui/collapsible";
-import { Input } from "@/src/client/components-v2/ui/input";
-import { ScrollArea } from "@/src/client/components-v2/ui/scroll-area";
+} from "@/src/client/components/ui/collapsible";
+import { Input } from "@/src/client/components/ui/input";
+import { ScrollArea } from "@/src/client/components/ui/scroll-area";
 import { ChevronRight, Globe, Hash, Search } from "lucide-react";
 import { useState } from "react";
 

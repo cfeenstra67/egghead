@@ -1,11 +1,11 @@
-import { Button } from "@/src/client/components-v2/ui/button";
+import { Button } from "@/src/client/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/src/client/components-v2/ui/dropdown-menu";
-import { Separator } from "@/src/client/components-v2/ui/separator";
+} from "@/src/client/components/ui/dropdown-menu";
+import { Separator } from "@/src/client/components/ui/separator";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Link2, MoreVertical } from "lucide-react";
 import { useState } from "react";

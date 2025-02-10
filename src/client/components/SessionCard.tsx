@@ -2,7 +2,7 @@ import { BinaryOperator } from "@/src/server/clause";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import type { DeleteSessionsRequest, SessionResponse } from "../../server";
-import { Button } from "../components-v2/ui/button";
+import { Button } from "./ui/button";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
 import { DeleteSessionModal } from "./DeleteSessionModal";
 import ExternalLink from "./ExternalLink";

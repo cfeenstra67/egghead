@@ -1,5 +1,5 @@
-import { Button } from "@/src/client/components-v2/ui/button";
-import { ScrollArea } from "@/src/client/components-v2/ui/scroll-area";
+import { Button } from "@/src/client/components/ui/button";
+import { ScrollArea } from "@/src/client/components/ui/scroll-area";
 import { useState } from "react";
 import { HistoryItem } from "./history-item";
 

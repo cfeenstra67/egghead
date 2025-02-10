@@ -1,14 +1,14 @@
 import { Theme } from "@/src/server";
-import { Input } from "../../components-v2/ui/input";
-import { Label } from "../../components-v2/ui/label";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components-v2/ui/select";
-import { Switch } from "../../components-v2/ui/switch";
+} from "../../components/ui/select";
+import { Switch } from "../../components/ui/switch";
 import Layout from "../../components/Layout";
 import SettingsSideBar, {
   SettingsPage,

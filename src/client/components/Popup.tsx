@@ -8,8 +8,8 @@ import {
   BinaryOperator,
   type Clause,
 } from "../../server/clause";
-import { Badge } from "../components-v2/ui/badge";
-import { Input } from "../components-v2/ui/input";
+import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
 import { AppContext } from "../lib/context";
 import PopupLayout from "./PopupLayout";
 import SearchResults from "./SearchResults";
@@ -48,8 +48,6 @@ export default function Popup() {
           clauses,
         };
       }
-
-      console.log("REQUEST", newRequest);
 
       const client = await serverClientFactory();
       return await client.querySessions({

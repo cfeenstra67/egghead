@@ -6,8 +6,8 @@ import {
 } from "@tanstack/react-query";
 import { useContext, useState } from "react";
 import { Link } from "wouter";
-import { Button } from "../components-v2/ui/button";
-import { Checkbox } from "../components-v2/ui/checkbox";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../components-v2/ui/dialog";
-import { Label } from "../components-v2/ui/label";
-import { ScrollArea } from "../components-v2/ui/scroll-area";
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "../hooks/use-toast";
 import { AppContext } from "../lib";
 import SearchResults from "./SearchResults";

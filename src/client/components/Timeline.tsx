@@ -7,9 +7,9 @@ import type {
   QuerySessionsRequest,
 } from "../../server";
 import { Theme } from "../../server/types";
-import { Badge } from "./ui/badge";
 import { AppContext } from "../lib";
 import { useTheme } from "../lib/theme";
+import { Badge } from "./ui/badge";
 
 export interface TimelineProps {
   request: QuerySessionsRequest;

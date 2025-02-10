@@ -1,4 +1,8 @@
 import { Theme } from "@/src/server";
+import Layout from "../../components/Layout";
+import SettingsSideBar, {
+  SettingsPage,
+} from "../../components/SettingsSideBar";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
@@ -9,10 +13,6 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
-import Layout from "../../components/Layout";
-import SettingsSideBar, {
-  SettingsPage,
-} from "../../components/SettingsSideBar";
 import { useSettingsContext } from "../../lib/SettingsContext";
 
 export default function Settings() {

@@ -1,4 +1,3 @@
-import { sessionIndexTable } from "../models";
 import queryStringGrammar, {
   type QueryStringSemantics,
 } from "./query-string.ohm-bundle";
@@ -241,22 +240,7 @@ function addClauseOperation<T>(semantics: QueryStringSemantics): void {
       let term = value.clause().value;
       term = term?.slice(1, term.length - 1)?.replace('""', '"') ?? null;
 
-      const fieldName = col.sourceString.trim().toLowerCase();
-      if (!Object.keys(sessionIndexTable.columns).includes(fieldName)) {
-        return {
-          operator: BinaryOperator.Match,
-          fieldName: IndexToken,
-          value: getSearchString(
-            [
-              col.sourceString,
-              colon1.sourceString,
-              operator.sourceString,
-              colon2.sourceString,
-              value.sourceString,
-            ].join(""),
-          ),
-        };
-      }
+      const fieldName = col.sourceString.trim();
 
       let outOp: BinaryOperator | undefined = undefined;
       const op = operator.sourceString.slice(

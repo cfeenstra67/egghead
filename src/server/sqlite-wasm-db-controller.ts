@@ -1,6 +1,4 @@
-import sqlite3InitModule, {
-  type Sqlite3Static,
-} from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, { type Sqlite3Static } from "@sqlite.org/sqlite-wasm";
 import { executeDdl } from "../models/ddl";
 import { AbstractDBController } from "./abstract-db-controller";
 import type { SQLConnection } from "./sql-primitives";

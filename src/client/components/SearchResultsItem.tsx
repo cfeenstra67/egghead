@@ -11,6 +11,12 @@ import type { Session } from "../../models";
 import type { SessionResponse } from "../../server";
 import { BinaryOperator, dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
+import { AppContext } from "../lib/context";
+import { getFaviconUrlPublicApi } from "../lib/favicon";
+import { cn } from "../lib/utils";
+import { DeleteSessionModal } from "./DeleteSessionModal";
+import ExternalLink, { useExternalLinkOpener } from "./ExternalLink";
+import Highlighted from "./Highlighted";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
@@ -20,12 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
-import { AppContext } from "../lib/context";
-import { getFaviconUrlPublicApi } from "../lib/favicon";
-import { cn } from "../lib/utils";
-import { DeleteSessionModal } from "./DeleteSessionModal";
-import ExternalLink, { useExternalLinkOpener } from "./ExternalLink";
-import Highlighted from "./Highlighted";
 
 const logger = parentLogger.child({ context: "SearchResultsItem" });
 

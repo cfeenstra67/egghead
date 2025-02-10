@@ -10,6 +10,11 @@ import {
   IndexToken,
 } from "../../server/clause";
 import { dateToSqliteString } from "../../server/utils";
+import { DeleteSessionModal } from "../components/DeleteSessionModal";
+import Layout from "../components/Layout";
+import SearchResults from "../components/SearchResults";
+import SearchResultsSideBar from "../components/SearchResultsSideBar";
+import Timeline from "../components/Timeline";
 import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
@@ -18,11 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { ScrollArea } from "../components/ui/scroll-area";
-import { DeleteSessionModal } from "../components/DeleteSessionModal";
-import Layout from "../components/Layout";
-import SearchResults from "../components/SearchResults";
-import SearchResultsSideBar from "../components/SearchResultsSideBar";
-import Timeline from "../components/Timeline";
 import { useDebounced } from "../hooks/use-debounced";
 import { AppContext } from "../lib";
 

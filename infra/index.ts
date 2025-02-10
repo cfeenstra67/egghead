@@ -108,15 +108,18 @@ async function staticWebsite({
 
   let headersPolicyId: pulumi.Output<string> | undefined = undefined;
   if (headers) {
-    const headersPolicy = new aws.cloudfront.ResponseHeadersPolicy(`${idPrefix}headers-policy`, {
-      customHeadersConfig: {
-        items: Object.entries(headers).map(([key, value]) => ({
-          header: key,
-          override: true,
-          value
-        }))
-      }
-    });
+    const headersPolicy = new aws.cloudfront.ResponseHeadersPolicy(
+      `${idPrefix}headers-policy`,
+      {
+        customHeadersConfig: {
+          items: Object.entries(headers).map(([key, value]) => ({
+            header: key,
+            override: true,
+            value,
+          })),
+        },
+      },
+    );
     headersPolicyId = headersPolicy.id;
   }
 
@@ -149,7 +152,7 @@ async function staticWebsite({
         minTtl: 0,
         defaultTtl: 600,
         maxTtl: 600,
-        responseHeadersPolicyId: headersPolicyId
+        responseHeadersPolicyId: headersPolicyId,
       },
       priceClass: "PriceClass_100",
       restrictions: { geoRestriction: { restrictionType: "none" } },
@@ -264,7 +267,7 @@ export = async () => {
     logsBucket,
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp"
+      "Cross-Origin-Embedder-Policy": "require-corp",
     },
     tags,
   });

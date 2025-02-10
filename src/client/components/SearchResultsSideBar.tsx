@@ -6,6 +6,8 @@ import type {
   QuerySessionFacetsFacetValue,
   QuerySessionsRequest,
 } from "../../server";
+import { AppContext } from "../lib";
+import { cn } from "../lib/utils";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
@@ -16,8 +18,6 @@ import {
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Spinner } from "./ui/spinner";
-import { AppContext } from "../lib";
-import { cn } from "../lib/utils";
 
 interface HostsComponentProps {
   disabled?: boolean;

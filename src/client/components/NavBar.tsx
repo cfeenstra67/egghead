@@ -1,15 +1,11 @@
 import { Book, Search, Settings2 } from "lucide-react";
 import { useContext } from "react";
 import { Link } from "wouter";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "./ui/tooltip";
 import EggheadIcon from "../icons/egghead.svg";
 import { AppContext } from "../lib";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export interface NavbarProps {
   searchDisabled?: boolean;

@@ -1094,6 +1094,7 @@ describe(SearchService, () => {
     "%s: parse: %s = %s",
     (id: string, queryString: string, expected: Clause<Session>) => {
       const result = parseQueryString<Session>(queryString);
+      console.log("??", result, expected);
       expect(clausesEqual(result, expected)).toBe(true);
     },
   );

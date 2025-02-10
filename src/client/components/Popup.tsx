@@ -8,11 +8,11 @@ import {
   BinaryOperator,
   type Clause,
 } from "../../server/clause";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
 import { AppContext } from "../lib/context";
 import PopupLayout from "./PopupLayout";
 import SearchResults from "./SearchResults";
+import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
 
 export default function Popup() {
   const { query, setQuery, runtime, serverClientFactory } =

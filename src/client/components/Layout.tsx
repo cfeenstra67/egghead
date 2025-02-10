@@ -1,8 +1,8 @@
-import { Toaster } from "./ui/toaster";
-import { TooltipProvider } from "./ui/tooltip";
 import { themeClasses, useTheme } from "../lib/theme";
 import { cn } from "../lib/utils";
 import NavBar from "./NavBar";
+import { Toaster } from "./ui/toaster";
+import { TooltipProvider } from "./ui/tooltip";
 
 export interface LayoutProps {
   children: React.ReactNode | React.ReactNode[];

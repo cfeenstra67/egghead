@@ -6,10 +6,10 @@ import { useContext, useState } from "react";
 import Editor from "react-simple-code-editor";
 import parentLogger from "../../logger";
 import type { ServerInterface } from "../../server";
-import { Button } from "./ui/button";
 import { AppContext } from "../lib";
 import styles from "../styles/DbTool.module.css";
 import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
+import { Button } from "./ui/button";
 
 hljs.registerLanguage("sql", sqlLang);
 

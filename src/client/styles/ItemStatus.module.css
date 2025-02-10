@@ -1,9 +1,0 @@
-.itemStatus {
-  --active-color: #42f548;
-  width: 20px;
-  height: 20px;
-}
-
-.itemStatus circle {
-  fill: var(--active-color);
-}

@@ -18,7 +18,6 @@ import ImportExport from "./pages/settings/ImportExport";
 import "animate.css";
 import "highlight.js/styles/monokai-sublime.css";
 import "./styles/styles.css";
-import "./styles/App.css";
 
 export interface AppProps {
   serverClientFactory: () => Promise<ServerInterface>;

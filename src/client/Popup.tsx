@@ -10,7 +10,6 @@ import type { RuntimeInterface } from "./lib/runtimes";
 // Global CSS
 import "animate.css";
 import "./styles/styles.css";
-import "./styles/Popup.css";
 import { ThemeContextProvider } from "./lib/theme";
 
 export interface PopupProps {

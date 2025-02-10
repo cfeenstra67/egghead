@@ -21,14 +21,17 @@ runs:
       run: |
         pnpm install
         pnpm ohm-generate
-    - uses: Gr1N/setup-poetry@v8
     - uses: actions/setup-python@v4
       with:
         python-version: '3.8'
         cache: poetry
-    - name: Set up Python Dependencies
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.5.1"
+    - name: Setup python env
       shell: bash
-      run: poetry install
+      run: uv sync
     - name: Build 
       shell: bash
       run: build.sh

@@ -67,19 +67,21 @@ export default function Popup() {
 
   return (
     <PopupLayout>
-      <div className="p-4 flex flex-col gap-2">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            autoFocus
-            type="search"
-            placeholder="Search history..."
-            className="pl-8"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+      <div className="flex flex-col overflow-hidden h-full">
+        <div className="p-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              type="search"
+              placeholder="Search history..."
+              className="pl-8"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 p-2">
           <Badge
             className="cursor-pointer"
             variant="outline"
@@ -95,7 +97,7 @@ export default function Popup() {
             Current Domain Only
           </Badge>
         </div>
-        <div>
+        <div className="flex-1 overflow-y-auto pt-[1px]">
           {sessionsQuery.status === "error" ? (
             <p>An error occurred while loading search results.</p>
           ) : (

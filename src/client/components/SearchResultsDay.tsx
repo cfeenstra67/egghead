@@ -63,10 +63,12 @@ export default function SearchResultsDay({
     ? groupSessions(sessions)
     : sessions.map((s) => getAggSession(s));
   return (
-    <div className="w-full">
-      <h2 className="text-sm font-medium text-muted-foreground mb-2">
-        {dateString(date)}
-      </h2>
+    <>
+      <div className="p-2 sticky top-[-1px] bg-background z-10 border-y">
+        <h2 className="text-sm font-medium text-muted-foreground">
+          {dateString(date)}
+        </h2>
+      </div>
       <div className="flex flex-col gap-2">
         <TransitionGroup component={null}>
           {groupedSessions.flatMap((session, idx) => (
@@ -85,6 +87,6 @@ export default function SearchResultsDay({
           ))}
         </TransitionGroup>
       </div>
-    </div>
+    </>
   );
 }

@@ -338,7 +338,7 @@ function SingleAggregatedSearchResultsItem({
                 variant="ghost"
                 size="sm"
                 className={cn("text-xs flex items-center whitespace-nowrap", {
-                  "bg-muted text-accent-foreground":
+                  "bg-primary text-primary-foreground":
                     childTypesExpanded.includes(ChildType.Link),
                 })}
                 onClick={() => {

@@ -12,10 +12,11 @@ function LoadingState({ isPopup, progress }: LoadingStateProps) {
 
   return (
     <UseLayout>
-      {!isPopup && <h1>History</h1>}
-      <div>
-        <p>Loading database: {(progress * 100).toFixed(1)}%.</p>
-      </div>
+      <main className="max-w-[700px] mx-auto p-4">
+        <div className="text-xl font-semibold">
+          <p>Loading database: {(progress * 100).toFixed(1)}%.</p>
+        </div>
+      </main>
     </UseLayout>
   );
 }
@@ -30,15 +31,19 @@ function ErrorState({ isPopup, error }: ErrorStateProps) {
 
   return (
     <UseLayout>
-      {!isPopup && <h1>History</h1>}
-      <div>
-        <p>An error occurred while loading the database: {error}.</p>
+      <main className="max-w-[700px] mx-auto p-4">
+        <p className="text-lg font-semibold">
+          An error occurred while loading the database: {error}.
+        </p>
         <p>
           {"Unfortunately this app isn't usable in this state, try reloading "}
-          {"the page or contacting me at me@camfeenstra.com for help if the "}
-          {"issue persists."}
+          {"the page or contacting me at "}
+          <a className="underline" href="mailto:me@camfeenstra.com">
+            me@camfeenstra.com
+          </a>{" "}
+          {"for help if the issue persists."}
         </p>
-      </div>
+      </main>
     </UseLayout>
   );
 }

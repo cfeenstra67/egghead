@@ -39,8 +39,8 @@ export interface SQLConnection {
   import?: (data: Uint8Array) => Promise<void>;
 }
 
-export function createQueryBuilder(): QueryBuilder {
-  return new Kysely<Database>({
+export function createQueryBuilder<D = Database>(): Kysely<D> {
+  return new Kysely({
     dialect: {
       createAdapter() {
         return new SqliteAdapter();

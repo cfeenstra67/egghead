@@ -230,7 +230,7 @@ export function fts5CreateVocabTableSql(args: Fts5TableArgs): string {
   return components.join(" ");
 }
 
-export async function createFts5IndexV2(
+export async function createFts5Index(
   args: Fts5TableArgs,
   connection: SQLConnection,
 ): Promise<void> {
@@ -242,7 +242,7 @@ export async function createFts5IndexV2(
   await connection(fts5DeleteTriggerSql(args));
 }
 
-export async function dropFts5IndexV2(
+export async function dropFts5Index(
   args: Fts5TableArgs,
   connection: SQLConnection,
 ): Promise<void> {

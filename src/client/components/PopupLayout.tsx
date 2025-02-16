@@ -10,8 +10,9 @@ export default function PopupLayout({ children }: PopupLayoutProps) {
 
   return (
     <div
+      id="layout"
       className={cn(
-        "flex w-[400px] h-[600px] flex-col bg-background text-foreground dark text-base",
+        "w-[400px] h-[600px] overflow-hidden bg-background text-foreground text-base",
         themeClasses[theme],
       )}
     >

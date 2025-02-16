@@ -69,16 +69,19 @@ export default function SearchResults({
           aggregate={aggregate}
         />
       ))}
-      {sessions.length === 0 &&
-        (isLoading ? (
-          <h1>Loading...</h1>
-        ) : query !== undefined && query.trim().length < 3 ? (
-          <h1>
-            No Results. Try lengthening your search to at least 3 characters.
-          </h1>
-        ) : (
-          <h1>No Results.</h1>
-        ))}
+      {sessions.length === 0 && (
+        <div className="p-4 font-semibold">
+          {isLoading ? (
+            <h1>Loading...</h1>
+          ) : query !== undefined && query.trim().length < 3 ? (
+            <h1>
+              No Results. Try lengthening your search to at least 3 characters.
+            </h1>
+          ) : (
+            <h1>No Results.</h1>
+          )}
+        </div>
+      )}
     </>
   );
 }

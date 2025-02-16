@@ -2,13 +2,13 @@ import "chart.js/auto";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useContext, useState } from "react";
 import { Chart } from "react-chartjs-2";
-import type {
-  QuerySessionTimelineRequest,
-  QuerySessionsRequest,
+import {
+  type QuerySessionTimelineRequest,
+  type QuerySessionsRequest,
+  Theme,
 } from "../../server";
-import { Theme } from "../../server/types";
 import { AppContext } from "../lib";
-import { useTheme } from "../lib/theme";
+import { useThemeVariable } from "../lib/theme";
 import { Badge } from "./ui/badge";
 
 export interface TimelineProps {
@@ -140,10 +140,16 @@ export default function Timeline({
     },
   });
 
-  const theme = useTheme();
+  const backgroundColorValues = useThemeVariable("--primary", (theme) =>
+    theme === Theme.Light ? "240 3.8% 46.1%" : "240 5% 64.9%",
+  );
 
-  const backgroundColor =
-    theme === Theme.Light ? "hsl(215.4 16.3% 46.9%)" : "hsl(215.4 16.3% 56.9%)";
+  const backgroundColor = `hsl(${backgroundColorValues})`;
+
+  // TODO
+  const fontColorValues = useThemeVariable("--foreground", (theme) => "");
+
+  const fontColor = `hsl(${fontColorValues})`;
 
   return (
     <>
@@ -212,6 +218,7 @@ export default function Timeline({
                   ticks: {
                     autoSkipPadding: 6,
                     maxRotation: 0,
+                    color: fontColor,
                   },
                   grid: {
                     display: false,

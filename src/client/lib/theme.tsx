@@ -13,8 +13,8 @@ export type ConcreteTheme = Exclude<Theme, Theme.Auto>;
 const ThemeContext = createContext<ConcreteTheme>(Theme.Dark);
 
 export const themeClasses: Record<ConcreteTheme, string> = {
-  [Theme.Light]: "lightTheme",
-  [Theme.Dark]: "darkTheme",
+  [Theme.Light]: "default-light",
+  [Theme.Dark]: "default-dark",
 };
 
 export function ThemeContextProvider({ children }: PropsWithChildren) {
@@ -76,4 +76,28 @@ export function ThemeContextProvider({ children }: PropsWithChildren) {
 
 export function useTheme(): ConcreteTheme {
   return useContext(ThemeContext);
+}
+
+export function useThemeVariable(
+  name: string,
+  fallback: (theme: ConcreteTheme) => string,
+): string {
+  const theme = useTheme();
+  const [value, setValue] = useState<string | null>(null);
+  useEffect(() => {
+    const layout = document.getElementById("layout");
+    if (layout === null) {
+      return;
+    }
+    const style = getComputedStyle(layout);
+
+    const value = style.getPropertyValue(name);
+    setValue(value);
+  }, [name, theme]);
+
+  if (value === null) {
+    return fallback(theme);
+  }
+
+  return value;
 }

@@ -1,5 +1,5 @@
 import sqlite3InitModule, { type Sqlite3Static } from "@sqlite.org/sqlite-wasm";
-import { executeDdl } from "../models/ddl";
+import { executeMigrations } from "../models/migrations";
 import { AbstractDBController } from "./abstract-db-controller";
 import type { SQLConnection } from "./sql-primitives";
 
@@ -59,7 +59,7 @@ export class SQLiteWASMDBController extends AbstractDBController {
       await this.sqlite3!.oo1.OpfsDb.importDb(this.path, data);
     };
 
-    await executeDdl(returnFunc);
+    await executeMigrations(returnFunc);
 
     return returnFunc;
   }

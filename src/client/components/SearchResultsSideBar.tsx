@@ -16,7 +16,6 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 import { Input } from "./ui/input";
-import { ScrollArea } from "./ui/scroll-area";
 import { Spinner } from "./ui/spinner";
 
 interface HostsComponentProps {
@@ -245,6 +244,7 @@ function TermsComponent({
 
 interface SearchSideBarProps {
   disabled?: boolean;
+  className?: string;
   request: QuerySessionsRequest;
   selectedHosts: string[];
   setSelectedHosts: (hosts: string[]) => void;
@@ -253,6 +253,7 @@ interface SearchSideBarProps {
 }
 
 export default function SearchSideBar({
+  className,
   disabled,
   request,
   selectedHosts,
@@ -285,26 +286,24 @@ export default function SearchSideBar({
   }
 
   return (
-    <aside className="w-64 border-r bg-background">
-      <ScrollArea className="h-[calc(100vh-3.5rem)]">
-        <div className="p-4 space-y-6">
-          <HostsComponent
-            loading={facets.status === "pending"}
-            hosts={facets.data?.host ?? []}
-            selectedHosts={selectedHosts}
-            setSelectedHosts={setSelectedHosts}
-            disabled={disabled}
-          />
+    <aside className={cn("w-64 border-r overflow-y-auto", className)}>
+      <div className="p-4 space-y-6">
+        <HostsComponent
+          loading={facets.status === "pending"}
+          hosts={facets.data?.host ?? []}
+          selectedHosts={selectedHosts}
+          setSelectedHosts={setSelectedHosts}
+          disabled={disabled}
+        />
 
-          <TermsComponent
-            loading={facets.status === "pending"}
-            terms={facets.data?.term ?? []}
-            selectedTerms={selectedTerms}
-            setSelectedTerms={setSelectedTerms}
-            disabled={disabled}
-          />
-        </div>
-      </ScrollArea>
+        <TermsComponent
+          loading={facets.status === "pending"}
+          terms={facets.data?.term ?? []}
+          selectedTerms={selectedTerms}
+          setSelectedTerms={setSelectedTerms}
+          disabled={disabled}
+        />
+      </div>
     </aside>
   );
 }

@@ -8,7 +8,7 @@ import {
   sessionIndexTable,
   sessionTermIndexTable,
 } from "../models";
-import { createFts5IndexV2, dropFts5IndexV2 } from "../models/fts5";
+import { createFts5Index, dropFts5Index } from "../models/fts5";
 import { maybeAbort } from "./abort";
 import { SearchService, sessionIndexTableArgs } from "./search";
 import {
@@ -78,6 +78,21 @@ function shouldIndex(url: string): boolean {
   const urlObj = new URL(url);
   const cleanedProtocol = urlObj.protocol.slice(0, urlObj.protocol.length - 1);
   return !stopProtocols.has(cleanedProtocol) && !stopHosts.has(urlObj.hostname);
+}
+
+export async function regenerateSearchIndices(
+  conn: SQLConnection,
+  abort?: AbortSignal,
+): Promise<void> {
+  const searchIndexArgs = sessionIndexTableArgs(sessionIndexTable, "trigram");
+  const termIndexArgs = sessionIndexTableArgs(sessionTermIndexTable);
+
+  for (const args of [searchIndexArgs, termIndexArgs]) {
+    await dropFts5Index(args, conn);
+    maybeAbort(abort);
+    await createFts5Index(args, conn);
+    maybeAbort(abort);
+  }
 }
 
 // Some arbitrary negative value (so it won't overlap w/ real IDs)
@@ -342,15 +357,7 @@ export class Server implements ServerInterface {
   async regenerateIndex(
     request: RegenerateIndexRequest,
   ): Promise<RegenerateIndexResponse> {
-    const searchIndexArgs = sessionIndexTableArgs(sessionIndexTable, "trigram");
-    const termIndexArgs = sessionIndexTableArgs(sessionTermIndexTable);
-
-    for (const args of [searchIndexArgs, termIndexArgs]) {
-      await dropFts5IndexV2(args, this.connection);
-      maybeAbort(request.abort);
-      await createFts5IndexV2(args, this.connection);
-      maybeAbort(request.abort);
-    }
+    await regenerateSearchIndices(this.connection, request.abort);
 
     return {};
   }

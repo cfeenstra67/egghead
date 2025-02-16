@@ -13,17 +13,18 @@ export default function Layout({ children, searchDisabled }: LayoutProps) {
   const theme = useTheme();
 
   return (
-    <TooltipProvider>
-      <div
-        className={cn(
-          "flex min-h-screen flex-col bg-background text-foreground dark text-base",
-          themeClasses[theme],
-        )}
-      >
+    <div
+      id="layout"
+      className={cn(
+        "h-screen bg-background text-foreground text-base default-global overflow-hidden",
+        themeClasses[theme],
+      )}
+    >
+      <TooltipProvider>
         <NavBar searchDisabled={searchDisabled} />
-        <div className="flex flex-1 overflow-hidden h-full">{children}</div>
+        <div className="pt-14 flex h-full">{children}</div>
         <Toaster />
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </div>
   );
 }

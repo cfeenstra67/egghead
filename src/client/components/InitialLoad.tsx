@@ -2,6 +2,24 @@ import { useMemo, useState } from "react";
 import Layout from "./Layout";
 import PopupLayout from "./PopupLayout";
 
+interface ContainerProps extends React.PropsWithChildren {
+  isPopup?: boolean;
+}
+
+function Container({ isPopup, children }: ContainerProps) {
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      {isPopup ? null : (
+        <div className="w-64 border-r bg-background hidden md:block" />
+      )}
+      <main className="flex-1 overflow-hidden min-h-full p-4 space-y-4 text-base">
+        {!isPopup && <h1 className="text-2xl font-semibold">Activity</h1>}
+        {children}
+      </main>
+    </div>
+  );
+}
+
 interface LoadingStateProps {
   isPopup?: boolean;
   progress: number;
@@ -12,11 +30,11 @@ function LoadingState({ isPopup, progress }: LoadingStateProps) {
 
   return (
     <UseLayout>
-      <main className="max-w-[700px] mx-auto p-4">
-        <div className="text-xl font-semibold">
+      <Container isPopup={isPopup}>
+        <div className="font-semibold">
           <p>Loading database: {(progress * 100).toFixed(1)}%.</p>
         </div>
-      </main>
+      </Container>
     </UseLayout>
   );
 }
@@ -31,7 +49,7 @@ function ErrorState({ isPopup, error }: ErrorStateProps) {
 
   return (
     <UseLayout>
-      <main className="max-w-[700px] mx-auto p-4">
+      <Container isPopup={isPopup}>
         <p className="text-lg font-semibold">
           An error occurred while loading the database: {error}.
         </p>
@@ -43,7 +61,7 @@ function ErrorState({ isPopup, error }: ErrorStateProps) {
           </a>{" "}
           {"for help if the issue persists."}
         </p>
-      </main>
+      </Container>
     </UseLayout>
   );
 }

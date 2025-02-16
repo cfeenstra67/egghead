@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.1.0] - 2025-02-16
+
 ### Changed
 
 - Changed color scheme away from default shadcn theme.
+
+- Updated docs to match app theme.
 
 ### Fixed
 

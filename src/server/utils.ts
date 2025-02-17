@@ -97,6 +97,7 @@ export function dateToSqliteString(date: Date): string {
 export function defaultSettings(): SettingsItems {
   return {
     dataCollectionEnabled: true,
+    showFullUrls: false,
     devModeEnabled: DEV_MODE,
     theme: Theme.Auto,
     retentionPolicyMonths: 12,

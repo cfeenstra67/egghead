@@ -52,6 +52,21 @@ export const migrations: Migration[] = [
       await executeScript(ddl, conn);
     },
   },
+  {
+    name: "add-show-full-urls",
+    up: async (conn) => {
+      await conn("BEGIN");
+      await conn(
+        `CREATE TABLE settings_new("id" varchar PRIMARY KEY NOT NULL, "dataCollectionEnabled" boolean NOT NULL, "devModeEnabled" boolean NOT NULL, "createdAt" datetime NOT NULL, "updatedAt" datetime NOT NULL, "theme" varchar NOT NULL, "retentionPolicyMonths" integer NOT NULL, "showFullUrls" boolean NOT NULL)`,
+      );
+      await conn(
+        'INSERT INTO settings_new SELECT *, false as "showFullUrls" FROM settings',
+      );
+      await conn("DROP TABLE settings");
+      await conn("ALTER TABLE settings_new RENAME TO settings");
+      await conn("COMMIT");
+    },
+  },
 ];
 
 interface MigrationTable {
@@ -86,6 +101,8 @@ export async function executeMigrations(conn: SQLConnection): Promise<void> {
   const existingNames = new Set(
     (await executeQuery(existingIdsQuery, conn)).map((row) => row.name),
   );
+
+  console.log("EXISTING", existingNames);
 
   for (const migration of migrations) {
     if (existingNames.has(migration.name)) {

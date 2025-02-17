@@ -50,6 +50,7 @@ function sessionToSessionResponse(
     childTransitions: Record<string, string>;
     highlightedTitle: string;
     highlightedHost: string;
+    highlightedUrl: string;
   },
 ): SessionResponse {
   return {
@@ -206,6 +207,7 @@ export class SearchService {
   private searchQueryBuilder(
     request: QuerySessionsRequest,
     isSearch?: boolean,
+    highlight?: boolean,
   ) {
     const clauses: Clause<Session>[] = [];
 
@@ -229,7 +231,7 @@ export class SearchService {
       operator: AggregateOperator.And,
       clauses,
     };
-    if (isSearch) {
+    if (isSearch && highlight) {
       fullClause = prepareClauseForSearch(fullClause);
       builder = builder.select(({ eb }) => [
         eb
@@ -248,6 +250,14 @@ export class SearchService {
             sql.lit("}~}~}"),
           ])
           .as("highlightedHost"),
+        eb
+          .fn("highlight", [
+            sql.id("session_index"),
+            eb.lit(3),
+            sql.lit("{~{~{"),
+            sql.lit("}~}~}"),
+          ])
+          .as("highlightedUrl"),
       ]);
     }
 
@@ -543,7 +553,11 @@ export class SearchService {
   async querySessions(
     request: QuerySessionsRequest,
   ): Promise<QuerySessionsResponse> {
-    const originalBuilder = this.searchQueryBuilder(request, request.isSearch);
+    const originalBuilder = this.searchQueryBuilder(
+      request,
+      request.isSearch,
+      true,
+    );
 
     let builder = originalBuilder;
 

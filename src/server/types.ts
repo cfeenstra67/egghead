@@ -119,6 +119,7 @@ export interface SessionResponse
   childTransitions: Record<string, string>;
   highlightedTitle: string;
   highlightedHost: string;
+  highlightedUrl: string;
   startedAt: string;
   endedAt?: string;
 }

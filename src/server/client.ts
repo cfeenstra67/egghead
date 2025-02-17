@@ -38,7 +38,7 @@ export function createServerClient(processor: RequestHandler): ServerInterface {
       if (response.code === ServerResponseCode.Ok) {
         return response;
       }
-      if (response.code === ServerResponseCode.Error) {
+      if (response.code === ServerResponseCode.Aborted) {
         throw new Aborted();
       }
       throw new ServerError(response.message, response.stack);

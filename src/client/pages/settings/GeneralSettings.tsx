@@ -61,6 +61,29 @@ export default function Settings() {
             <div />
             <div>
               <Label htmlFor="theme" className="text-base font-semibold">
+                Show full URLs in Search
+              </Label>
+            </div>
+            <div className="min-w-24 flex justify-end">
+              <Switch
+                checked={settings.items.showFullUrls}
+                onCheckedChange={(value) => {
+                  settings.patch({
+                    showFullUrls: value,
+                  });
+                }}
+              />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {
+                "Show full URLs for each page in search results rather than only the host."
+              }
+            </div>
+            <div />
+            <div />
+            <div />
+            <div>
+              <Label htmlFor="theme" className="text-base font-semibold">
                 Retention Period (months)
               </Label>
             </div>

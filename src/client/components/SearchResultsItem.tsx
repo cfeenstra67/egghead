@@ -9,6 +9,7 @@ import type { Session } from "../../models";
 import type { SessionResponse } from "../../server";
 import { BinaryOperator, dslToClause } from "../../server/clause";
 import { dateFromSqliteString } from "../../server/utils";
+import { useSettingsContext } from "../lib/SettingsContext";
 import { AppContext } from "../lib/context";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
 import { cn } from "../lib/utils";
@@ -173,6 +174,7 @@ function SingleAggregatedSearchResultsItem({
   setChecked,
   ...transitionProps
 }: SingleAggregatedSearchResultsItemProps) {
+  const settings = useSettingsContext();
   const [isInView, setIsInView] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -278,61 +280,47 @@ function SingleAggregatedSearchResultsItem({
             tabId={session.endedAt ? undefined : session.tabId}
             rel="noreferrer"
           >
-            <div className="text-sm font-medium leading-none truncate block md:max-w-[85%] lg:max-w-[90%]">
-              <span title={session.title}>
-                <Highlighted title={session.highlightedTitle} />
-              </span>
+            <div className="text-sm font-medium leading-none truncate block">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Highlighted title={session.highlightedTitle} />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[600px] text-wrap break-all">
+                  {session.title}
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground max-w-[60%]">
-              <span className="truncate block" title={session.rawUrl}>
-                <Highlighted title={session.highlightedHost} />
-              </span>
+            <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex-shrink-0">
+                    {getTimeString(session.startedAt)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dateFromSqliteString(session.startedAt).toLocaleString()}
+                </TooltipContent>
+              </Tooltip>
               <Separator className="h-3 flex-shrink-0" orientation="vertical" />
-              <span
-                className="flex-shrink-0"
-                title={dateFromSqliteString(session.startedAt).toLocaleString()}
-              >
-                {getTimeString(session.startedAt)}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="truncate block" title={session.rawUrl}>
+                    {settings.items.showFullUrls ? (
+                      <Highlighted title={session.highlightedUrl} />
+                    ) : (
+                      <Highlighted title={session.highlightedHost} />
+                    )}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[600px] text-wrap break-all">
+                  <a href={session.rawUrl}>{session.rawUrl}</a>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </ExternalLink>
           <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
-            {/* {childTypeCounts.FORM_SUBMIT > 0 &&
-            !hideChildTypes &&
-            showChildren ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={clsx({
-                  "text-xs flex items-center whitespace-nowrap": true,
-                  "bg-muted text-accent-foreground":
-                    childTypesExpanded.includes(ChildType.FormSubmit),
-                })}
-                onClick={() => {
-                  if (childTypesExpanded.includes(ChildType.FormSubmit)) {
-                    setChildTypesExpanded(
-                      childTypesExpanded.filter(
-                        (t) => t !== ChildType.FormSubmit,
-                      ),
-                    );
-                  } else {
-                    setChildTypesExpanded(
-                      childTypesExpanded.concat(ChildType.FormSubmit),
-                    );
-                  }
-                }}
-              >
-                <Send className="h-4 w-4 mr-1" />
-                {showChildren === "full" ? (
-                  <span>
-                    {childTypeCounts.FORM_SUBMIT} form
-                    {childTypeCounts.FORM_SUBMIT > 1 ? "s" : ""}
-                  </span>
-                ) : (
-                  <span>{childTypeCounts.FORM_SUBMIT}</span>
-                )}
-              </Button>
-            ) : null} */}
             {childTypeCounts.LINK > 0 && !hideChildTypes && showChildren ? (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -427,35 +415,6 @@ function SingleAggregatedSearchResultsItem({
                   <TooltipContent>Details</TooltipContent>
                 </Tooltip>
               </>
-              // <DropdownMenu>
-              //   <DropdownMenuTrigger asChild>
-              //     <Button
-              //       variant="ghost"
-              //       size="icon"
-              //       className={cn("h-8 w-8 opacity-0 group-hover:opacity-100", {
-              //         "w-4": showChildren === "short",
-              //       })}
-              //     >
-              //       <MoreVertical className="h-4 w-4" />
-              //     </Button>
-              //   </DropdownMenuTrigger>
-              //   <DropdownMenuContent align="end">
-              //     <DropdownMenuItem className="cursor-pointer" asChild>
-              //       <Link href={`/session/${aggSession.session.id}`}>
-              //         <Info /> <span>Details</span>
-              //       </Link>
-              //     </DropdownMenuItem>
-              //     <DropdownMenuItem
-              //       className="cursor-pointer"
-              //       onClick={(evt) => {
-              //         setShowDelete(true);
-              //         evt.preventDefault();
-              //       }}
-              //     >
-              //       <Trash2 /> <span>Delete</span>
-              //     </DropdownMenuItem>
-              //   </DropdownMenuContent>
-              // </DropdownMenu>
             ) : null}
           </div>
         </div>

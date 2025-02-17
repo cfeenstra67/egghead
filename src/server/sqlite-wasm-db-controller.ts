@@ -57,6 +57,7 @@ export class SQLiteWASMDBController extends AbstractDBController {
 
     returnFunc.import = async (data) => {
       await this.sqlite3!.oo1.OpfsDb.importDb(this.path, data);
+      await executeMigrations(returnFunc);
     };
 
     await executeMigrations(returnFunc);

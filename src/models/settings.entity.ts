@@ -16,6 +16,8 @@ export class Settings {
   // @Column()
   retentionPolicyMonths!: number;
 
+  showFullUrls!: boolean;
+
   // @Column()
   theme: Theme;
 

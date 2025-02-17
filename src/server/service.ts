@@ -40,6 +40,8 @@ import type {
   PingResponse,
   QueryRequest,
   QueryResponse,
+  QuerySessionFacetRequest,
+  QuerySessionFacetResponse,
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
@@ -325,6 +327,12 @@ export class Server implements ServerInterface {
     request: QuerySessionFacetsRequest,
   ): Promise<QuerySessionFacetsResponse> {
     return await this.searchService.querySessionFacets(request);
+  }
+
+  async querySessionFacet(
+    request: QuerySessionFacetRequest,
+  ): Promise<QuerySessionFacetResponse> {
+    return await this.searchService.querySessionFacet(request);
   }
 
   async querySessionTimeline(

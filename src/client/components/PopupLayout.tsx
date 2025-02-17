@@ -1,5 +1,6 @@
 import { themeClasses, useTheme } from "../lib/theme";
 import { cn } from "../lib/utils";
+import { TooltipProvider } from "./ui/tooltip";
 
 export interface PopupLayoutProps {
   children?: React.ReactNode;
@@ -16,7 +17,7 @@ export default function PopupLayout({ children }: PopupLayoutProps) {
         themeClasses[theme],
       )}
     >
-      {children}
+      <TooltipProvider>{children}</TooltipProvider>
     </div>
   );
 }

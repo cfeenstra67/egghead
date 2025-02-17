@@ -1,5 +1,5 @@
 import debounce from "lodash/debounce";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export function useDebounced<T>(value: T, interval: number): T {
   const [currentValue, setCurrentValue] = useState(value);
@@ -12,9 +12,9 @@ export function useDebounced<T>(value: T, interval: number): T {
     [interval],
   );
 
-  useEffect(() => {
+  if (value !== currentValue) {
     setCurrentValueDebounced(value);
-  }, [value]);
+  }
 
   return currentValue;
 }

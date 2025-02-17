@@ -1,8 +1,11 @@
 import throttle from "lodash/throttle";
-import { ServerClient, createExtensionRequestProcessor } from "./server/client";
+import {
+  createExtensionRequestProcessor,
+  createServerClient,
+} from "./server/client";
 
 function startContentScript() {
-  const serverClient = new ServerClient(
+  const serverClient = createServerClient(
     createExtensionRequestProcessor("background"),
   );
 

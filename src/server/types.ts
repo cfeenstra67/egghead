@@ -11,6 +11,7 @@ export enum ServerMessage {
   CorrelateChromeVisit = "correlateChromeVisit",
   CreateGhostSessions = "createGhostSessions",
   QuerySessions = "querySessions",
+  QuerySessionFacet = "querySessionFacet",
   QuerySessionFacets = "querySessionFacets",
   QuerySessionTimeline = "querySessionTimeline",
   ImportDatabase = "importDatabase",
@@ -143,6 +144,17 @@ export interface QuerySessionFacetsResponse {
   term: QuerySessionFacetsFacetValue[];
 }
 
+export interface QuerySessionFacetRequest extends BaseRequest {
+  facet: "host" | "term";
+  query?: string;
+  filter?: Clause<Session>;
+  facetsSize?: number;
+}
+
+export interface QuerySessionFacetResponse {
+  values: QuerySessionFacetsFacetValue[];
+}
+
 export interface QuerySessionTimelineRequest extends BaseRequest {
   query?: string;
   filter?: Clause<Session>;
@@ -214,6 +226,10 @@ export type ServerMessageMapping = {
   [ServerMessage.QuerySessionFacets]: [
     QuerySessionFacetsRequest,
     QuerySessionFacetsResponse,
+  ];
+  [ServerMessage.QuerySessionFacet]: [
+    QuerySessionFacetRequest,
+    QuerySessionFacetResponse,
   ];
   [ServerMessage.QuerySessionTimeline]: [
     QuerySessionTimelineRequest,

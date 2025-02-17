@@ -32,6 +32,8 @@ import {
 import stopwordsTxt from "./stopwords.txt";
 import type {
   DeleteSessionsRequest,
+  QuerySessionFacetRequest,
+  QuerySessionFacetResponse,
   QuerySessionFacetsRequest,
   QuerySessionFacetsResponse,
   QuerySessionTimelineRequest,
@@ -606,6 +608,27 @@ export class SearchService {
       host: hostStats,
       term: termStats,
     };
+  }
+
+  async querySessionFacet(
+    request: QuerySessionFacetRequest,
+  ): Promise<QuerySessionFacetResponse> {
+    const builder = this.searchQueryBuilder(request, true);
+
+    const rowIdBuilder = this.rowIdQueryBuilder(builder);
+
+    const facetsSize = request.facetsSize ?? 25;
+
+    let values: any[];
+    if (request.facet === "host") {
+      values = await this.getHostStats(rowIdBuilder, facetsSize);
+    } else if (request.facet === "term") {
+      values = await this.getTermStats(rowIdBuilder, facetsSize);
+    } else {
+      throw new Error(`Invalid facet: ${request.facet}`);
+    }
+
+    return { values };
   }
 
   async querySessionTimeline(

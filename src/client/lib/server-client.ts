@@ -1,5 +1,5 @@
 import type { ServerInterface } from "../../server";
-import { ServerClient } from "../../server/client";
+import { createServerClient } from "../../server/client";
 import { workerRequestHandler } from "../../server/utils";
 import { createWorkerClient } from "../../server/worker-client";
 
@@ -12,7 +12,7 @@ export function serverFactory(
     const workerHandler = createWorkerClient(worker);
     const handler = workerRequestHandler(workerHandler);
 
-    const client = new ServerClient(handler);
+    const client = createServerClient(handler);
 
     const url = URL.createObjectURL(new Blob([existingDb]));
     await client.importDatabase({ databaseUrl: url });

@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useContext, useState } from "react";
 import type { Session } from "../../models";
 import type { QuerySessionsRequest } from "../../server";
@@ -73,12 +73,17 @@ export default function Popup() {
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
-              type="search"
               placeholder="Search history..."
               className="pl-8"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            {query ? (
+              <X
+                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+                onClick={() => setQuery("")}
+              />
+            ) : null}
           </div>
         </div>
         <div className="flex gap-2 p-2">

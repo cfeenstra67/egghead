@@ -1,7 +1,7 @@
 import * as ReactDOM from "react-dom/client";
 import {
-  ServerClient,
   createExtensionRequestProcessor,
+  createServerClient,
 } from "../server/client";
 import Popup from "./Popup";
 import InitialCrawl from "./components/InitialCrawl";
@@ -10,7 +10,7 @@ import { PopupRuntime } from "./lib/runtimes";
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);
 const serverClientFactory = async () =>
-  new ServerClient(createExtensionRequestProcessor("background"));
+  createServerClient(createExtensionRequestProcessor("background"));
 root.render(
   <InitialCrawl
     isPopup

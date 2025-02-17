@@ -2,11 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ChevronUp, Globe, Hash, Search } from "lucide-react";
 import { useCallback, useContext, useState } from "react";
-import type {
-  QuerySessionFacetsFacetValue,
-  QuerySessionsRequest,
-} from "../../server";
+import type { QuerySessionFacetsFacetValue } from "../../server";
 import { AppContext } from "../lib";
+import { type QueryFilters, filtersToRequest } from "../lib/filters";
 import { cn } from "../lib/utils";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -245,37 +243,56 @@ function TermsComponent({
 interface SearchSideBarProps {
   disabled?: boolean;
   className?: string;
-  request: QuerySessionsRequest;
-  selectedHosts: string[];
+  filters: QueryFilters;
   setSelectedHosts: (hosts: string[]) => void;
-  selectedTerms: string[];
   setSelectedTerms: (terms: string[]) => void;
 }
 
 export default function SearchSideBar({
   className,
   disabled,
-  request,
-  selectedHosts,
+  filters,
   setSelectedHosts,
-  selectedTerms,
   setSelectedTerms,
 }: SearchSideBarProps) {
   const { serverClientFactory } = useContext(AppContext);
 
-  const facets = useQuery({
-    queryKey: ["history", request, "facets"],
+  const [hostsRequest] = filtersToRequest(filters, {
+    omitHostFilter: true,
+  });
+
+  const hosts = useQuery({
+    queryKey: ["history", hostsRequest, "hosts"],
     enabled: !disabled,
     queryFn: async () => {
       const client = await serverClientFactory();
-      return await client.querySessionFacets(request);
+      return await client.querySessionFacet({
+        ...hostsRequest,
+        facet: "host",
+      });
     },
   });
 
-  const allHosts = facets.data?.host ?? [];
-  const visibleHosts = allHosts.filter((h) => selectedHosts.includes(h.value));
+  const [termsRequest] = filtersToRequest(filters);
+
+  const terms = useQuery({
+    queryKey: ["history", termsRequest, "terms"],
+    enabled: !disabled,
+    queryFn: async () => {
+      const client = await serverClientFactory();
+      return await client.querySessionFacet({
+        ...termsRequest,
+        facet: "term",
+      });
+    },
+  });
+
+  const allHosts = hosts.data?.values ?? [];
+  const visibleHosts = allHosts.filter((h) =>
+    filters.selectedHosts.includes(h.value),
+  );
   const nonVisibleHosts = allHosts.filter(
-    (h) => !selectedHosts.includes(h.value),
+    (h) => !filters.selectedHosts.includes(h.value),
   );
   while (visibleHosts.length < 5 && nonVisibleHosts.length > 0) {
     const item = nonVisibleHosts.shift();
@@ -289,17 +306,17 @@ export default function SearchSideBar({
     <aside className={cn("w-64 border-r overflow-y-auto", className)}>
       <div className="p-4 space-y-6">
         <HostsComponent
-          loading={facets.status === "pending"}
-          hosts={facets.data?.host ?? []}
-          selectedHosts={selectedHosts}
+          loading={hosts.status === "pending"}
+          hosts={hosts.data?.values ?? []}
+          selectedHosts={filters.selectedHosts}
           setSelectedHosts={setSelectedHosts}
           disabled={disabled}
         />
 
         <TermsComponent
-          loading={facets.status === "pending"}
-          terms={facets.data?.term ?? []}
-          selectedTerms={selectedTerms}
+          loading={terms.status === "pending"}
+          terms={terms.data?.values ?? []}
+          selectedTerms={filters.selectedTerms}
           setSelectedTerms={setSelectedTerms}
           disabled={disabled}
         />

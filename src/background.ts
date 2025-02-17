@@ -2,7 +2,7 @@ import { setupObservers } from "./extension/utils";
 import parentLogger from "./logger";
 import { ServerResponseCode } from "./server";
 import { Aborted } from "./server/abort";
-import { ServerClient } from "./server/client";
+import { createServerClient } from "./server/client";
 import { JobManager } from "./server/job-manager";
 import { createOffscreenClient } from "./server/offscreen-client";
 import {
@@ -23,7 +23,7 @@ const managedConnection = jobManagerMiddleware(
   loggingServerConnection,
   jobManager,
 );
-const serverClient = new ServerClient(managedConnection);
+const serverClient = createServerClient(managedConnection);
 
 const observersController = setupObservers(serverClient);
 

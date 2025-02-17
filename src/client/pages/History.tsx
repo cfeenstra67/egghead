@@ -278,7 +278,7 @@ export default function History() {
   }
 
   return (
-    <Layout searchDisabled={!!checksState}>
+    <Layout autoFocus searchDisabled={!!checksState}>
       {deleteRequest !== null ? (
         <DeleteSessionModal
           request={deleteRequest}

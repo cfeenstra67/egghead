@@ -8,10 +8,16 @@ import { Input } from "./ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export interface NavbarProps {
+  autoFocus?: boolean;
   searchDisabled?: boolean;
+  onSearchFocus?: () => void;
 }
 
-export default function NavBar({ searchDisabled }: NavbarProps) {
+export default function NavBar({
+  searchDisabled,
+  autoFocus,
+  onSearchFocus,
+}: NavbarProps) {
   const { query, setQuery } = useContext(AppContext);
 
   return (
@@ -26,11 +32,12 @@ export default function NavBar({ searchDisabled }: NavbarProps) {
           <div className="relative">
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              autoFocus
+              autoFocus={autoFocus}
               placeholder="Search history..."
               className="pl-8"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={onSearchFocus}
               disabled={searchDisabled}
             />
             {query ? (

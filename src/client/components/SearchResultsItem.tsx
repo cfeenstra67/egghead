@@ -280,7 +280,7 @@ function SingleAggregatedSearchResultsItem({
             tabId={session.endedAt ? undefined : session.tabId}
             rel="noreferrer"
           >
-            <div className="text-sm font-medium leading-none truncate block">
+            <div className="text-sm font-medium leading-tight truncate block">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>

@@ -1,6 +1,7 @@
 import { BinaryOperator } from "@/src/server/clause";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useContext, useState } from "react";
+import { Link } from "wouter";
 import { AppContext } from "../lib";
 import SearchResults from "./SearchResults";
 import SessionCard from "./SessionCard";
@@ -114,72 +115,81 @@ export default function SessionDetail({
       ) : sessionQuery.status === "error" ? (
         <div>Error loading visit: {sessionQuery.error.message}.</div>
       ) : (
-        <div>Visit not found.</div>
+        <div className="flex flex-col gap-6">
+          <h1 className="text-xl font-semibold">Visit not found</h1>
+
+          <Link className="underline" href="/">
+            Back to search
+          </Link>
+        </div>
       )}
-      <Tabs
-        value={tabValue}
-        onValueChange={(value) => setTabValue([value, false])}
-        className="flex-grow overflow-hidden flex flex-col"
-      >
-        <TabsList>
-          <TabsTrigger value="parents">
-            Navigated to this page from (
-            {parentSessionsCount === null ? "..." : parentSessionsCount})
-          </TabsTrigger>
-          <TabsTrigger value="visits">
-            Visits to this page (
-            {sessionsCount === null ? "..." : sessionsCount})
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent
-          value="parents"
-          className="flex-1 overflow-y-scroll overflow-x-hidden"
+      {sessionQuery.status === "pending" || session ? (
+        <Tabs
+          value={tabValue}
+          onValueChange={(value) => setTabValue([value, false])}
+          className="flex-grow overflow-hidden flex flex-col gap-4"
         >
-          {parentSessions.status === "error" ? (
-            <p>
-              An error occurred while loading pages that we navigated to this
-              one from.
-            </p>
-          ) : (
-            <>
-              <SearchResults
-                showChildren="full"
-                showControls
-                aggregate
-                animate
-                isLoading={parentSessions.status === "pending"}
-                sessions={
-                  parentSessions.data?.pages.flatMap((page) => page.results) ??
-                  []
-                }
-                onEndReached={() => parentSessions.fetchNextPage()}
-              />
-            </>
-          )}
-        </TabsContent>
-        <TabsContent
-          value="visits"
-          className="flex-1 overflow-y-scroll overflow-x-hidden"
-        >
-          {sessionsQuery.status === "error" ? (
-            <p>An error occurred while loading other visits to this page.</p>
-          ) : (
-            <>
-              <SearchResults
-                showChildren="full"
-                showControls
-                animate
-                isLoading={sessionsQuery.status === "pending"}
-                sessions={
-                  sessionsQuery.data?.pages.flatMap((page) => page.results) ??
-                  []
-                }
-                onEndReached={() => sessionsQuery.fetchNextPage()}
-              />
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsList>
+            <TabsTrigger value="parents">
+              Navigated to this page from (
+              {parentSessionsCount === null ? "..." : parentSessionsCount})
+            </TabsTrigger>
+            <TabsTrigger value="visits">
+              Visits to this page (
+              {sessionsCount === null ? "..." : sessionsCount})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="parents"
+            className="flex-1 overflow-y-scroll overflow-x-hidden"
+          >
+            {parentSessions.status === "error" ? (
+              <p>
+                An error occurred while loading pages that we navigated to this
+                one from.
+              </p>
+            ) : (
+              <>
+                <SearchResults
+                  showChildren="full"
+                  showControls
+                  aggregate
+                  animate
+                  isLoading={parentSessions.status === "pending"}
+                  sessions={
+                    parentSessions.data?.pages.flatMap(
+                      (page) => page.results,
+                    ) ?? []
+                  }
+                  onEndReached={() => parentSessions.fetchNextPage()}
+                />
+              </>
+            )}
+          </TabsContent>
+          <TabsContent
+            value="visits"
+            className="flex-1 overflow-y-scroll overflow-x-hidden"
+          >
+            {sessionsQuery.status === "error" ? (
+              <p>An error occurred while loading other visits to this page.</p>
+            ) : (
+              <>
+                <SearchResults
+                  showChildren="full"
+                  showControls
+                  animate
+                  isLoading={sessionsQuery.status === "pending"}
+                  sessions={
+                    sessionsQuery.data?.pages.flatMap((page) => page.results) ??
+                    []
+                  }
+                  onEndReached={() => sessionsQuery.fetchNextPage()}
+                />
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
+      ) : null}
     </>
   );
 }

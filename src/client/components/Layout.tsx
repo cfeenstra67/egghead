@@ -1,15 +1,14 @@
 import { themeClasses, useTheme } from "../lib/theme";
 import { cn } from "../lib/utils";
-import NavBar from "./NavBar";
+import NavBar, { type NavbarProps } from "./NavBar";
 import { Toaster } from "./ui/toaster";
 import { TooltipProvider } from "./ui/tooltip";
 
-export interface LayoutProps {
+export interface LayoutProps extends NavbarProps {
   children: React.ReactNode | React.ReactNode[];
-  searchDisabled?: boolean;
 }
 
-export default function Layout({ children, searchDisabled }: LayoutProps) {
+export default function Layout({ children, ...navbarProps }: LayoutProps) {
   const theme = useTheme();
 
   return (
@@ -21,7 +20,7 @@ export default function Layout({ children, searchDisabled }: LayoutProps) {
       )}
     >
       <TooltipProvider>
-        <NavBar searchDisabled={searchDisabled} />
+        <NavBar {...navbarProps} />
         <div className="pt-14 flex h-full">{children}</div>
         <Toaster />
       </TooltipProvider>

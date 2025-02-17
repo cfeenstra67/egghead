@@ -1,6 +1,6 @@
 import { BinaryOperator } from "@/src/server/clause";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useLocation } from "wouter";
 import type { DeleteSessionsRequest, SessionResponse } from "../../server";
 import { getFaviconUrlPublicApi } from "../lib/favicon";
 import { DeleteSessionModal } from "./DeleteSessionModal";
@@ -9,11 +9,11 @@ import { Button } from "./ui/button";
 
 export interface SessionCardProps {
   session: SessionResponse;
+  onDelete?: () => void;
 }
 
-export default function SessionCard({ session }: SessionCardProps) {
+export default function SessionCard({ session, onDelete }: SessionCardProps) {
   const url = new URL(session.rawUrl);
-  const [_, setLocation] = useLocation();
   const [showDelete, setShowDelete] = useState(false);
 
   const durationMinutes = (session.interactionCount * 3) / 60;
@@ -36,7 +36,10 @@ export default function SessionCard({ session }: SessionCardProps) {
         request={request}
         open={showDelete}
         onOpenChanged={(open) => setShowDelete(open)}
-        onDelete={() => setLocation("/")}
+        onDelete={() => {
+          setShowDelete(false);
+          onDelete?.();
+        }}
       />
       <div className="flex gap-6 items-center">
         <div className="p-6">
@@ -58,8 +61,7 @@ export default function SessionCard({ session }: SessionCardProps) {
           </ExternalLink>
 
           <div>
-            Spent <b>{durationMinutes.toFixed(2)}</b> minute(s) interacting with
-            this page
+            Spent <b>{durationMinutes.toFixed(2)}</b> minute(s) on this page
           </div>
 
           <div>
@@ -72,6 +74,7 @@ export default function SessionCard({ session }: SessionCardProps) {
           className="ml-auto self-start cursor-pointer"
           onClick={() => setShowDelete(true)}
         >
+          <Trash2 />
           Delete
         </Button>
       </div>

@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronDown, RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Square, SquareCheck, Trash2, X } from "lucide-react";
 import { useContext, useState } from "react";
 import type { Session } from "../../models";
 import type { DeleteSessionsRequest, QuerySessionsRequest } from "../../server";
@@ -15,20 +15,20 @@ import Layout from "../components/Layout";
 import SearchResults from "../components/SearchResults";
 import SearchResultsSideBar from "../components/SearchResultsSideBar";
 import Timeline from "../components/Timeline";
+import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 import { useDebounced } from "../hooks/use-debounced";
 import { AppContext } from "../lib";
 
 interface QueryFilters {
   selectedTerms: string[];
   selectedHosts: string[];
-  dateRange: [Date, Date] | null;
+  dateStack: [Date, Date][];
 }
 
 interface ChecksState {
@@ -44,7 +44,7 @@ const defaultChecksState: ChecksState = {
 const defaultFilters: QueryFilters = {
   selectedTerms: [],
   selectedHosts: [],
-  dateRange: null,
+  dateStack: [],
 };
 
 type Setter<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -71,21 +71,20 @@ function Controls({
   query,
 }: ControlsProps) {
   return (
-    <div className="flex items-center justify-between p-4">
+    <div className="flex items-center justify-between">
       <h1 className="text-2xl font-semibold">Activity</h1>
 
       {checksState !== null ? (
         <>
           {numSelected > 0 ? (
             <div className="text-sm font-semibold">
-              {numSelected} session{numSelected === 1 ? "" : "s"} selected
+              {numSelected} item{numSelected === 1 ? "" : "s"} selected
             </div>
           ) : null}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {checksState?.defaultChecked === true &&
             checksState?.differentIds.length === 0 ? (
               <Button
-                className="h-8"
                 onClick={() =>
                   setChecksState({
                     defaultChecked: false,
@@ -93,11 +92,11 @@ function Controls({
                   })
                 }
               >
-                Deselect all
+                <Square />
+                {"Deselect all"}
               </Button>
             ) : (
               <Button
-                className="h-8"
                 onClick={() =>
                   setChecksState({
                     defaultChecked: true,
@@ -105,60 +104,76 @@ function Controls({
                   })
                 }
               >
-                Select all
+                <SquareCheck />
+                {"Select all"}
               </Button>
             )}
             <Button
               variant="destructive"
-              className="h-8"
               disabled={numSelected === 0}
               onClick={() => setDeleteOpen(true)}
             >
+              <Trash2 />
               Delete
             </Button>
-            <Button
-              variant="secondary"
-              className="h-8"
-              onClick={() => setChecksState(null)}
-            >
+            <Button variant="secondary" onClick={() => setChecksState(null)}>
+              <X />
               Cancel
             </Button>
           </div>
         </>
       ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              Actions <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem
-              disabled={clauses.length === 0 && !query}
-              className="cursor-pointer"
-              onClick={() => {
-                setFilters(defaultFilters);
-                setQuery("");
-              }}
-            >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              <span>Reset filters</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => setChecksState(defaultChecksState)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete Sessions</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-2 items-center">
+          {clauses.length > 0 || query ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="px-2"
+                  onClick={() => {
+                    setFilters(defaultFilters);
+                    setQuery("");
+                  }}
+                >
+                  <RotateCcw className="h-6 w-6" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset Filters</TooltipContent>
+            </Tooltip>
+          ) : null}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={() => setChecksState(defaultChecksState)}
+                className="px-2"
+              >
+                <Trash2 />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete items</TooltipContent>
+          </Tooltip>
+        </div>
       )}
     </div>
   );
 }
 
-export default function HistoryV2() {
+function dateRangeToLabel(start: Date, end: Date): string {
+  const fmt = (d: Date) => {
+    return d.toLocaleString("en-US", {
+      day: "numeric",
+      hour: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+  const endWithBump = new Date(end.getTime() + 1000);
+  return `${fmt(start)} - ${fmt(endWithBump)}`;
+}
+
+export default function History() {
   const { query, setQuery, serverClientFactory } = useContext(AppContext);
   const [checksState, setChecksState] = useState<ChecksState | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -194,8 +209,8 @@ export default function HistoryV2() {
       clauses: subClauses,
     });
   }
-  if (filters.dateRange !== null) {
-    const [start, end] = filters.dateRange;
+  if (filters.dateStack.length > 0) {
+    const [start, end] = filters.dateStack.at(-1)!;
 
     clauses.push({
       fieldName: "startedAt",
@@ -318,8 +333,8 @@ export default function HistoryV2() {
           setFilters((f) => ({ ...f, selectedTerms }))
         }
       />
-      <main className="flex-1 overflow-y-auto">
-        <div>
+      <main className="flex-1 overflow-y-scroll">
+        <div className="flex flex-col gap-2 p-4">
           <Controls
             numSelected={numSelected}
             checksState={checksState}
@@ -330,12 +345,67 @@ export default function HistoryV2() {
             setFilters={setFilters}
             setQuery={setQuery}
           />
-          <div className="px-4 pb-4">
+          <div className="flex gap-2 flex-wrap max-w-full overflow-hidden">
+            {query ? (
+              <Badge className="cursor-pointer truncate gap-2" onClick={() => setQuery("")}>
+                <span className="truncate">Search: {query}</span>
+                <X className="w-4 h-4 shrink-0" />
+              </Badge>
+            ) : null}
+            {filters.dateStack.length > 0 ? (
+              <Badge
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    dateStack: f.dateStack.slice(0, -1),
+                  }))
+                }
+                className="cursor-pointer"
+              >
+                Time: {dateRangeToLabel(...filters.dateStack.at(-1)!)}
+                <X className="w-4 h-4 ml-2" />
+              </Badge>
+            ) : null}
+            {filters.selectedHosts.map((host) => (
+              <Badge
+                key={host}
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    selectedHosts: f.selectedHosts.filter((h) => h !== host),
+                  }))
+                }
+                className="cursor-pointer"
+              >
+                Host: {host}
+                <X className="w-4 h-4 ml-2" />
+              </Badge>
+            ))}
+            {filters.selectedTerms.map((term) => (
+              <Badge
+                key={term}
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    selectedTerms: f.selectedTerms.filter((t) => t !== term),
+                  }))
+                }
+                className="cursor-pointer"
+              >
+                Term: {term}
+                <X className="w-4 h-4 ml-2" />
+              </Badge>
+            ))}
+          </div>
+          <div>
             <Timeline
               request={newRequest}
-              dateRange={filters.dateRange}
+              dateRange={filters.dateStack.at(-1) ?? null}
               setDateRange={(dateRange) =>
-                setFilters((f) => ({ ...f, dateRange }))
+                setFilters((f) => ({
+                  ...f,
+                  dateStack: f.dateStack.concat([dateRange]),
+                }))
               }
             />
           </div>

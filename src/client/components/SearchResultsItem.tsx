@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { AnimatePresence, motion } from "framer-motion";
-import { Info, Link2, MoreVertical, Send, Trash2 } from "lucide-react";
+import { Info, Link2, MoreVertical, Trash2 } from "lucide-react";
 import { type RefObject, useContext, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
@@ -17,15 +15,11 @@ import { cn } from "../lib/utils";
 import { DeleteSessionModal } from "./DeleteSessionModal";
 import ExternalLink, { useExternalLinkOpener } from "./ExternalLink";
 import Highlighted from "./Highlighted";
+import SessionDetailModal from "./SessionDetailModal";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const logger = parentLogger.child({ context: "SearchResultsItem" });
 
@@ -40,7 +34,7 @@ function getTimeString(date: string): string {
     .toLocaleTimeString()
     .split(" ");
   const timeString = time.split(":").slice(0, 2).join(":");
-  return `${timeString} ${amPm}`;
+  return [timeString, amPm].filter(Boolean).join(" ");
 }
 
 enum ChildType {
@@ -181,6 +175,7 @@ function SingleAggregatedSearchResultsItem({
 }: SingleAggregatedSearchResultsItemProps) {
   const [isInView, setIsInView] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const session = aggSession.session;
   const url = new URL(session.url);
   const { ref, inView } = useInView({
@@ -224,6 +219,11 @@ function SingleAggregatedSearchResultsItem({
         open={showDelete}
         onOpenChanged={setShowDelete}
         onDelete={() => setShowDelete(false)}
+      />
+      <SessionDetailModal
+        sessionId={aggSession.session.id}
+        open={showDetails}
+        onOpenChanged={setShowDetails}
       />
       <CSSTransition
         {...transitionProps}
@@ -297,7 +297,7 @@ function SingleAggregatedSearchResultsItem({
             </div>
           </ExternalLink>
           <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
-            {childTypeCounts.FORM_SUBMIT > 0 &&
+            {/* {childTypeCounts.FORM_SUBMIT > 0 &&
             !hideChildTypes &&
             showChildren ? (
               <Button
@@ -332,37 +332,42 @@ function SingleAggregatedSearchResultsItem({
                   <span>{childTypeCounts.FORM_SUBMIT}</span>
                 )}
               </Button>
-            ) : null}
+            ) : null} */}
             {childTypeCounts.LINK > 0 && !hideChildTypes && showChildren ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn("text-xs flex items-center whitespace-nowrap", {
-                  "bg-primary text-primary-foreground":
-                    childTypesExpanded.includes(ChildType.Link),
-                })}
-                onClick={() => {
-                  if (childTypesExpanded.includes(ChildType.Link)) {
-                    setChildTypesExpanded(
-                      childTypesExpanded.filter((t) => t !== ChildType.Link),
-                    );
-                  } else {
-                    setChildTypesExpanded(
-                      childTypesExpanded.concat(ChildType.Link),
-                    );
-                  }
-                }}
-              >
-                <Link2 className="h-4 w-4 mr-1" />
-                {showChildren === "full" ? (
-                  <span>
-                    {childTypeCounts.LINK} link
-                    {childTypeCounts.LINK > 1 ? "s" : ""}
-                  </span>
-                ) : (
-                  <span>{childTypeCounts.LINK}</span>
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "text-xs flex items-center whitespace-nowrap",
+                      {
+                        "bg-primary text-primary-foreground":
+                          childTypesExpanded.includes(ChildType.Link),
+                      },
+                    )}
+                    onClick={() => {
+                      if (childTypesExpanded.includes(ChildType.Link)) {
+                        setChildTypesExpanded(
+                          childTypesExpanded.filter(
+                            (t) => t !== ChildType.Link,
+                          ),
+                        );
+                      } else {
+                        setChildTypesExpanded(
+                          childTypesExpanded.concat(ChildType.Link),
+                        );
+                      }
+                    }}
+                  >
+                    <Link2 className="h-4 w-4 mr-1" />
+                    <span>{childTypeCounts.LINK}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {childTypeCounts.LINK} link(s) opened from this page
+                </TooltipContent>
+              </Tooltip>
             ) : null}
             {showControls && showChildren === "short" ? (
               <Link href={`/session/${aggSession.session.id}`}>
@@ -377,68 +382,82 @@ function SingleAggregatedSearchResultsItem({
                 </Button>
               </Link>
             ) : showControls ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn("h-8 w-8 opacity-0 group-hover:opacity-100", {
-                      "w-4": showChildren === "short",
-                    })}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="cursor-pointer" asChild>
-                    <Link href={`/session/${aggSession.session.id}`}>
-                      <Info /> <span>Details</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={(evt) => {
-                      setShowDelete(true);
-                      evt.preventDefault();
-                    }}
-                  >
-                    <Trash2 /> <span>Delete</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-8 w-8 opacity-0 group-hover:opacity-100",
+                        {
+                          "w-4": showChildren === "short",
+                        },
+                      )}
+                      onClick={(evt) => {
+                        setShowDelete(true);
+                        evt.preventDefault();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-8 w-8 opacity-0 group-hover:opacity-100",
+                        {
+                          "w-4": showChildren === "short",
+                        },
+                      )}
+                      onClick={(evt) => {
+                        setShowDetails(true);
+                        evt.preventDefault();
+                      }}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Details</TooltipContent>
+                </Tooltip>
+              </>
+              // <DropdownMenu>
+              //   <DropdownMenuTrigger asChild>
+              //     <Button
+              //       variant="ghost"
+              //       size="icon"
+              //       className={cn("h-8 w-8 opacity-0 group-hover:opacity-100", {
+              //         "w-4": showChildren === "short",
+              //       })}
+              //     >
+              //       <MoreVertical className="h-4 w-4" />
+              //     </Button>
+              //   </DropdownMenuTrigger>
+              //   <DropdownMenuContent align="end">
+              //     <DropdownMenuItem className="cursor-pointer" asChild>
+              //       <Link href={`/session/${aggSession.session.id}`}>
+              //         <Info /> <span>Details</span>
+              //       </Link>
+              //     </DropdownMenuItem>
+              //     <DropdownMenuItem
+              //       className="cursor-pointer"
+              //       onClick={(evt) => {
+              //         setShowDelete(true);
+              //         evt.preventDefault();
+              //       }}
+              //     >
+              //       <Trash2 /> <span>Delete</span>
+              //     </DropdownMenuItem>
+              //   </DropdownMenuContent>
+              // </DropdownMenu>
             ) : null}
           </div>
-          <AnimatePresence>
-            {false && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="ml-8 pl-4 border-l border-muted"
-              >
-                {/* Placeholder for child items */}
-                <div className="p-2 rounded-lg hover:bg-muted/50">
-                  <h4 className="text-sm font-medium">Child Link 1</h4>
-                  <p className="text-xs text-muted-foreground">
-                    https://example.com/child1
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg hover:bg-muted/50">
-                  <h4 className="text-sm font-medium">Child Link 2</h4>
-                  <p className="text-xs text-muted-foreground">
-                    https://example.com/child2
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg hover:bg-muted/50">
-                  <h4 className="text-sm font-medium">Child Link 3</h4>
-                  <p className="text-xs text-muted-foreground">
-                    https://example.com/child3
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </CSSTransition>
       <TransitionGroup component={null}>

@@ -4,6 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { useContext, useState } from "react";
 import { Link } from "wouter";
 import { useToast } from "../hooks/use-toast";
@@ -96,7 +97,7 @@ export function DeleteSessionModal({
         <div className="max-w-full space-y-4 overflow-auto">
           <DialogHeader className="gap-4">
             <DialogTitle>
-              Are you sure you want to delete {countString} session(s)?
+              Are you sure you want to delete {countString} item(s)?
             </DialogTitle>
             <DialogDescription>
               <strong>This operation is not reversible.</strong> If you wish,
@@ -108,7 +109,7 @@ export function DeleteSessionModal({
               .
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex flex-col gap-2 border-destructive border rounded-lg p-4 max-h-60">
+          <ScrollArea className="flex flex-col gap-2 border-destructive border p-2 rounded max-h-60">
             <SearchResults
               sessions={
                 sessionsQuery.data?.pages.flatMap((p) => p.results) ?? []
@@ -132,10 +133,10 @@ export function DeleteSessionModal({
                 Also delete from browser history storage
               </Label>
               <div className="text-sm text-muted-foreground">
-                Egghead stores your history securely on your device separately
-                from where your browser normally stores your history data by
-                default. If you select this option, these sessions will be
-                deleted from both places instead of only Egghead's storage.
+                Egghead uses a separate storage location on your device to store
+                more detailed history information than your browser normally
+                does. If you check this box, these history items will be deleted
+                from both locations instead of only Egghead's storage.
                 <br />
               </div>
             </div>
@@ -151,7 +152,8 @@ export function DeleteSessionModal({
               }
               onClick={() => deleteSessions.mutate()}
             >
-              Delete session(s)
+              <Trash2 />
+              Delete
             </Button>
           </DialogFooter>
         </div>

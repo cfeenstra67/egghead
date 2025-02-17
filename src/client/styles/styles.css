@@ -82,21 +82,21 @@
     font-family: "Fira code", "Fira Mono", monospace;
   }
 
-  #layout::-webkit-scrollbar {
+  *::-webkit-scrollbar {
     width: 12px;
   }
 
-  #layout::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track {
     background: hsl(var(--background));
   }
 
-  #layout::-webkit-scrollbar-thumb {
+  *::-webkit-scrollbar-thumb {
     background-color: hsl(var(--muted-foreground));
     border-radius: hsl(var(--radius));
   }
 
   /* For Firefox (partial support) */
-  #layout {
+  * {
     scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--background));
     scrollbar-width: thin; /* or 'auto' */
   }

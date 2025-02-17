@@ -1,6 +1,6 @@
 import "chart.js/auto";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useContext, useState } from "react";
+import { useContext } from "react";
 import { Chart } from "react-chartjs-2";
 import {
   type QuerySessionTimelineRequest,
@@ -9,12 +9,11 @@ import {
 } from "../../server";
 import { AppContext } from "../lib";
 import { useThemeVariable } from "../lib/theme";
-import { Badge } from "./ui/badge";
 
 export interface TimelineProps {
   request: QuerySessionsRequest;
   dateRange: [Date, Date] | null;
-  setDateRange: (range: [Date, Date] | null) => void;
+  setDateRange: (range: [Date, Date]) => void;
 }
 
 function dateStringToDateRange(
@@ -109,25 +108,6 @@ export default function Timeline({
   setDateRange,
 }: TimelineProps) {
   const { serverClientFactory } = useContext(AppContext);
-  const [dateRangeStack, setDateRangeStack] = useState<[Date, Date][]>([]);
-
-  const pushDateStack = useCallback(
-    (start: Date, end: Date) => {
-      setDateRange([start, end]);
-      setDateRangeStack(dateRangeStack.concat([[start, end]]));
-    },
-    [dateRangeStack, setDateRangeStack],
-  );
-
-  const popDateStack = useCallback(() => {
-    dateRangeStack.pop();
-    setDateRangeStack(dateRangeStack);
-    if (dateRangeStack.length > 0) {
-      setDateRange(dateRangeStack[dateRangeStack.length - 1]);
-    } else {
-      setDateRange(null);
-    }
-  }, [dateRangeStack, setDateRangeStack]);
 
   const response = useQuery({
     queryKey: ["history", request, "timeline"],
@@ -153,11 +133,6 @@ export default function Timeline({
 
   return (
     <>
-      {dateRange !== null && (
-        <Badge onClick={() => popDateStack()} className="cursor-pointer">
-          {dateRangeToLabel(...dateRange)}
-        </Badge>
-      )}
       <div className="relative w-full h-36 mt-1">
         {response.status === "success" && response.data.timeline.length > 0 ? (
           <Chart
@@ -195,13 +170,12 @@ export default function Timeline({
                   response.data.granularity,
                   selectedLabel,
                 );
-                const currentRange = dateRangeStack[dateRangeStack.length - 1];
                 if (
-                  currentRange === undefined ||
-                  currentRange[0].getTime() !== range[0].getTime() ||
-                  currentRange[1].getTime() !== range[1].getTime()
+                  dateRange === null ||
+                  dateRange[0].getTime() !== range[0].getTime() ||
+                  dateRange[1].getTime() !== range[1].getTime()
                 ) {
-                  pushDateStack(...range);
+                  setDateRange(range);
                 }
               },
               scales: {

@@ -1,4 +1,4 @@
-import { Book, Search, Settings2 } from "lucide-react";
+import { Book, Search, Settings2, X } from "lucide-react";
 import { useContext } from "react";
 import { Link } from "wouter";
 import EggheadIcon from "../icons/egghead.svg";
@@ -27,13 +27,18 @@ export default function NavBar({ searchDisabled }: NavbarProps) {
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
-              type="search"
               placeholder="Search history..."
               className="pl-8"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={searchDisabled}
             />
+            {query ? (
+              <X
+                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer"
+                onClick={() => setQuery("")}
+              />
+            ) : null}
           </div>
         </div>
       </div>

@@ -69,8 +69,8 @@ export default function SearchResults({
           aggregate={aggregate}
         />
       ))}
-      {sessions.length === 0 && (
-        <div className="p-4 font-semibold">
+      {groupedSessions.length === 0 && (
+        <div className="p-4 font-semibold text-center">
           {isLoading ? (
             <h1>Loading...</h1>
           ) : query !== undefined && query.trim().length < 3 ? (

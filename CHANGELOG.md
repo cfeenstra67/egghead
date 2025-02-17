@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.2.0] - 2025-02-17
+
+### Added
+
+- Added "Search Help" w/ tips about supported constructs in the search syntax.
+
+- Added "show full urls" setting to allow showing the full URL in search rather than just the host.
+
+- All filters currently being applied now appear at the top of the search and can be removed one-by-one.
+
+### Changed
+
+- Removed all dropdowns--buttons are always visible. All buttons should have tooltips now as well.
+
+- Opening details of a session opens in a modal instead of navigating pages, losing the state of the current search.
+
+- Selecting a host does not filter down the list of hosts--other filters still apply to the host list.
+
+### Fixed
+
+- Clicking on search bar from settings page now navigates to search--previously this would happen on typing the first character and the search would be lost.
+
+- Fixed deletion not working in the demo app.
+
+- Fixed migrations not working in the demo app.
+
 ## [2.1.0] - 2025-02-16
 
 ### Changed

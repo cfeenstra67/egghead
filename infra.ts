@@ -9,10 +9,7 @@ export default () => {
   const dnsName = config.require("dns-name");
   const docsDnsName = config.require("docs-dns-name");
 
-  const demoBucket = saws.bucket(ctx.prefix("demo"));
-
-  saws.bucketFiles(ctx.prefix("demo"), {
-    bucket: demoBucket,
+  const demoBucket = saws.bucket(ctx.prefix("demo"), {
     paths: [
       "dist/demo",
       "dist/chrome.zip",
@@ -33,10 +30,7 @@ export default () => {
     },
   });
 
-  const docsBucket = saws.bucket(ctx.prefix("docs"));
-
-  saws.bucketFiles(ctx.prefix("docs"), {
-    bucket: docsBucket,
+  const docsBucket = saws.bucket(ctx.prefix("docs"), {
     paths: ["dist/docs/html"],
   });
 

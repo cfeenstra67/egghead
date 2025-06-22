@@ -37,7 +37,7 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws:iam::081142152120:role/egghead-github-role-2a57924
+        role-to-assume: arn:aws:iam::081142152120:role/egghead-dev-github-role-1ea2c1d
         aws-region: us-east-2
     - uses: pulumi/actions@v3
       with:

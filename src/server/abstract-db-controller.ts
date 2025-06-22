@@ -1,5 +1,5 @@
 import EventTarget from "@ungap/event-target";
-import type { SQLConnection } from "./sql-primitives";
+import type { SQLConnection } from "./sql-primitives.js";
 
 export abstract class AbstractDBController {
   initCalled: boolean;

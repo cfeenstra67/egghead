@@ -1,5 +1,5 @@
 import queue from "queue";
-import { Aborted } from "./abort";
+import { Aborted } from "./abort.js";
 
 export interface JobContext {
   jobId: string;

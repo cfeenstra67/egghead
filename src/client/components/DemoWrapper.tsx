@@ -1,6 +1,6 @@
 import { useState } from "react";
-import InitialLoad from "./InitialLoad";
-import RadioSelect from "./RadioSelect";
+import InitialLoad from "./InitialLoad.js";
+import RadioSelect from "./RadioSelect.js";
 
 export interface DemoWrapperProps {
   getApp: (db: Uint8Array) => React.ReactElement;

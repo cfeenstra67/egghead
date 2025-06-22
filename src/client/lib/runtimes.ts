@@ -3,7 +3,7 @@ import {
   popupLocationHook,
   useExtensionLocation,
   useHashLocation,
-} from "./router";
+} from "./router.js";
 
 export interface RuntimeInterface {
   routerHook: RouterHook;

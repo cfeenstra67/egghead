@@ -1,6 +1,6 @@
-import parentLogger from "../logger";
-import { createExtensionRequestProcessor } from "./client";
-import type { RequestHandler } from "./types";
+import parentLogger from "../logger.js";
+import { createExtensionRequestProcessor } from "./client.js";
+import type { RequestHandler } from "./types.js";
 
 const logger = parentLogger.child({ context: "offscreen-client" });
 

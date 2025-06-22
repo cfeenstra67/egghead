@@ -40,7 +40,7 @@ export default () => {
     paths: ["dist/docs/html"],
   });
 
-  saws.staticSite(ctx.prefix("demo"), {
+  saws.staticSite(ctx.prefix("docs"), {
     bucket: docsBucket,
     domain: docsDnsName,
     adapter: {

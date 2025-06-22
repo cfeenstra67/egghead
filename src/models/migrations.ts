@@ -1,10 +1,10 @@
 import type { Generated } from "kysely";
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 import {
   type SQLConnection,
   createQueryBuilder,
   executeQuery,
-} from "../server/sql-primitives";
+} from "../server/sql-primitives.js";
 
 const logger = parentLogger.child({ context: "migrations" });
 

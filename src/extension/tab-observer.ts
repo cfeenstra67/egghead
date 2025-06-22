@@ -1,9 +1,9 @@
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 import type { Session } from "../models";
 import type { ServerInterface, TabChangedRequest } from "../server";
-import { dslToClause } from "../server/clause";
-import { getTabById } from "./chrome-utils";
-import type { NavigationObserver } from "./navigation-observer";
+import { dslToClause } from "../server/clause.js";
+import { getTabById } from "./chrome-utils.js";
+import type { NavigationObserver } from "./navigation-observer.js";
 
 const logger = parentLogger.child({ context: "tab-observer" });
 

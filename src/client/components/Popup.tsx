@@ -7,12 +7,12 @@ import {
   AggregateOperator,
   BinaryOperator,
   type Clause,
-} from "../../server/clause";
-import { AppContext } from "../lib/context";
-import PopupLayout from "./PopupLayout";
-import SearchResults from "./SearchResults";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
+} from "../../server/clause.js";
+import { AppContext } from "../lib/context.js";
+import PopupLayout from "./PopupLayout.js";
+import SearchResults from "./SearchResults.js";
+import { Badge } from "./ui/badge.js";
+import { Input } from "./ui/input.js";
 
 export default function Popup() {
   const { query, setQuery, runtime, serverClientFactory } =

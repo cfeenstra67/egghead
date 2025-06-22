@@ -3,9 +3,9 @@ import { useContext } from "react";
 import { Link } from "wouter";
 import EggheadIcon from "../icons/egghead.svg";
 import { AppContext } from "../lib";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip.js";
 
 export interface NavbarProps {
   autoFocus?: boolean;

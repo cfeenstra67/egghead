@@ -2,12 +2,12 @@ import { BinaryOperator } from "@/src/server/clause";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { DeleteSessionsRequest, SessionResponse } from "../../server";
-import { useSettingsContext } from "../lib/SettingsContext";
-import { getFaviconUrlPublicApi } from "../lib/favicon";
-import { DeleteSessionModal } from "./DeleteSessionModal";
-import ExternalLink from "./ExternalLink";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { useSettingsContext } from "../lib/SettingsContext.js";
+import { getFaviconUrlPublicApi } from "../lib/favicon.js";
+import { DeleteSessionModal } from "./DeleteSessionModal.js";
+import ExternalLink from "./ExternalLink.js";
+import { Button } from "./ui/button.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip.js";
 
 export interface SessionCardProps {
   session: SessionResponse;

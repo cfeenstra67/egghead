@@ -7,11 +7,11 @@ import {
 import { Trash2 } from "lucide-react";
 import { useContext, useState } from "react";
 import { Link } from "wouter";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "../hooks/use-toast.js";
 import { AppContext } from "../lib";
-import SearchResults from "./SearchResults";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
+import SearchResults from "./SearchResults.js";
+import { Button } from "./ui/button.js";
+import { Checkbox } from "./ui/checkbox.js";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +19,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
-import { ScrollArea } from "./ui/scroll-area";
+} from "./ui/dialog.js";
+import { Label } from "./ui/label.js";
+import { ScrollArea } from "./ui/scroll-area.js";
 
 export interface DeleteSubmissionModalProps {
   request: Omit<QuerySessionsRequest, "skip" | "limit">;

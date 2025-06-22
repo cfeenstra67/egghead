@@ -1,8 +1,8 @@
 import * as ReactDOM from "react-dom/client";
-import Popup from "./Popup";
-import InitialLoad from "./components/InitialLoad";
-import { WebRuntime } from "./lib/runtimes";
-import { serverFactory } from "./lib/server-client";
+import Popup from "./Popup.js";
+import InitialLoad from "./components/InitialLoad.js";
+import { WebRuntime } from "./lib/runtimes.js";
+import { serverFactory } from "./lib/server-client.js";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);

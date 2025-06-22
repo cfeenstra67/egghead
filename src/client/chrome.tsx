@@ -2,11 +2,11 @@ import * as ReactDOM from "react-dom/client";
 import {
   createExtensionRequestProcessor,
   createServerClient,
-} from "../server/client";
-import App from "./App";
-import InitialCrawl from "./components/InitialCrawl";
+} from "../server/client.js";
+import App from "./App.js";
+import InitialCrawl from "./components/InitialCrawl.js";
 import { findTabId } from "./lib";
-import { ChromeEmbeddedRuntime } from "./lib/runtimes";
+import { ChromeEmbeddedRuntime } from "./lib/runtimes.js";
 
 const body = document.getElementById("body") as Element;
 findTabId().then((tabId) => {

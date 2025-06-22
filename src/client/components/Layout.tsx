@@ -1,8 +1,8 @@
-import { themeClasses, useTheme } from "../lib/theme";
-import { cn } from "../lib/utils";
-import NavBar, { type NavbarProps } from "./NavBar";
-import { Toaster } from "./ui/toaster";
-import { TooltipProvider } from "./ui/tooltip";
+import { themeClasses, useTheme } from "../lib/theme.js";
+import { cn } from "../lib/utils.js";
+import NavBar, { type NavbarProps } from "./NavBar.js";
+import { Toaster } from "./ui/toaster.js";
+import { TooltipProvider } from "./ui/tooltip.js";
 
 export interface LayoutProps extends NavbarProps {
   children: React.ReactNode | React.ReactNode[];

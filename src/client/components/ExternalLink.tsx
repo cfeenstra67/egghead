@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useContext } from "react";
-import { AppContext } from "../lib/context";
+import { AppContext } from "../lib/context.js";
 
 export interface ExternalLinkProps {
   href: string;

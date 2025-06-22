@@ -1,4 +1,4 @@
-import type { ServerMessage, WorkerHandler, WorkerResponse } from "./types";
+import type { ServerMessage, WorkerHandler, WorkerResponse } from "./types.js";
 
 export function createWorkerClient(worker: Worker): WorkerHandler {
   return (request) => {

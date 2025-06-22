@@ -1,10 +1,10 @@
 import debounce from "lodash/debounce";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import parentLogger from "../../logger";
+import parentLogger from "../../logger.js";
 import type { QuerySessionsRequest, SessionResponse } from "../../server";
-import { Aborted } from "../../server/abort";
-import { requestsEqual } from "../../server/utils";
-import { AppContext } from "./context";
+import { Aborted } from "../../server/abort.js";
+import { requestsEqual } from "../../server/utils.js";
+import { AppContext } from "./context.js";
 
 const logger = parentLogger.child({ context: "session-query" });
 

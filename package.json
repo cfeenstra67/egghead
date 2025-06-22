@@ -1,5 +1,6 @@
 {
   "name": "egghead",
+  "type": "module",
   "version": "2.2.0",
   "author": "cfeenstra67 <cameron.l.feenstra@gmail.com>",
   "license": "MIT",
@@ -11,7 +12,7 @@
     "serve": "webpack serve --config-name dev --no-client-overlay",
     "serve-demo": "webpack serve --config-name demo --no-client-overlay",
     "ohm-generate": "ohm generateBundles --esm --withTypes src/**/*.ohm",
-    "check": "pnpm biome check *.ts src test infra --write",
+    "check": "pnpm biome check *.{js,ts} src test infra --write",
     "test": "jest"
   },
   "dependencies": {
@@ -28,7 +29,7 @@
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-toast": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.1.8",
-    "@sqlite.org/sqlite-wasm": "3.48.0-build4",
+    "@sqlite.org/sqlite-wasm": "3.50.1-build1",
     "@tanstack/react-query": "^5.66.0",
     "@ungap/event-target": "^0.2.3",
     "animate.css": "^4.1.1",
@@ -56,7 +57,7 @@
     "@ohm-js/cli": "^1.1.0",
     "@pulumi/aws": "^6.68.0",
     "@pulumi/pulumi": "^3.149.0",
-    "@stackattack/aws": "0.1.0-dev.41",
+    "@stackattack/aws": "0.1.0-dev.43",
     "@svgr/webpack": "^6.2.1",
     "@types/chrome": "^0.0.300",
     "@types/jest": "^28.1.5",
@@ -81,7 +82,7 @@
     "mime-types": "^2.1.35",
     "mini-css-extract-plugin": "^2.6.0",
     "ohm-js": "^16.3.4",
-    "postcss": ">=8.4.31",
+    "postcss": "^8.5.6",
     "postcss-loader": "^8.1.1",
     "postcss-preset-env": "^10.1.3",
     "prettier": "^2.6.2",

@@ -1,7 +1,7 @@
-import type { AbstractDBController } from "./abstract-db-controller";
-import { Server } from "./service";
-import type { RequestHandler } from "./types";
-import { requestHandler } from "./utils";
+import type { AbstractDBController } from "./abstract-db-controller.js";
+import { Server } from "./service.js";
+import type { RequestHandler } from "./types.js";
+import { requestHandler } from "./utils.js";
 
 export interface BackgroundClient {
   handle: RequestHandler;

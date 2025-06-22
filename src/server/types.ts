@@ -1,6 +1,6 @@
 import type { Session, SettingsItems } from "../models";
-import type { Clause } from "./clause";
-import type { RemoveAnnotations, RemoveRelations } from "./sql-primitives";
+import type { Clause } from "./clause.js";
+import type { RemoveAnnotations, RemoveRelations } from "./sql-primitives.js";
 
 export enum ServerMessage {
   Ping = "ping",

@@ -1,4 +1,4 @@
-import type { Table } from "./base";
+import type { Table } from "./base.js";
 
 export const sessionTable = {
   name: "session",

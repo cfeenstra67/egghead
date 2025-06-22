@@ -2,10 +2,10 @@ import * as ReactDOM from "react-dom/client";
 import {
   createExtensionRequestProcessor,
   createServerClient,
-} from "../server/client";
-import Popup from "./Popup";
-import InitialCrawl from "./components/InitialCrawl";
-import { PopupRuntime } from "./lib/runtimes";
+} from "../server/client.js";
+import Popup from "./Popup.js";
+import InitialCrawl from "./components/InitialCrawl.js";
+import { PopupRuntime } from "./lib/runtimes.js";
 
 const body = document.getElementById("body") as Element;
 const root = ReactDOM.createRoot(body);

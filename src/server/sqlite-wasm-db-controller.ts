@@ -1,7 +1,7 @@
 import sqlite3InitModule, { type Sqlite3Static } from "@sqlite.org/sqlite-wasm";
-import { executeMigrations } from "../models/migrations";
-import { AbstractDBController } from "./abstract-db-controller";
-import type { SQLConnection } from "./sql-primitives";
+import { executeMigrations } from "../models/migrations.js";
+import { AbstractDBController } from "./abstract-db-controller.js";
+import type { SQLConnection } from "./sql-primitives.js";
 
 export class SQLiteWASMDBController extends AbstractDBController {
   private sqlite3: Sqlite3Static | null = null;

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import { Aborted } from "./abort";
-import { ServerMessage, ServerResponseCode } from "./types";
-import type { RequestHandler, ServerInterface } from "./types";
+import { Aborted } from "./abort.js";
+import { ServerMessage, ServerResponseCode } from "./types.js";
+import type { RequestHandler, ServerInterface } from "./types.js";
 
 // For use in a web page or from background to offscreen communication
 export function createExtensionRequestProcessor(

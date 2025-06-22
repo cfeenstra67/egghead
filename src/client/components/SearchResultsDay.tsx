@@ -3,7 +3,7 @@ import type { SessionResponse } from "../../server";
 import SearchResultsItem, {
   getAggSession,
   groupSessions,
-} from "./SearchResultsItem";
+} from "./SearchResultsItem.js";
 
 interface SearchResultsDayProps {
   date: Date;

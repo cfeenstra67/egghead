@@ -1,8 +1,8 @@
-import { Aborted } from "./abort";
-import { createBackgroundClient } from "./background-client";
-import { JobManager } from "./job-manager";
-import { SQLiteWASMDBController } from "./sqlite-wasm-db-controller";
-import { ServerResponseCode, type WorkerMessage } from "./types";
+import { Aborted } from "./abort.js";
+import { createBackgroundClient } from "./background-client.js";
+import { JobManager } from "./job-manager.js";
+import { SQLiteWASMDBController } from "./sqlite-wasm-db-controller.js";
+import { ServerResponseCode, type WorkerMessage } from "./types.js";
 
 const { handle: serverConnection, close: closeServer } = createBackgroundClient(
   new SQLiteWASMDBController("history.db"),

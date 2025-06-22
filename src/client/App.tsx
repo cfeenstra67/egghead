@@ -3,16 +3,16 @@ import { useState } from "react";
 import { Route, Router, Switch, useLocation } from "wouter";
 import type { ServerInterface } from "../server";
 import { AppContext } from "./lib";
-import { SettingsContextProvider } from "./lib/SettingsContext";
-import type { RuntimeInterface } from "./lib/runtimes";
-import { ThemeContextProvider } from "./lib/theme";
-import History from "./pages/History";
-import NotFound from "./pages/NotFound";
-import SessionDetail from "./pages/SessionDetail";
-import About from "./pages/settings/About";
-import DevSettings from "./pages/settings/DevSettings";
-import GeneralSettings from "./pages/settings/GeneralSettings";
-import ImportExport from "./pages/settings/ImportExport";
+import { SettingsContextProvider } from "./lib/SettingsContext.js";
+import type { RuntimeInterface } from "./lib/runtimes.js";
+import { ThemeContextProvider } from "./lib/theme.js";
+import History from "./pages/History.js";
+import NotFound from "./pages/NotFound.js";
+import SessionDetail from "./pages/SessionDetail.js";
+import About from "./pages/settings/About.js";
+import DevSettings from "./pages/settings/DevSettings.js";
+import GeneralSettings from "./pages/settings/GeneralSettings.js";
+import ImportExport from "./pages/settings/ImportExport.js";
 
 // Global CSS
 import "animate.css";

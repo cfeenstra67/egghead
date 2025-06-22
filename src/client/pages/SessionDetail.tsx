@@ -1,8 +1,8 @@
 import { useLocation } from "wouter";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout.js";
 import SessionDetailComponent, {
   type SessionDetailProps,
-} from "../components/SessionDetail";
+} from "../components/SessionDetail.js";
 
 export default function SessionDetail({ sessionId }: SessionDetailProps) {
   const [_, setLocation] = useLocation();

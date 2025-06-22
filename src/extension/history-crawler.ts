@@ -1,7 +1,7 @@
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 import type { GhostSession, ServerInterface } from "../server";
-import { AggregateOperator, BinaryOperator } from "../server/clause";
-import { cleanURL, dateToSqliteString } from "../server/utils";
+import { AggregateOperator, BinaryOperator } from "../server/clause.js";
+import { cleanURL, dateToSqliteString } from "../server/utils.js";
 
 // Chrome appears to only store 3 months' worth of history, so setting
 // this any earlier than that isn't useful and misleads the user on the

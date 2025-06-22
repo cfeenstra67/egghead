@@ -1,8 +1,8 @@
 import { useLocation } from "wouter";
-import { cn } from "../lib/utils";
-import Layout from "./Layout";
-import type { SettingsPage } from "./SettingsSideBar";
-import SettingsSideBar from "./SettingsSideBar";
+import { cn } from "../lib/utils.js";
+import Layout from "./Layout.js";
+import type { SettingsPage } from "./SettingsSideBar.js";
+import SettingsSideBar from "./SettingsSideBar.js";
 
 export interface SettingsLayoutProps extends React.PropsWithChildren {
   page: SettingsPage;

@@ -5,9 +5,9 @@ import {
   sessionIndexTable,
   sessionTable,
 } from "../models";
-import type { Table } from "../models/base";
-import { type Fts5TableArgs, getColumn } from "../models/fts5";
-import { maybeAbort } from "./abort";
+import type { Table } from "../models/base.js";
+import { type Fts5TableArgs, getColumn } from "../models/fts5.js";
+import { maybeAbort } from "./abort.js";
 import {
   AggregateOperator,
   BinaryOperator,
@@ -19,8 +19,8 @@ import {
   isUnary,
   mapClauses,
   parseQueryString,
-} from "./clause";
-import { renderClause } from "./render-clause";
+} from "./clause.js";
+import { renderClause } from "./render-clause.js";
 import {
   type Database,
   type QueryBuilder,
@@ -28,7 +28,7 @@ import {
   type SQLConnection,
   createQueryBuilder,
   executeQuery,
-} from "./sql-primitives";
+} from "./sql-primitives.js";
 import stopwordsTxt from "./stopwords.txt";
 import type {
   DeleteSessionsRequest,
@@ -41,8 +41,8 @@ import type {
   QuerySessionsRequest,
   QuerySessionsResponse,
   SessionResponse,
-} from "./types";
-import { dateToSqliteString } from "./utils";
+} from "./types.js";
+import { dateToSqliteString } from "./utils.js";
 
 function sessionToSessionResponse(
   session: RemoveAnnotations<Database["session"]> & {
@@ -378,6 +378,9 @@ export class SearchService {
           ])
           .where("col", "=", "title")
           .where("term", "not in", stopwords)
+          .where(({ eb }) =>
+            eb(eb.fn<number>("length", [eb.ref("term")]), ">=", 3),
+          )
           .groupBy(["term", "doc", "is_result"]),
     );
 

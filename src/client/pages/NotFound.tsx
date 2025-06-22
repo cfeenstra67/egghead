@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout.js";
 
 export default function NotFound() {
   return (

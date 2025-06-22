@@ -1,16 +1,16 @@
 import type { Insertable } from "kysely";
 import chunk from "lodash/chunk";
 import { v4 as uuidv4 } from "uuid";
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 import {
   type Settings,
   type Session as TypeORMSession,
   sessionIndexTable,
   sessionTermIndexTable,
 } from "../models";
-import { createFts5Index, dropFts5Index } from "../models/fts5";
-import { maybeAbort } from "./abort";
-import { SearchService, sessionIndexTableArgs } from "./search";
+import { createFts5Index, dropFts5Index } from "../models/fts5.js";
+import { maybeAbort } from "./abort.js";
+import { SearchService, sessionIndexTableArgs } from "./search.js";
 import {
   type QueryBuilder,
   type RemoveAnnotations,
@@ -18,7 +18,7 @@ import {
   type SQLConnection,
   createQueryBuilder,
   executeQuery,
-} from "./sql-primitives";
+} from "./sql-primitives.js";
 import type {
   ApplyRetentionPolicyRequest,
   ApplyRetentionPolicyResponse,
@@ -59,8 +59,8 @@ import type {
   TabInteractionResponse,
   UpdateSettingsRequest,
   UpdateSettingsResponse,
-} from "./types";
-import { cleanURL, defaultSettings, getHost } from "./utils";
+} from "./types.js";
+import { cleanURL, defaultSettings, getHost } from "./utils.js";
 
 type Session = RemoveAnnotations<RemoveRelations<TypeORMSession>>;
 

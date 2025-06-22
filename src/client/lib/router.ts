@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import parentLogger from "../../logger";
-import type { RuntimeInterface } from "./runtimes";
+import parentLogger from "../../logger.js";
+import type { RuntimeInterface } from "./runtimes.js";
 
 const logger = parentLogger.child({ context: "router" });
 

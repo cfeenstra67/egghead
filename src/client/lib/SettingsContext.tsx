@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { SettingsItems } from "../../models";
-import { Aborted } from "../../server/abort";
-import { defaultSettings } from "../../server/utils";
-import { AppContext } from "./context";
+import { Aborted } from "../../server/abort.js";
+import { defaultSettings } from "../../server/utils.js";
+import { AppContext } from "./context.js";
 
 export interface SettingsContext {
   items: SettingsItems;

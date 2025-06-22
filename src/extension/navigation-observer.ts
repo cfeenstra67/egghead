@@ -1,5 +1,5 @@
 import EventTarget from "@ungap/event-target";
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 
 const logger = parentLogger.child({ context: "navigation-observer" });
 

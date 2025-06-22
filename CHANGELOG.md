@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Changed
+
+- Converted app to use ES Modules for the source code
+
+## Fixed
+
+- Prevent terms shorter than 3 characters from appearing in the sidebar--clicking on these produces an empty screen + they are not likely to refer to concrete topics.
+
 ## [2.2.0] - 2025-02-17
 
 ### Added

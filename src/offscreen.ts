@@ -1,5 +1,5 @@
-import parentLogger from "./logger";
-import { createWorkerClient } from "./server/worker-client";
+import parentLogger from "./logger.js";
+import { createWorkerClient } from "./server/worker-client.js";
 
 const worker = new Worker("offscreen-worker.js");
 

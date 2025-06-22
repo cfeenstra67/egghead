@@ -1,6 +1,6 @@
 import type { SessionResponse } from "../../server";
-import { dateFromSqliteString } from "../../server/utils";
-import SearchResultsDay from "./SearchResultsDay";
+import { dateFromSqliteString } from "../../server/utils.js";
+import SearchResultsDay from "./SearchResultsDay.js";
 
 function groupSessionsByDay(
   sessions: SessionResponse[],

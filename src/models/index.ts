@@ -3,8 +3,8 @@ import {
   SessionIndex,
   SessionTermIndex,
   SessionTermIndexVocab,
-} from "./session.entity";
-import { Settings } from "./settings.entity";
+} from "./session.entity.js";
+import { Settings } from "./settings.entity.js";
 
 // All entities to be queried
 export const entities = [

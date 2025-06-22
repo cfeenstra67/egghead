@@ -2,15 +2,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Router } from "wouter";
 import type { ServerInterface } from "../server";
-import PopupComponent from "./components/Popup";
+import PopupComponent from "./components/Popup.js";
 import { AppContext } from "./lib";
-import { SettingsContextProvider } from "./lib/SettingsContext";
-import type { RuntimeInterface } from "./lib/runtimes";
+import { SettingsContextProvider } from "./lib/SettingsContext.js";
+import type { RuntimeInterface } from "./lib/runtimes.js";
 
 // Global CSS
 import "animate.css";
 import "./styles/styles.css";
-import { ThemeContextProvider } from "./lib/theme";
+import { ThemeContextProvider } from "./lib/theme.js";
 
 export interface PopupProps {
   serverClientFactory: () => Promise<ServerInterface>;

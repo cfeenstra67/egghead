@@ -7,23 +7,23 @@ import {
   AggregateOperator,
   BinaryOperator,
   type Clause,
-} from "../../server/clause";
-import { DeleteSessionModal } from "../components/DeleteSessionModal";
-import Layout from "../components/Layout";
-import SearchHelp from "../components/SearchHelp";
-import SearchResults from "../components/SearchResults";
-import SearchResultsSideBar from "../components/SearchResultsSideBar";
-import Timeline from "../components/Timeline";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+} from "../../server/clause.js";
+import { DeleteSessionModal } from "../components/DeleteSessionModal.js";
+import Layout from "../components/Layout.js";
+import SearchHelp from "../components/SearchHelp.js";
+import SearchResults from "../components/SearchResults.js";
+import SearchResultsSideBar from "../components/SearchResultsSideBar.js";
+import Timeline from "../components/Timeline.js";
+import { Badge } from "../components/ui/badge.js";
+import { Button } from "../components/ui/button.js";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../components/ui/tooltip";
-import { useDebounced } from "../hooks/use-debounced";
+} from "../components/ui/tooltip.js";
+import { useDebounced } from "../hooks/use-debounced.js";
 import { AppContext } from "../lib";
-import { type QueryFilters, filtersToRequest } from "../lib/filters";
+import { type QueryFilters, filtersToRequest } from "../lib/filters.js";
 
 type NonQueryFilters = Omit<QueryFilters, "query">;
 

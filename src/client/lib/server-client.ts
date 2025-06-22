@@ -1,7 +1,7 @@
 import type { ImportDatabaseResponse, ServerInterface } from "../../server";
-import { createServerClient } from "../../server/client";
-import { workerRequestHandler } from "../../server/utils";
-import { createWorkerClient } from "../../server/worker-client";
+import { createServerClient } from "../../server/client.js";
+import { workerRequestHandler } from "../../server/utils.js";
+import { createWorkerClient } from "../../server/worker-client.js";
 
 export function serverFactory(
   existingDb: Uint8Array,

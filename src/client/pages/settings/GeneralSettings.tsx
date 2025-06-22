@@ -1,17 +1,17 @@
 import { Theme } from "@/src/server";
-import SettingsLayout from "../../components/SettingsLayout";
-import { SettingsPage } from "../../components/SettingsSideBar";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import SettingsLayout from "../../components/SettingsLayout.js";
+import { SettingsPage } from "../../components/SettingsSideBar.js";
+import { Input } from "../../components/ui/input.js";
+import { Label } from "../../components/ui/label.js";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { Switch } from "../../components/ui/switch";
-import { useSettingsContext } from "../../lib/SettingsContext";
+} from "../../components/ui/select.js";
+import { Switch } from "../../components/ui/switch.js";
+import { useSettingsContext } from "../../lib/SettingsContext.js";
 
 export default function Settings() {
   const settings = useSettingsContext();

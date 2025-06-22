@@ -5,8 +5,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { Theme } from "../../server/types";
-import { useSettingsContext } from "./SettingsContext";
+import { Theme } from "../../server/types.js";
+import { useSettingsContext } from "./SettingsContext.js";
 
 export type ConcreteTheme = Exclude<Theme, Theme.Auto>;
 

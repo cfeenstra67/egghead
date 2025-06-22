@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
-import parentLogger from "../logger";
+import parentLogger from "../logger.js";
 import type { SettingsItems } from "../models";
-import { Aborted } from "./abort";
-import { BinaryOperator, clausesEqual } from "./clause";
-import type { JobManager, JobManagerMiddleware } from "./job-manager";
-import { ServerMessage, ServerResponseCode, Theme } from "./types";
+import { Aborted } from "./abort.js";
+import { BinaryOperator, clausesEqual } from "./clause.js";
+import type { JobManager, JobManagerMiddleware } from "./job-manager.js";
+import { ServerMessage, ServerResponseCode, Theme } from "./types.js";
 import type {
   DeleteSessionsRequest,
   DeleteSessionsResponse,
@@ -14,7 +14,7 @@ import type {
   ServerInterface,
   TypedServerRequestForMessage,
   WorkerHandler,
-} from "./types";
+} from "./types.js";
 
 const logger = parentLogger.child({ context: "server-utils" });
 

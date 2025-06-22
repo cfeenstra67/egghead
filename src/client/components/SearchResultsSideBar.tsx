@@ -4,17 +4,17 @@ import { ChevronUp, Globe, Hash, Search } from "lucide-react";
 import { useCallback, useContext, useState } from "react";
 import type { QuerySessionFacetsFacetValue } from "../../server";
 import { AppContext } from "../lib";
-import { type QueryFilters, filtersToRequest } from "../lib/filters";
-import { cn } from "../lib/utils";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { type QueryFilters, filtersToRequest } from "../lib/filters.js";
+import { cn } from "../lib/utils.js";
+import { Badge } from "./ui/badge.js";
+import { Button } from "./ui/button.js";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./ui/collapsible";
-import { Input } from "./ui/input";
-import { Spinner } from "./ui/spinner";
+} from "./ui/collapsible.js";
+import { Input } from "./ui/input.js";
+import { Spinner } from "./ui/spinner.js";
 
 interface HostsComponentProps {
   disabled?: boolean;

@@ -1,4 +1,4 @@
-import type { SQLConnection } from "../server/sql-primitives";
+import type { SQLConnection } from "../server/sql-primitives.js";
 
 const dummyColumnName = "dum";
 

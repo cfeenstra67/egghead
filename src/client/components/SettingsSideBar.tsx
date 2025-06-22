@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { SquareArrowOutUpRight } from "lucide-react";
 import { Link } from "wouter";
-import { useSettingsContext } from "../lib/SettingsContext";
-import ExternalLink from "./ExternalLink";
+import { useSettingsContext } from "../lib/SettingsContext.js";
+import ExternalLink from "./ExternalLink.js";
 
 export enum SettingsPage {
   General = "General",

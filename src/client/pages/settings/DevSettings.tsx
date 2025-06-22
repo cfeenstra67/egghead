@@ -1,8 +1,8 @@
 import { useState } from "react";
-import DbTool from "../../components/DbTool";
-import SettingsLayout from "../../components/SettingsLayout";
-import { SettingsPage } from "../../components/SettingsSideBar";
-import { useSettingsContext } from "../../lib/SettingsContext";
+import DbTool from "../../components/DbTool.js";
+import SettingsLayout from "../../components/SettingsLayout.js";
+import { SettingsPage } from "../../components/SettingsSideBar.js";
+import { useSettingsContext } from "../../lib/SettingsContext.js";
 
 export default function DevSettings() {
   const settings = useSettingsContext();

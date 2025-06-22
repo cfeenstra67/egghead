@@ -6,7 +6,7 @@ import {
   type Keys,
   isFilter,
   isUnary,
-} from "./clause";
+} from "./clause.js";
 
 export interface RenderClauseArgs<T> {
   clause: Clause<T>;

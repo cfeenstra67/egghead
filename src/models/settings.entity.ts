@@ -1,4 +1,4 @@
-import type { Theme } from "../server/types";
+import type { Theme } from "../server/types.js";
 
 export type SettingsItems = Omit<Settings, "id" | "createdAt" | "updatedAt">;
 

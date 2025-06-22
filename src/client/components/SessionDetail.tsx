@@ -3,9 +3,9 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useContext, useState } from "react";
 import { Link } from "wouter";
 import { AppContext } from "../lib";
-import SearchResults from "./SearchResults";
-import SessionCard from "./SessionCard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import SearchResults from "./SearchResults.js";
+import SessionCard from "./SessionCard.js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.js";
 
 export interface SessionDetailProps {
   sessionId: string;

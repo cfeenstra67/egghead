@@ -1,8 +1,8 @@
 import type { ServerInterface } from "../server";
-import { HistoryCrawler } from "./history-crawler";
-import { NavigationObserver } from "./navigation-observer";
-import { RetentionPolicyManager } from "./retention-policy-manager";
-import { TabObserver } from "./tab-observer";
+import { HistoryCrawler } from "./history-crawler.js";
+import { NavigationObserver } from "./navigation-observer.js";
+import { RetentionPolicyManager } from "./retention-policy-manager.js";
+import { TabObserver } from "./tab-observer.js";
 
 export function historyCrawlerFactory(server: ServerInterface): HistoryCrawler {
   return new HistoryCrawler(server, "historyCrawler", 24 * 60 * 60 * 1000);

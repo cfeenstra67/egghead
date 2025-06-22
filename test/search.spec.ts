@@ -7,8 +7,8 @@ import {
   UnaryOperator,
   clausesEqual,
   parseQueryString,
-} from "../src/server/clause";
-import { SearchService } from "../src/server/search";
+} from "../src/server/clause.js";
+import { SearchService } from "../src/server/search.js";
 
 type SessionInput = Omit<Session, "childSessions">;
 

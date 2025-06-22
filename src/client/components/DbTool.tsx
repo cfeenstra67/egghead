@@ -4,12 +4,12 @@ import sqlLang from "highlight.js/lib/languages/sql";
 import { ChevronsLeftRight, ChevronsRightLeft, Play } from "lucide-react";
 import { useContext, useState } from "react";
 import Editor from "react-simple-code-editor";
-import parentLogger from "../../logger";
+import parentLogger from "../../logger.js";
 import type { ServerInterface } from "../../server";
 import { AppContext } from "../lib";
 import styles from "../styles/DbTool.module.css";
-import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus";
-import { Button } from "./ui/button";
+import SettingsOptionStatus, { LoadingState } from "./SettingsOptionStatus.js";
+import { Button } from "./ui/button.js";
 
 hljs.registerLanguage("sql", sqlLang);
 

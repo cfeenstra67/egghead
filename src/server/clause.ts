@@ -1,6 +1,6 @@
 import queryStringGrammar, {
   type QueryStringSemantics,
-} from "./query-string.ohm-bundle";
+} from "./query-string.ohm-bundle.js";
 
 export const IndexToken = "__index__";
 

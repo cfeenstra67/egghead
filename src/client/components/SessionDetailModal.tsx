@@ -1,5 +1,5 @@
-import SessionDetail from "./SessionDetail";
-import { Dialog, DialogContent } from "./ui/dialog";
+import SessionDetail from "./SessionDetail.js";
+import { Dialog, DialogContent } from "./ui/dialog.js";
 
 export interface SessionDetailModalProps {
   sessionId: string;

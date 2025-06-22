@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import Layout from "./Layout";
-import PopupLayout from "./PopupLayout";
+import Layout from "./Layout.js";
+import PopupLayout from "./PopupLayout.js";
 
 interface ContainerProps extends React.PropsWithChildren {
   isPopup?: boolean;

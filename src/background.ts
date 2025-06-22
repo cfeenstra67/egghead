@@ -1,16 +1,16 @@
-import { setupObservers } from "./extension/utils";
-import parentLogger from "./logger";
+import { setupObservers } from "./extension/utils.js";
+import parentLogger from "./logger.js";
 import { ServerResponseCode } from "./server";
-import { Aborted } from "./server/abort";
-import { createServerClient } from "./server/client";
-import { JobManager } from "./server/job-manager";
-import { createOffscreenClient } from "./server/offscreen-client";
+import { Aborted } from "./server/abort.js";
+import { createServerClient } from "./server/client.js";
+import { JobManager } from "./server/job-manager.js";
+import { createOffscreenClient } from "./server/offscreen-client.js";
 import {
   deleteSessions,
   jobManagerMiddleware,
   logJobMiddleware,
   logRequestMiddleware,
-} from "./server/utils";
+} from "./server/utils.js";
 
 const logger = parentLogger.child({ context: "background" });
 

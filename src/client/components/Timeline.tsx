@@ -8,7 +8,7 @@ import {
   Theme,
 } from "../../server";
 import { AppContext } from "../lib";
-import { useThemeVariable } from "../lib/theme";
+import { useThemeVariable } from "../lib/theme.js";
 
 export interface TimelineProps {
   request: QuerySessionsRequest;

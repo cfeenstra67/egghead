@@ -1,6 +1,6 @@
-import { platform, version } from "../../../constants";
-import SettingsLayout from "../../components/SettingsLayout";
-import { SettingsPage } from "../../components/SettingsSideBar";
+import { platform, version } from "../../../constants.js";
+import SettingsLayout from "../../components/SettingsLayout.js";
+import { SettingsPage } from "../../components/SettingsSideBar.js";
 
 export default function About() {
   return (

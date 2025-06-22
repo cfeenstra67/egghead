@@ -1,8 +1,8 @@
 import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
-import { historyCrawlerFactory } from "../../extension/utils";
+import { historyCrawlerFactory } from "../../extension/utils.js";
 import type { ServerInterface } from "../../server";
-import Layout from "./Layout";
-import PopupLayout from "./PopupLayout";
+import Layout from "./Layout.js";
+import PopupLayout from "./PopupLayout.js";
 
 interface LoadingStateProps {
   isPopup?: boolean;

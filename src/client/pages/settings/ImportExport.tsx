@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useContext, useRef } from "react";
-import SettingsLayout from "../../components/SettingsLayout";
+import SettingsLayout from "../../components/SettingsLayout.js";
 import SettingsOptionStatus, {
   LoadingState,
-} from "../../components/SettingsOptionStatus";
-import { SettingsPage } from "../../components/SettingsSideBar";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+} from "../../components/SettingsOptionStatus.js";
+import { SettingsPage } from "../../components/SettingsSideBar.js";
+import { Button } from "../../components/ui/button.js";
+import { Input } from "../../components/ui/input.js";
+import { Label } from "../../components/ui/label.js";
 import { AppContext, cleanupUrl, downloadUrl } from "../../lib";
 
 export default function ImportExport() {

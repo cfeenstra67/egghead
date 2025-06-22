@@ -138,6 +138,9 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.149.0
         version: 3.149.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      '@stackattack/aws':
+        specifier: 0.1.0-dev.41
+        version: 0.1.0-dev.41(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
       '@svgr/webpack':
         specifier: ^6.2.1
         version: 6.2.1
@@ -1688,8 +1691,17 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
+  '@pulumi/aws-native@1.30.0':
+    resolution: {integrity: sha512-y0rjvfsHvuIh5Biixqk+p12FVGTWRNSrVA1p6zui99dkvMV/KX5/lh6dEBbwW3hxcNVrZn0frU9LHXSyFSLLZA==}
+
   '@pulumi/aws@6.68.0':
     resolution: {integrity: sha512-uehJNSviSq3garkLXsy1zZzI7V6clBDQq8G83PSpNfdePdGeKtuRoxMSsuqkgpGkue+cGjoxJtC6QwdtzgaKBQ==}
+
+  '@pulumi/aws@6.83.0':
+    resolution: {integrity: sha512-uYpYSA5aaDERFuxy3D+FDWiwH7YYNHSwGLpHVuARAzBfQ/SQDkS/tfJI5NNo7/+KCmje3rloKE2enUK/Q9bVBg==}
+
+  '@pulumi/command@1.1.0':
+    resolution: {integrity: sha512-ovVec+gXeqpcm76xwYYZvfJym8bG9NRvlBGQWbn0+c0fKQziZIjiv5V+AxTKfb+dLWKe7Otyt206L1IWq41hyw==}
 
   '@pulumi/pulumi@3.149.0':
     resolution: {integrity: sha512-04B7//mng19nq5loBHJPcXbXP+m55df4kJqddkoTT4cSHIzwyZS+mvdaGnukT08XQF7JqGPkmzMEz+rfAilCfQ==}
@@ -1703,8 +1715,23 @@ packages:
       typescript:
         optional: true
 
+  '@pulumi/pulumi@3.178.0':
+    resolution: {integrity: sha512-giEX8H79XLfLZkbpHjT400DCOWXZ1oTSoBGk9RUIeNqq3xh9WvvVf6Zrcs6Xe96ciPu/Cf4lCKENBgtY3Jtugw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      ts-node: '>= 7.0.1 < 12'
+      typescript: '>= 3.8.3 < 6'
+    peerDependenciesMeta:
+      ts-node:
+        optional: true
+      typescript:
+        optional: true
+
   '@pulumi/query@0.3.0':
     resolution: {integrity: sha512-xfo+yLRM2zVjVEA4p23IjQWzyWl1ZhWOGobsBqRpIarzLvwNH/RAGaoehdxlhx4X92302DrpdIFgTICMN4P38w==}
+
+  '@pulumi/random@4.18.2':
+    resolution: {integrity: sha512-jC0HfgkFKwgUGmocM7Tw6UyOrpLFXGO8kYfV6f5Q9R/yziaVxEVPQ0Uup2HfosDh926EZHJrt2EUIJHWCyOvFA==}
 
   '@radix-ui/number@1.1.0':
     resolution: {integrity: sha512-V3gRzhVNU1ldS5XhAPTom1fOIo4ccrjjJgmE+LI2h/WaFpHmx0MQApT+KZHnx8abG6Avtfcz4WoEciMnpFT3HQ==}
@@ -2300,6 +2327,9 @@ packages:
   '@sqlite.org/sqlite-wasm@3.48.0-build4':
     resolution: {integrity: sha512-hI6twvUkzOmyGZhQMza1gpfqErZxXRw6JEsiVjUbo7tFanVD+8Oil0Ih3l2nGzHdxPI41zFmfUQG7GHqhciKZQ==}
     hasBin: true
+
+  '@stackattack/aws@0.1.0-dev.41':
+    resolution: {integrity: sha512-iozombbHTKp+oMqRt9vca3Sot4AiOYGKoSXRvbT3mz0ST9FYyOdAbJnMNQ/DQFkANJf3mIxoUawsSzwmR8t57g==}
 
   '@svgr/babel-plugin-add-jsx-attribute@6.0.0':
     resolution: {integrity: sha512-MdPdhdWLtQsjd29Wa4pABdhWbaRMACdM1h31BY+c6FghTZqNGT7pEYdBoaGeKtdTOBC/XNFQaKVj+r/Ei2ryWA==}
@@ -8017,10 +8047,38 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
+  '@pulumi/aws-native@1.30.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@pulumi/pulumi': 3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
+
   '@pulumi/aws@6.68.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
     dependencies:
       '@pulumi/pulumi': 3.149.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
       mime: 2.6.0
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
+
+  '@pulumi/aws@6.83.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@pulumi/pulumi': 3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      mime: 2.6.0
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
+
+  '@pulumi/command@1.1.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@pulumi/pulumi': 3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -8066,7 +8124,53 @@ snapshots:
       - bluebird
       - supports-color
 
+  '@pulumi/pulumi@3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@grpc/grpc-js': 1.12.6
+      '@logdna/tail-file': 2.2.0
+      '@npmcli/arborist': 7.5.4
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/exporter-zipkin': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/instrumentation': 0.55.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/instrumentation-grpc': 0.55.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node': 1.30.1(@opentelemetry/api@1.9.0)
+      '@types/google-protobuf': 3.15.12
+      '@types/semver': 7.5.8
+      '@types/tmp': 0.2.6
+      execa: 5.1.1
+      fdir: 6.4.3(picomatch@3.0.1)
+      google-protobuf: 3.20.1
+      got: 11.8.6
+      ini: 2.0.0
+      js-yaml: 3.14.1
+      minimist: 1.2.6
+      normalize-package-data: 6.0.2
+      picomatch: 3.0.1
+      pkg-dir: 7.0.0
+      require-from-string: 2.0.2
+      semver: 7.7.0
+      source-map-support: 0.5.21
+      tmp: 0.2.3
+      upath: 1.2.0
+    optionalDependencies:
+      ts-node: 10.9.1(@types/node@20.17.16)(typescript@5.7.3)
+      typescript: 5.7.3
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+
   '@pulumi/query@0.3.0': {}
+
+  '@pulumi/random@4.18.2(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@pulumi/pulumi': 3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
 
   '@radix-ui/number@1.1.0': {}
 
@@ -8668,6 +8772,20 @@ snapshots:
       '@sinonjs/commons': 3.0.1
 
   '@sqlite.org/sqlite-wasm@3.48.0-build4': {}
+
+  '@stackattack/aws@0.1.0-dev.41(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+    dependencies:
+      '@pulumi/aws': 6.83.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      '@pulumi/aws-native': 1.30.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      '@pulumi/command': 1.1.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      '@pulumi/pulumi': 3.178.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      '@pulumi/random': 4.18.2(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+      mime-types: 2.1.35
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
 
   '@svgr/babel-plugin-add-jsx-attribute@6.0.0(@babel/core@7.18.6)':
     dependencies:

@@ -11,7 +11,7 @@
     "serve": "webpack serve --config-name dev --no-client-overlay",
     "serve-demo": "webpack serve --config-name demo --no-client-overlay",
     "ohm-generate": "ohm generateBundles --esm --withTypes src/**/*.ohm",
-    "check": "pnpm biome check src test infra --write",
+    "check": "pnpm biome check *.ts src test infra --write",
     "test": "jest"
   },
   "dependencies": {
@@ -56,6 +56,7 @@
     "@ohm-js/cli": "^1.1.0",
     "@pulumi/aws": "^6.68.0",
     "@pulumi/pulumi": "^3.149.0",
+    "@stackattack/aws": "0.1.0-dev.41",
     "@svgr/webpack": "^6.2.1",
     "@types/chrome": "^0.0.300",
     "@types/jest": "^28.1.5",

@@ -1,4 +1,7 @@
 name: egghead
-runtime: nodejs
-main: infra/index.ts
+main: infra.ts
+runtime:
+  name: nodejs
+  options:
+    nodeargs: "--loader ts-node/esm --no-warnings"
 description: Browser history replacement that doesn't suck eggs

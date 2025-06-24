@@ -57,7 +57,7 @@
     "@ohm-js/cli": "^1.1.0",
     "@pulumi/aws": "^6.68.0",
     "@pulumi/pulumi": "^3.149.0",
-    "@stackattack/aws": "0.1.0-dev.44",
+    "@stackattack/aws": "0.1.0-dev.48",
     "@svgr/webpack": "^6.2.1",
     "@types/chrome": "^0.0.300",
     "@types/jest": "^28.1.5",

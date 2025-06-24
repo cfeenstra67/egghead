@@ -58,9 +58,10 @@ export default () => {
         },
         {
           actions: ["s3:PutObject*", "s3:DeleteObject"],
-          resources: [demoBucket.bucket.arn, docsBucket.bucket.arn].flatMap(
-            (arn) => [arn, pulumi.interpolate`${arn}/*`],
-          ),
+          resources: [demoBucket.arn, docsBucket.arn].flatMap((arn) => [
+            arn,
+            pulumi.interpolate`${arn}/*`,
+          ]),
         },
       ],
     }).json,

@@ -139,8 +139,8 @@ importers:
         specifier: ^3.149.0
         version: 3.149.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
       '@stackattack/aws':
-        specifier: 0.1.0-dev.44
-        version: 0.1.0-dev.44(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
+        specifier: 0.1.0-dev.48
+        version: 0.1.0-dev.48(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
       '@svgr/webpack':
         specifier: ^6.2.1
         version: 6.2.1
@@ -2328,8 +2328,8 @@ packages:
     resolution: {integrity: sha512-yH4M/SHN98NibniIwTVk6rwTJjy7n39l7zwWY3u+qsfZBGTi4lC1uEl2NDvIlkzsFtfCBvHBJJFJ1iuU3UzzEQ==}
     hasBin: true
 
-  '@stackattack/aws@0.1.0-dev.44':
-    resolution: {integrity: sha512-Ptd7twUnpxAMW354zqgc+hlqRhIM/4ryVPvMsVK9ryp6HvHLvD3gUGLr0MZeNplzv5K/NrW8os3DBumswNObvg==}
+  '@stackattack/aws@0.1.0-dev.48':
+    resolution: {integrity: sha512-MHuxXn+D3PYljCYXTJcFsAPcHn+Rk9q+k6P2vPZAKQJb2O2czBVM+SJZ4y+YyWZpB7dPHTeNOv//ruh1eHpofQ==}
 
   '@svgr/babel-plugin-add-jsx-attribute@6.0.0':
     resolution: {integrity: sha512-MdPdhdWLtQsjd29Wa4pABdhWbaRMACdM1h31BY+c6FghTZqNGT7pEYdBoaGeKtdTOBC/XNFQaKVj+r/Ei2ryWA==}
@@ -8773,7 +8773,7 @@ snapshots:
 
   '@sqlite.org/sqlite-wasm@3.50.1-build1': {}
 
-  '@stackattack/aws@0.1.0-dev.44(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
+  '@stackattack/aws@0.1.0-dev.48(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)':
     dependencies:
       '@pulumi/aws': 6.83.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)
       '@pulumi/aws-native': 1.30.0(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3))(typescript@5.7.3)

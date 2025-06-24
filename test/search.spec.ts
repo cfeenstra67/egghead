@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import type { Session } from "../src/models";
 import {
   AggregateOperator,
@@ -8,7 +9,6 @@ import {
   clausesEqual,
   parseQueryString,
 } from "../src/server/clause.js";
-import { SearchService } from "../src/server/search.js";
 
 type SessionInput = Omit<Session, "childSessions">;
 
@@ -1041,6 +1041,21 @@ const examples: TestCase[] = [
   },
 ];
 
+for (const {
+  id,
+  query: queryString,
+  clause: expected,
+  resultIds,
+  data,
+} of examples) {
+  test(`${id}: parse: ${queryString} = ${expected}`, () => {
+    const result = parseQueryString<Session>(queryString);
+    expect(clausesEqual(result, expected)).toBe(true);
+  });
+
+  test(`${id}: run: ${queryString} -> ${resultIds}`, async () => {});
+}
+
 // async function useDatabase<T>(use: (conn: SQLConnection) => Promise<T>): Promise<T> {
 //   const db = new Database();
 
@@ -1083,51 +1098,37 @@ const examples: TestCase[] = [
 //   }
 // }
 
-describe(SearchService, () => {
-  const parseExamples: [string, string, Clause<Session>][] = examples.map(
-    (example) => {
-      return [example.id, example.query, example.clause];
-    },
-  );
+// describe(SearchService, () => {
+//   const runExamples: [string, string, string[], SessionInput[]][] = examples.map((example) => {
+//     return [example.id, example.query, example.resultIds, example.data];
+//   });
+//   it.each(runExamples)('%s: run: %s -> %s', async (id: string, queryString: string, resultIds: string[], data: SessionInput[]) => {
+//     await useDatabase(async (conn) => {
+//       const qb = createQueryBuilder();
 
-  it.each(parseExamples)(
-    "%s: parse: %s = %s",
-    (id: string, queryString: string, expected: Clause<Session>) => {
-      const result = parseQueryString<Session>(queryString);
-      console.log("??", result, expected);
-      expect(clausesEqual(result, expected)).toBe(true);
-    },
-  );
-  // const runExamples: [string, string, string[], SessionInput[]][] = examples.map((example) => {
-  //   return [example.id, example.query, example.resultIds, example.data];
-  // });
-  // it.each(runExamples)('%s: run: %s -> %s', async (id: string, queryString: string, resultIds: string[], data: SessionInput[]) => {
-  //   await useDatabase(async (conn) => {
-  //     const qb = createQueryBuilder();
+//       if (data.length > 0) {
+//         const builder = qb.insertInto('session').values(data);
 
-  //     if (data.length > 0) {
-  //       const builder = qb.insertInto('session').values(data);
+//         await executeQuery(builder, conn);
+//       }
 
-  //       await executeQuery(builder, conn);
-  //     }
-
-  //     const searchService = new SearchService(conn);
-  //     // main search query
-  //     const { results, totalCount } = await searchService.querySessions({
-  //       query: queryString,
-  //       isSearch: true,
-  //     });
-  //     expect(results.length).toBe(totalCount);
-  //     expect(new Set(results.map((row) => row.id))).toStrictEqual(new Set(resultIds));
-  //     // for facets & timeline, just make sure they run w/o failing
-  //     await searchService.querySessionFacets({
-  //       query: queryString,
-  //       facetsSize: 10,
-  //     });
-  //     await searchService.querySessionTimeline({
-  //       query: queryString,
-  //       granularity: 5
-  //     });
-  //   });
-  // });
-});
+//       const searchService = new SearchService(conn);
+//       // main search query
+//       const { results, totalCount } = await searchService.querySessions({
+//         query: queryString,
+//         isSearch: true,
+//       });
+//       expect(results.length).toBe(totalCount);
+//       expect(new Set(results.map((row) => row.id))).toStrictEqual(new Set(resultIds));
+//       // for facets & timeline, just make sure they run w/o failing
+//       await searchService.querySessionFacets({
+//         query: queryString,
+//         facetsSize: 10,
+//       });
+//       await searchService.querySessionTimeline({
+//         query: queryString,
+//         granularity: 5
+//       });
+//     });
+//   });
+// });
